@@ -1,0 +1,663 @@
+import {
+  AlertTriangle,
+  Calendar,
+  CheckCircle,
+  CreditCard,
+  Flag,
+  Home,
+  Plane,
+  Route,
+  ShieldCheck,
+  Star,
+  Target,
+  Trophy,
+} from "lucide-react";
+import { formatMoney } from "../utils/formatters";
+import { getText } from "../data/translations";
+
+const pageText = {
+  FR: {
+    subtitle: "Votre chemin financier, étape par étape.",
+    nextVictory: "Prochaine victoire",
+    recommendedAction: "Action recommandée",
+    priorityDebt: "Dette prioritaire",
+    totalDebt: "Dette totale",
+    activeGoals: "Objectifs actifs",
+    goalsProgress: "Progression objectifs",
+    goalsAmount: "Montant objectifs",
+    timeline: "Timeline OnJarama",
+    story: "Une histoire claire, pas seulement des chiffres.",
+    today: "Aujourd’hui",
+    startingPoint: "Point de départ",
+    noDebt: "Aucune dette prioritaire",
+    highRate: "Taux élevé",
+    remaining: "Reste",
+    current: "Actuel",
+    target: "Objectif",
+    progress: "Progression",
+    targetDate: "Date cible",
+    emergencyFund: "Fonds d’urgence",
+    emergencySubtitle: "Créer une sécurité minimale",
+    travel: "Voyage",
+    travelSubtitle: "Projet personnel ou familial",
+    house: "Maison",
+    houseSubtitle: "Construction, achat ou rénovation",
+    freedom: "Liberté financière",
+    freedomSubtitle: "Vision long terme",
+    aiReading: "Lecture IA",
+    updateSituation: "Mettre à jour ma situation",
+    manageGoals: "Gérer mes objectifs",
+    addDebtGoal: "Ajoutez une dette ou un objectif pour créer votre parcours.",
+    debtAdvice:
+      "Votre priorité actuelle est la dette au taux le plus élevé. Une fois réduite, vos objectifs avanceront plus vite.",
+    goalAdvice:
+      "Votre objectif principal est actif. Continuez à l’alimenter régulièrement.",
+    startAdvice:
+      "Commencez par ajouter votre situation financière et un objectif principal.",
+  },
+
+  EN: {
+    subtitle: "Your financial path, step by step.",
+    nextVictory: "Next victory",
+    recommendedAction: "Recommended action",
+    priorityDebt: "Priority debt",
+    totalDebt: "Total debt",
+    activeGoals: "Active goals",
+    goalsProgress: "Goals progress",
+    goalsAmount: "Goals amount",
+    timeline: "OnJarama Timeline",
+    story: "A clear story, not just numbers.",
+    today: "Today",
+    startingPoint: "Starting point",
+    noDebt: "No priority debt",
+    highRate: "High rate",
+    remaining: "Remaining",
+    current: "Current",
+    target: "Target",
+    progress: "Progress",
+    targetDate: "Target date",
+    emergencyFund: "Emergency fund",
+    emergencySubtitle: "Build minimum security",
+    travel: "Travel",
+    travelSubtitle: "Personal or family project",
+    house: "Home",
+    houseSubtitle: "Construction, purchase or renovation",
+    freedom: "Financial freedom",
+    freedomSubtitle: "Long-term vision",
+    aiReading: "AI reading",
+    updateSituation: "Update my situation",
+    manageGoals: "Manage my goals",
+    addDebtGoal: "Add a debt or goal to create your path.",
+    debtAdvice:
+      "Your current priority is the debt with the highest rate. Once reduced, your goals will move faster.",
+    goalAdvice:
+      "Your main goal is active. Keep funding it regularly.",
+    startAdvice:
+      "Start by adding your financial situation and one main goal.",
+  },
+
+  ES: {
+    subtitle: "Tu camino financiero, paso a paso.",
+    nextVictory: "Próxima victoria",
+    recommendedAction: "Acción recomendada",
+    priorityDebt: "Deuda prioritaria",
+    totalDebt: "Deuda total",
+    activeGoals: "Objetivos activos",
+    goalsProgress: "Progreso de objetivos",
+    goalsAmount: "Monto de objetivos",
+    timeline: "Cronología OnJarama",
+    story: "Una historia clara, no solo números.",
+    today: "Hoy",
+    startingPoint: "Punto de partida",
+    noDebt: "No hay deuda prioritaria",
+    highRate: "Tasa alta",
+    remaining: "Restante",
+    current: "Actual",
+    target: "Objetivo",
+    progress: "Progreso",
+    targetDate: "Fecha objetivo",
+    emergencyFund: "Fondo de emergencia",
+    emergencySubtitle: "Crear una seguridad mínima",
+    travel: "Viaje",
+    travelSubtitle: "Proyecto personal o familiar",
+    house: "Casa",
+    houseSubtitle: "Construcción, compra o renovación",
+    freedom: "Libertad financiera",
+    freedomSubtitle: "Visión a largo plazo",
+    aiReading: "Lectura IA",
+    updateSituation: "Actualizar mi situación",
+    manageGoals: "Gestionar mis objetivos",
+    addDebtGoal: "Agrega una deuda u objetivo para crear tu camino.",
+    debtAdvice:
+      "Tu prioridad actual es la deuda con la tasa más alta. Una vez reducida, tus objetivos avanzarán más rápido.",
+    goalAdvice:
+      "Tu objetivo principal está activo. Sigue financiándolo regularmente.",
+    startAdvice:
+      "Empieza agregando tu situación financiera y un objetivo principal.",
+  },
+};
+
+function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
+  const t = getText(settings);
+  const language = settings?.language || "FR";
+  const p = pageText[language] || pageText.FR;
+  const currency = settings?.currency || "CAD";
+
+  const debts = Array.isArray(financeData?.debts) ? financeData.debts : [];
+  const goals = Array.isArray(selectedGoals) ? selectedGoals : [];
+
+  const totalDebt = debts.reduce(
+    (sum, debt) => sum + Number(debt.balance || 0),
+    0
+  );
+
+  const priorityDebt = [...debts].sort(
+    (a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0)
+  )[0];
+
+  const highlightedGoal =
+    goals.find((goal) => goal.highlighted && !goal.archived) ||
+    goals.find((goal) => !goal.archived);
+
+  const totalGoalTarget = goals.reduce(
+    (sum, goal) => sum + Number(goal.targetAmount || 0),
+    0
+  );
+
+  const totalGoalCurrent = goals.reduce(
+    (sum, goal) => sum + Number(goal.currentAmount || 0),
+    0
+  );
+
+  const globalGoalProgress =
+    totalGoalTarget > 0
+      ? Math.min(100, Math.round((totalGoalCurrent / totalGoalTarget) * 100))
+      : 0;
+
+  const nextVictory = priorityDebt || highlightedGoal;
+
+  return (
+    <div>
+      <h1>{t.parcours}</h1>
+      <p style={muted}>{p.subtitle}</p>
+
+      <section style={heroCard}>
+        <Trophy color="var(--gold)" size={38} />
+
+        <p style={muted}>{p.nextVictory}</p>
+
+        <h2>
+          {priorityDebt?.name ||
+            highlightedGoal?.title ||
+            p.recommendedAction}
+        </h2>
+
+        <h1 style={{ color: "var(--gold)" }}>
+          {priorityDebt
+            ? formatMoney(priorityDebt.balance, currency)
+            : highlightedGoal
+            ? formatMoney(
+                getRemaining(
+                  highlightedGoal.currentAmount,
+                  highlightedGoal.targetAmount
+                ),
+                currency
+              )
+            : formatMoney(0, currency)}
+        </h1>
+
+        <p style={muted}>
+          {priorityDebt
+            ? p.debtAdvice
+            : highlightedGoal
+            ? p.goalAdvice
+            : p.addDebtGoal}
+        </p>
+      </section>
+
+      <div className="grid-2" style={grid}>
+        <InfoCard
+          icon={<AlertTriangle />}
+          title={p.totalDebt}
+          value={formatMoney(totalDebt, currency)}
+          color="var(--red)"
+        />
+
+        <InfoCard
+          icon={<Target />}
+          title={p.activeGoals}
+          value={goals.length}
+          color="var(--gold)"
+        />
+
+        <InfoCard
+          icon={<ShieldCheck />}
+          title={p.goalsProgress}
+          value={`${globalGoalProgress}%`}
+          color="var(--green)"
+        />
+
+        <InfoCard
+          icon={<Flag />}
+          title={p.goalsAmount}
+          value={formatMoney(totalGoalTarget, currency)}
+          color="var(--purple)"
+        />
+      </div>
+
+      <section style={card}>
+        <div style={header}>
+          <Route color="var(--green)" />
+          <div>
+            <h2>{p.timeline}</h2>
+            <p style={muted}>{p.story}</p>
+          </div>
+        </div>
+
+        <TimelineStep
+          icon={<CheckCircle />}
+          title={p.today}
+          subtitle={p.startingPoint}
+          current={formatMoney(0, currency)}
+          target={formatMoney(0, currency)}
+          remaining={formatMoney(0, currency)}
+          progress={100}
+          action={p.startingPoint}
+          color="var(--blue)"
+          p={p}
+        />
+
+        <TimelineStep
+          icon={<CreditCard />}
+          title={priorityDebt?.name || p.priorityDebt}
+          subtitle={
+            priorityDebt
+              ? `${p.highRate} : ${priorityDebt.interestRate}%`
+              : p.noDebt
+          }
+          current={
+            priorityDebt
+              ? formatMoney(priorityDebt.balance, currency)
+              : formatMoney(0, currency)
+          }
+          target={formatMoney(0, currency)}
+          remaining={
+            priorityDebt
+              ? formatMoney(priorityDebt.balance, currency)
+              : formatMoney(0, currency)
+          }
+          progress={priorityDebt ? getDebtProgress(priorityDebt.balance) : 0}
+          action={
+            priorityDebt
+              ? `${p.recommendedAction} : ${priorityDebt.name}`
+              : p.addDebtGoal
+          }
+          color="var(--gold)"
+          p={p}
+        />
+
+        <TimelineStep
+          icon={<ShieldCheck />}
+          title={p.emergencyFund}
+          subtitle={p.emergencySubtitle}
+          current={formatMoney(0, currency)}
+          target="3 mois"
+          remaining="À définir"
+          progress={20}
+          action={p.emergencySubtitle}
+          color="var(--green)"
+          p={p}
+        />
+
+        <GoalStep
+          goals={goals}
+          category="voyage"
+          fallbackTitle={p.travel}
+          fallbackSubtitle={p.travelSubtitle}
+          icon={<Plane />}
+          color="var(--blue)"
+          currency={currency}
+          p={p}
+        />
+
+        <GoalStep
+          goals={goals}
+          category="maison"
+          fallbackTitle={p.house}
+          fallbackSubtitle={p.houseSubtitle}
+          icon={<Home />}
+          color="var(--gold)"
+          currency={currency}
+          p={p}
+        />
+
+        <GoalStep
+          goals={goals}
+          category="liberte"
+          fallbackTitle={p.freedom}
+          fallbackSubtitle={p.freedomSubtitle}
+          icon={<Trophy />}
+          color="var(--purple)"
+          currency={currency}
+          p={p}
+        />
+
+        {highlightedGoal && !["voyage", "maison", "liberte"].includes(highlightedGoal.category) && (
+          <GoalStep
+            goals={[highlightedGoal]}
+            category={highlightedGoal.category}
+            fallbackTitle={highlightedGoal.title}
+            fallbackSubtitle={highlightedGoal.option || p.recommendedAction}
+            icon={<Star />}
+            color="var(--gold)"
+            currency={currency}
+            p={p}
+          />
+        )}
+      </section>
+
+      <section style={adviceCard}>
+        <Calendar color="var(--purple)" />
+        <div>
+          <h2>{p.aiReading}</h2>
+          <p style={muted}>
+            {priorityDebt
+              ? p.debtAdvice
+              : goals.length > 0
+              ? p.goalAdvice
+              : p.startAdvice}
+          </p>
+        </div>
+      </section>
+
+      <section style={card}>
+        <h2>{t.quickActions}</h2>
+
+        <div style={actions}>
+          <button onClick={() => setCurrentPage("situation")} style={redBtn}>
+            {p.updateSituation}
+          </button>
+
+          <button onClick={() => setCurrentPage("objectifs")} style={goldBtn}>
+            {p.manageGoals}
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function GoalStep({
+  goals,
+  category,
+  fallbackTitle,
+  fallbackSubtitle,
+  icon,
+  color,
+  currency,
+  p,
+}) {
+  const goal =
+    goals.find((item) => item.category === category && item.highlighted) ||
+    goals.find((item) => item.category === category);
+
+  const current = Number(goal?.currentAmount || 0);
+  const target = Number(goal?.targetAmount || 0);
+  const remaining = getRemaining(current, target);
+  const progress = getGoalProgress(current, target);
+
+  return (
+    <TimelineStep
+      icon={icon}
+      title={goal?.title || fallbackTitle}
+      subtitle={goal?.option || fallbackSubtitle}
+      current={formatMoney(current, currency)}
+      target={target > 0 ? formatMoney(target, currency) : "À définir"}
+      remaining={formatMoney(remaining, currency)}
+      progress={progress}
+      action={
+        goal?.targetDate
+          ? `${p.targetDate} : ${goal.targetDate}`
+          : fallbackSubtitle
+      }
+      color={color}
+      p={p}
+    />
+  );
+}
+
+function TimelineStep({
+  icon,
+  title,
+  subtitle,
+  current,
+  target,
+  remaining,
+  progress,
+  action,
+  color,
+  p,
+}) {
+  const safeProgress = Math.min(100, Math.max(0, Number(progress || 0)));
+
+  return (
+    <div style={step}>
+      <div style={{ ...stepIcon, color }}>{icon}</div>
+
+      <div style={{ flex: 1 }}>
+        <div style={stepTop}>
+          <strong>{title}</strong>
+          <strong style={{ color }}>{safeProgress}%</strong>
+        </div>
+
+        <p style={mutedSmall}>{subtitle}</p>
+
+        <div style={amountGrid}>
+          <SmallStat label={p.current} value={current} />
+          <SmallStat label={p.target} value={target} />
+          <SmallStat label={p.remaining} value={remaining} />
+        </div>
+
+        <div style={barBg}>
+          <div
+            style={{
+              ...barFill,
+              width: `${safeProgress}%`,
+              background: color,
+            }}
+          />
+        </div>
+
+        <p style={actionText}>{action}</p>
+      </div>
+    </div>
+  );
+}
+
+function SmallStat({ label, value }) {
+  return (
+    <div style={smallStat}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function InfoCard({ icon, title, value, color }) {
+  return (
+    <div style={{ ...infoCard, borderColor: color }}>
+      <span style={{ color }}>{icon}</span>
+      <p style={mutedSmall}>{title}</p>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function getRemaining(current, target) {
+  return Math.max(0, Number(target || 0) - Number(current || 0));
+}
+
+function getGoalProgress(current, target) {
+  if (!target || Number(target) <= 0) return 0;
+
+  return Math.min(
+    100,
+    Math.round((Number(current || 0) / Number(target || 0)) * 100)
+  );
+}
+
+function getDebtProgress(balance) {
+  const amount = Number(balance || 0);
+
+  if (amount <= 0) return 100;
+  if (amount >= 20000) return 10;
+  if (amount >= 15000) return 25;
+  if (amount >= 10000) return 40;
+  if (amount >= 5000) return 60;
+  if (amount >= 1000) return 80;
+
+  return 90;
+}
+
+const heroCard = {
+  background: "linear-gradient(135deg,#2a210b,var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "24px",
+  padding: "22px",
+  marginTop: "20px",
+};
+
+const grid = {
+  gap: "12px",
+  marginTop: "18px",
+};
+
+const infoCard = {
+  background: "var(--bg-card)",
+  border: "1px solid var(--border)",
+  borderRadius: "18px",
+  padding: "16px",
+};
+
+const card = {
+  background: "var(--bg-card)",
+  border: "1px solid var(--border)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const adviceCard = {
+  background: "linear-gradient(135deg, rgba(139,92,246,.18), var(--bg-card))",
+  border: "1px solid var(--purple)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+  display: "flex",
+  gap: "12px",
+};
+
+const header = {
+  display: "flex",
+  alignItems: "center",
+  gap: "12px",
+  marginBottom: "16px",
+};
+
+const step = {
+  display: "flex",
+  gap: "12px",
+  padding: "16px 0",
+  borderBottom: "1px solid var(--border)",
+};
+
+const stepIcon = {
+  width: "42px",
+  height: "42px",
+  borderRadius: "14px",
+  background: "var(--bg-panel)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  flex: "0 0 auto",
+};
+
+const stepTop = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: "12px",
+};
+
+const amountGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(3, 1fr)",
+  gap: "8px",
+  marginTop: "10px",
+};
+
+const smallStat = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "12px",
+  padding: "8px",
+  display: "flex",
+  flexDirection: "column",
+  gap: "4px",
+  fontSize: "12px",
+};
+
+const barBg = {
+  height: "10px",
+  background: "var(--bg-panel)",
+  borderRadius: "999px",
+  marginTop: "10px",
+};
+
+const barFill = {
+  height: "100%",
+  borderRadius: "999px",
+};
+
+const actionText = {
+  color: "var(--text-muted)",
+  fontSize: "13px",
+  marginTop: "8px",
+};
+
+const actions = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "10px",
+  marginTop: "14px",
+};
+
+const redBtn = {
+  padding: "14px",
+  borderRadius: "14px",
+  border: "none",
+  background: "var(--red)",
+  color: "white",
+  fontWeight: "bold",
+};
+
+const goldBtn = {
+  padding: "14px",
+  borderRadius: "14px",
+  border: "none",
+  background: "var(--gold)",
+  color: "#07111f",
+  fontWeight: "bold",
+};
+
+const muted = {
+  color: "var(--text-muted)",
+  marginTop: "8px",
+};
+
+const mutedSmall = {
+  color: "var(--text-muted)",
+  fontSize: "13px",
+  marginTop: "5px",
+};
+
+export default Parcours;
