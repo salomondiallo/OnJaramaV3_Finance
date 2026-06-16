@@ -1,34 +1,34 @@
 import { useEffect, useMemo, useState } from "react";
-import { Calendar, CreditCard, Lightbulb, Target, TrendingUp } from "lucide-react";
+import { Calendar, CreditCard, Lightbulb, Target } from "lucide-react";
 import { formatMoney } from "../utils/formatters";
 
 const pageText = {
   FR: {
-    adviceDebt: "Conseil : priorisez la dette au taux le plus élevé.",
-    adviceStart: "Conseil : ajoutez vos chiffres pour générer votre priorité.",
-    totalDebt: "Dette totale actuelle",
+    adviceDebt: "Priorisez la dette au taux le plus élevé.",
+    adviceStart: "Ajoutez vos chiffres pour générer votre priorité.",
+    totalDebt: "Dette totale",
     goal: "Objectif actif",
     noGoal: "Créez un objectif pour construire votre parcours.",
     payment: "Paiement prévu",
     noPayment: "Ajoutez un paiement programmé pour mieux prévoir votre semaine.",
   },
   EN: {
-    adviceDebt: "Tip: prioritize the debt with the highest rate.",
-    adviceStart: "Tip: add your numbers to generate your priority.",
-    totalDebt: "Current total debt",
+    adviceDebt: "Prioritize the debt with the highest rate.",
+    adviceStart: "Add your numbers to generate your priority.",
+    totalDebt: "Total debt",
     goal: "Active goal",
     noGoal: "Create a goal to build your path.",
     payment: "Scheduled payment",
-    noPayment: "Add a scheduled payment to better plan your week.",
+    noPayment: "Add a scheduled payment to plan your week.",
   },
   ES: {
-    adviceDebt: "Consejo: prioriza la deuda con la tasa más alta.",
-    adviceStart: "Consejo: agrega tus datos para generar tu prioridad.",
-    totalDebt: "Deuda total actual",
+    adviceDebt: "Prioriza la deuda con la tasa más alta.",
+    adviceStart: "Agrega tus datos para generar tu prioridad.",
+    totalDebt: "Deuda total",
     goal: "Objetivo activo",
     noGoal: "Crea un objetivo para construir tu camino.",
     payment: "Pago programado",
-    noPayment: "Agrega un pago programado para planificar mejor tu semana.",
+    noPayment: "Agrega un pago programado para planificar tu semana.",
   },
 };
 
@@ -46,9 +46,9 @@ function OnJaramaLive({ financeData, selectedGoals, settings }) {
     }
   }, []);
 
-  const activePayment = scheduledPayments.find((payment) => payment.active);
-
   const debts = Array.isArray(financeData?.debts) ? financeData.debts : [];
+  const activeGoals = Array.isArray(selectedGoals) ? selectedGoals : [];
+  const activePayment = scheduledPayments.find((payment) => payment.active);
 
   const priorityDebt = [...debts].sort(
     (a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0)
@@ -59,8 +59,6 @@ function OnJaramaLive({ financeData, selectedGoals, settings }) {
     0
   );
 
-  const activeGoals = Array.isArray(selectedGoals) ? selectedGoals : [];
-
   const firstGoal =
     activeGoals.find((goal) => goal.highlighted && !goal.archived) ||
     activeGoals.find((goal) => !goal.archived);
@@ -69,7 +67,7 @@ function OnJaramaLive({ financeData, selectedGoals, settings }) {
     {
       icon: <Lightbulb size={16} />,
       text: priorityDebt
-        ? `${p.adviceDebt} ${priorityDebt.name} (${priorityDebt.interestRate}%).`
+        ? `${p.adviceDebt} ${priorityDebt.name}.`
         : p.adviceStart,
     },
     {
@@ -83,10 +81,7 @@ function OnJaramaLive({ financeData, selectedGoals, settings }) {
     {
       icon: <Calendar size={16} />,
       text: activePayment
-        ? `${p.payment} : ${activePayment.name} — ${formatMoney(
-            activePayment.amount,
-            currency
-          )}.`
+        ? `${p.payment} : ${activePayment.name}.`
         : p.noPayment,
     },
   ];
@@ -102,7 +97,11 @@ function OnJaramaLive({ financeData, selectedGoals, settings }) {
   return (
     <div style={banner}>
       <span style={iconBox}>{messages[index].icon}</span>
-      <span>{messages[index].text}</span>
+
+      <span style={messageText} title={messages[index].text}>
+        {messages[index].text}
+      </span>
+
       <span style={dots}>
         {messages.map((_, itemIndex) => (
           <span
@@ -119,25 +118,34 @@ function OnJaramaLive({ financeData, selectedGoals, settings }) {
 }
 
 const banner = {
-  minHeight: "42px",
+  height: "44px",
+  minHeight: "44px",
+  maxHeight: "44px",
   background: "var(--bg-card)",
   border: "1px solid var(--border)",
   borderRadius: "16px",
-  padding: "10px 14px",
+  padding: "0 12px",
   marginBottom: "10px",
   display: "grid",
-  gridTemplateColumns: "22px 1fr auto",
+  gridTemplateColumns: "22px minmax(0, 1fr) auto",
   alignItems: "center",
   gap: "10px",
   color: "var(--text-main)",
   boxShadow: "0 8px 24px var(--shadow)",
   fontSize: "13px",
+  overflow: "hidden",
 };
 
 const iconBox = {
   color: "var(--gold)",
   display: "flex",
   alignItems: "center",
+};
+
+const messageText = {
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
 };
 
 const dots = {

@@ -7,7 +7,6 @@ import {
   PiggyBank,
   ShieldCheck,
   Target,
-  Wallet,
 } from "lucide-react";
 import { useState } from "react";
 import { getText } from "../data/translations";
@@ -35,14 +34,14 @@ function Accueil({ financeData, selectedGoals, setCurrentPage, settings }) {
     <div style={page}>
       <section style={hero}>
         <div style={quickRail}>
-          <RailItem icon={<CalendarDays />} label="Paiement" />
-          <RailItem icon={<PiggyBank />} label="Dette" />
-          <RailItem icon={<Target />} label="Objectif" />
-          <RailItem icon={<ShieldCheck />} label="Protection" />
-          <RailItem icon={<Lightbulb />} label="Conseil" />
+          <RailItem icon={<CalendarDays />} label="Paiement" onClick={() => setCurrentPage("paiements")} />
+          <RailItem icon={<PiggyBank />} label="Dette" onClick={() => setCurrentPage("situation")} />
+          <RailItem icon={<Target />} label="Objectif" onClick={() => setCurrentPage("objectifs")} />
+          <RailItem icon={<ShieldCheck />} label="Protection" onClick={() => setCurrentPage("situation")} />
+          <RailItem icon={<Lightbulb />} label="Conseil" onClick={() => setCurrentPage("assistant")} />
         </div>
 
-        <div style={heroText}>
+        <div style={heroTextBox}>
           <h1 style={heroTitle}>
             {t.heroTitle}
             <br />
@@ -62,11 +61,14 @@ function Accueil({ financeData, selectedGoals, setCurrentPage, settings }) {
         </button>
       </div>
 
-      <div style={actionsGrid}>
-        <ActionCard icon={<Wallet />} title="Situation" onClick={() => setCurrentPage("situation")} />
-        <ActionCard icon={<Target />} title="Objectifs" onClick={() => setCurrentPage("objectifs")} />
-        <ActionCard icon={<PiggyBank />} title="Parcours" onClick={() => setCurrentPage("parcours")} />
-        <ActionCard icon={<Bot />} title="IA" onClick={() => setCurrentPage("assistant")} />
+      <div style={heroButtons}>
+        <button onClick={() => setCurrentPage("situation")} style={primaryBtn}>
+          Commencer
+        </button>
+
+        <button onClick={() => setCurrentPage("assistant")} style={aiBtn}>
+          <Bot size={18} /> IA OnJarama
+        </button>
       </div>
 
       <section style={statusCard}>
@@ -83,34 +85,15 @@ function Accueil({ financeData, selectedGoals, setCurrentPage, settings }) {
           <MiniLine label="Conseil" value="Disponible" />
         </div>
       </section>
-
-      <div style={heroButtons}>
-        <button onClick={() => setCurrentPage("situation")} style={primaryBtn}>
-          Commencer
-        </button>
-
-        <button onClick={() => setCurrentPage("assistant")} style={aiBtn}>
-          <Bot size={18} /> IA OnJarama
-        </button>
-      </div>
     </div>
   );
 }
 
-function RailItem({ icon, label }) {
+function RailItem({ icon, label, onClick }) {
   return (
-    <button style={railItem}>
+    <button onClick={onClick} style={railItem}>
       <span style={railIcon}>{icon}</span>
       <small>{label}</small>
-    </button>
-  );
-}
-
-function ActionCard({ icon, title, onClick }) {
-  return (
-    <button onClick={onClick} style={actionCard}>
-      <span style={actionIcon}>{icon}</span>
-      <strong>{title}</strong>
     </button>
   );
 }
@@ -133,13 +116,13 @@ const page = {
 };
 
 const hero = {
-  height: "min(44vh, 360px)",
+  height: "min(48vh, 380px)",
   width: "100%",
   borderRadius: "28px",
   backgroundImage:
-    "linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.12), rgba(0,0,0,.50)), url('/onjarama-hero.png')",
+    "linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.05), rgba(0,0,0,.44)), url('/onjarama-hero.png')",
   backgroundSize: "cover",
-  backgroundPosition: "center 18%",
+  backgroundPosition: "center 20%",
   position: "relative",
   overflow: "hidden",
   border: "1px solid var(--border)",
@@ -159,10 +142,10 @@ const quickRail = {
 const railItem = {
   minWidth: 0,
   border: "1px solid rgba(212,175,55,.35)",
-  background: "rgba(7,17,31,.58)",
+  background: "rgba(7,17,31,.55)",
   color: "white",
   borderRadius: "16px",
-  padding: "8px 3px",
+  padding: "7px 3px",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
@@ -176,21 +159,25 @@ const railIcon = {
   display: "flex",
 };
 
-const heroText = {
+const heroTextBox = {
   position: "absolute",
-  left: "20px",
-  right: "20px",
-  bottom: "18px",
+  left: "14px",
+  right: "14px",
+  bottom: "14px",
   zIndex: 3,
+  padding: "12px",
+  borderRadius: "20px",
+  background: "rgba(7,17,31,.58)",
+  backdropFilter: "blur(10px)",
+  border: "1px solid rgba(255,255,255,.12)",
 };
 
 const heroTitle = {
   margin: 0,
   color: "white",
-  fontSize: "clamp(30px, 9vw, 44px)",
+  fontSize: "clamp(24px, 7.2vw, 36px)",
   lineHeight: "0.98",
   fontWeight: "900",
-  textShadow: "0 8px 24px rgba(0,0,0,.45)",
 };
 
 const heroAccent = {
@@ -200,9 +187,10 @@ const heroAccent = {
 };
 
 const heroSubtitle = {
-  marginTop: "10px",
-  color: "rgba(255,255,255,.95)",
-  fontSize: "14px",
+  marginTop: "8px",
+  marginBottom: 0,
+  color: "rgba(255,255,255,.92)",
+  fontSize: "13px",
   lineHeight: "1.25",
 };
 
@@ -238,30 +226,32 @@ const eyeBtn = {
   fontSize: "12px",
 };
 
-const actionsGrid = {
+const heroButtons = {
   display: "grid",
-  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-  gap: "8px",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "10px",
 };
 
-const actionCard = {
-  minHeight: "70px",
-  border: "1px solid var(--border)",
-  background: "var(--bg-card)",
-  color: "var(--text-main)",
-  borderRadius: "18px",
-  padding: "8px 5px",
+const primaryBtn = {
+  padding: "13px",
+  borderRadius: "16px",
+  border: "none",
+  background: "var(--green)",
+  color: "white",
+  fontWeight: "bold",
+};
+
+const aiBtn = {
+  padding: "13px",
+  borderRadius: "16px",
+  border: "none",
+  background: "linear-gradient(90deg, var(--purple), #9b7cff)",
+  color: "white",
+  fontWeight: "bold",
   display: "flex",
-  flexDirection: "column",
   justifyContent: "center",
   alignItems: "center",
-  gap: "5px",
-  fontSize: "12px",
-};
-
-const actionIcon = {
-  color: "var(--gold)",
-  display: "flex",
+  gap: "8px",
 };
 
 const statusCard = {
@@ -292,34 +282,6 @@ const miniLine = {
   flexDirection: "column",
   gap: "4px",
   fontSize: "12px",
-};
-
-const heroButtons = {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: "10px",
-};
-
-const primaryBtn = {
-  padding: "13px",
-  borderRadius: "16px",
-  border: "none",
-  background: "var(--green)",
-  color: "white",
-  fontWeight: "bold",
-};
-
-const aiBtn = {
-  padding: "13px",
-  borderRadius: "16px",
-  border: "none",
-  background: "linear-gradient(90deg, var(--purple), #9b7cff)",
-  color: "white",
-  fontWeight: "bold",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  gap: "8px",
 };
 
 const muted = {
