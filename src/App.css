@@ -1,7 +1,29 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-main);
+  color: var(--text-main);
+}
+
 .app-shell {
+  width: 100%;
+  max-width: 100%;
   min-height: 100vh;
   background: var(--bg-main);
   color: var(--text-main);
+  overflow-x: hidden;
 }
 
 .page-container {
@@ -11,6 +33,7 @@
   padding: 12px 16px 100px;
   background: var(--bg-main);
   color: var(--text-main);
+  overflow-x: hidden;
 }
 
 .page-container h1,
@@ -50,6 +73,27 @@ textarea {
   background: var(--bg-panel);
   color: var(--text-main);
   border-color: var(--border);
+  max-width: 100%;
+}
+
+img {
+  max-width: 100%;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 520px) {
+  .page-container {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
 }
 
 @keyframes fadeIn {
