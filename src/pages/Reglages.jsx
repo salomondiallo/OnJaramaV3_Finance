@@ -2,16 +2,14 @@ import { useState } from "react";
 import {
   Bell,
   Cloud,
-  Eye,
-  Grid2X2,
+  CreditCard,
+  Globe,
   Info,
   Languages,
-  LayoutList,
   Lock,
   Palette,
   RefreshCcw,
   Shield,
-  SlidersHorizontal,
   UserCircle,
   Wallet,
 } from "lucide-react";
@@ -19,12 +17,7 @@ import { getText } from "../data/translations";
 
 const pageText = {
   FR: {
-    subtitle: "Préférences, affichage, sécurité et sauvegarde.",
-    personalization: "Personnalisation",
-    homePreview: "Aperçu sécurisé",
-    shortcuts: "Raccourcis",
-    display: "Affichage",
-    security: "Sécurité & accès",
+    subtitle: "Préférences rapides, sécurité, sauvegarde et crédits.",
     language: "Langue",
     currency: "Devise",
     appearance: "Apparence",
@@ -34,54 +27,116 @@ const pageText = {
     reset: "Réinitialisation",
     credits: "Crédits",
     privacy: "Confidentialité",
-    account: "Profil",
+    account: "Compte",
+
     french: "Français",
     english: "English",
     spanish: "Español",
+
     dark: "Mode sombre",
     light: "Mode clair",
+
     on: "ON",
     off: "OFF",
-    compact: "Compact",
-    standard: "Standard",
-    large: "Large",
-    grid: "Grille",
-    list: "Liste",
-    debt: "Dette",
-    savings: "Épargne",
-    income: "Revenus",
-    goals: "Objectifs",
-    advice: "Conseils",
-    path: "Parcours",
-    payment: "Paiement",
-    goal: "Objectif",
-    protection: "Protection",
-    project: "Projet",
-    travel: "Voyage",
-    house: "Maison",
-    ai: "IA",
-    budget: "Budget",
-    hideAmountsStart: "Masquer les montants au démarrage",
-    autoHide: "Masquer automatiquement après 30 secondes",
-    demoMode: "Mode Démo",
-    privateMode: "Mode Privé",
-    pin: "Code PIN",
-    biometric: "Biométrie",
-    twoFactor: "Vérification 2 étapes",
-    soon: "Bientôt",
+
     syncSoon: "Bientôt disponible.",
     syncText: "Connexion cloud prévue plus tard. Aucune transaction bancaire.",
     backupText: "Sauvegarde locale automatique activée sur cet appareil.",
-    privacyText: "Les données restent locales tant que la synchronisation n’est pas activée.",
+    privacyText:
+      "Aucune transaction bancaire n’est possible dans cette version. Les données restent locales tant que la synchronisation n’est pas activée.",
+    accountText: "Profil utilisateur, pays, langue et devise sont visibles dans Profil.",
+
     resetGoals: "Réinitialiser les objectifs",
     resetFinance: "Réinitialiser les finances",
     resetSettings: "Réinitialiser les réglages",
     resetAll: "Réinitialiser tout",
+
     creator: "Créateur",
     founder: "Fondateur de l’écosystème OnJarama",
     appVersion: "OnJarama Path • Version 3.1 Beta",
     ecosystem: "OnJarama • OJCS • OJCT",
-    openProfile: "Ouvrir le profil",
+  },
+
+  EN: {
+    subtitle: "Quick preferences, security, backup and credits.",
+    language: "Language",
+    currency: "Currency",
+    appearance: "Appearance",
+    notifications: "Notifications",
+    synchronization: "Synchronization",
+    backup: "Backup",
+    reset: "Reset",
+    credits: "Credits",
+    privacy: "Privacy",
+    account: "Account",
+
+    french: "Français",
+    english: "English",
+    spanish: "Español",
+
+    dark: "Dark mode",
+    light: "Light mode",
+
+    on: "ON",
+    off: "OFF",
+
+    syncSoon: "Coming soon.",
+    syncText: "Cloud connection planned later. No banking transaction.",
+    backupText: "Automatic local backup enabled on this device.",
+    privacyText:
+      "No banking transaction is possible in this version. Data stays local until synchronization is enabled.",
+    accountText: "User profile, country, language and currency are visible in Profile.",
+
+    resetGoals: "Reset goals",
+    resetFinance: "Reset finances",
+    resetSettings: "Reset settings",
+    resetAll: "Reset everything",
+
+    creator: "Creator",
+    founder: "Founder of the OnJarama ecosystem",
+    appVersion: "OnJarama Path • Version 3.1 Beta",
+    ecosystem: "OnJarama • OJCS • OJCT",
+  },
+
+  ES: {
+    subtitle: "Preferencias rápidas, seguridad, copia y créditos.",
+    language: "Idioma",
+    currency: "Moneda",
+    appearance: "Apariencia",
+    notifications: "Notificaciones",
+    synchronization: "Sincronización",
+    backup: "Copia de seguridad",
+    reset: "Restablecer",
+    credits: "Créditos",
+    privacy: "Privacidad",
+    account: "Cuenta",
+
+    french: "Français",
+    english: "English",
+    spanish: "Español",
+
+    dark: "Modo oscuro",
+    light: "Modo claro",
+
+    on: "ON",
+    off: "OFF",
+
+    syncSoon: "Próximamente.",
+    syncText: "Conexión cloud prevista más adelante. Ninguna transacción bancaria.",
+    backupText: "Copia local automática activada en este dispositivo.",
+    privacyText:
+      "No es posible realizar transacciones bancarias en esta versión. Los datos permanecen locales hasta activar la sincronización.",
+    accountText: "Perfil, país, idioma y moneda están visibles en Perfil.",
+
+    resetGoals: "Restablecer objetivos",
+    resetFinance: "Restablecer finanzas",
+    resetSettings: "Restablecer ajustes",
+    resetAll: "Restablecer todo",
+
+    creator: "Creador",
+    founder: "Fundador del ecosistema OnJarama",
+    appVersion: "OnJarama Path • Versión 3.1 Beta",
+    ecosystem: "OnJarama • OJCS • OJCT",
   },
 };
 
@@ -95,21 +150,11 @@ function Reglages({
   setCurrentPage,
 }) {
   const t = getText(settings);
-  const p = pageText.FR;
-  const [openSection, setOpenSection] = useState("account");
+  const p = pageText[settings?.language || "FR"] || pageText.FR;
+  const [openSection, setOpenSection] = useState("language");
 
   function updateSetting(name, value) {
     setSettings({ ...settings, [name]: value });
-  }
-
-  function updateNested(group, name, value) {
-    setSettings({
-      ...settings,
-      [group]: {
-        ...(settings[group] || {}),
-        [name]: value,
-      },
-    });
   }
 
   function toggle(section) {
@@ -121,97 +166,174 @@ function Reglages({
       <h1>{t.reglages}</h1>
       <p style={muted}>{p.subtitle}</p>
 
-      <Tile open={openSection === "account"} onClick={() => toggle("account")} icon={<UserCircle />} title={p.account} color="var(--blue)">
-        <button onClick={() => setCurrentPage("profil")} style={profileBtn}>
-          {p.openProfile}
-        </button>
+      <Tile
+        open={openSection === "language"}
+        onClick={() => toggle("language")}
+        icon={<Languages />}
+        title={p.language}
+        color="var(--green)"
+      >
+        <Option active={settings.language === "FR"} onClick={() => updateSetting("language", "FR")}>
+          {p.french}
+        </Option>
+
+        <Option active={settings.language === "EN"} onClick={() => updateSetting("language", "EN")}>
+          {p.english}
+        </Option>
+
+        <Option active={settings.language === "ES"} onClick={() => updateSetting("language", "ES")}>
+          {p.spanish}
+        </Option>
       </Tile>
 
-      <Tile open={openSection === "personalization"} onClick={() => toggle("personalization")} icon={<SlidersHorizontal />} title={p.personalization} color="var(--gold)">
-        <h3>{p.homePreview}</h3>
-        <Toggle label={p.debt} active={settings.homeCards?.debt} onClick={() => updateNested("homeCards", "debt", !settings.homeCards?.debt)} />
-        <Toggle label={p.savings} active={settings.homeCards?.savings} onClick={() => updateNested("homeCards", "savings", !settings.homeCards?.savings)} />
-        <Toggle label={p.income} active={settings.homeCards?.income} onClick={() => updateNested("homeCards", "income", !settings.homeCards?.income)} />
-        <Toggle label={p.goals} active={settings.homeCards?.goals} onClick={() => updateNested("homeCards", "goals", !settings.homeCards?.goals)} />
-        <Toggle label={p.advice} active={settings.homeCards?.advice} onClick={() => updateNested("homeCards", "advice", !settings.homeCards?.advice)} />
-        <Toggle label={p.path} active={settings.homeCards?.path} onClick={() => updateNested("homeCards", "path", !settings.homeCards?.path)} />
-
-        <h3>{p.shortcuts}</h3>
-        <Toggle label={p.payment} active={settings.shortcuts?.payment} onClick={() => updateNested("shortcuts", "payment", !settings.shortcuts?.payment)} />
-        <Toggle label={p.debt} active={settings.shortcuts?.debt} onClick={() => updateNested("shortcuts", "debt", !settings.shortcuts?.debt)} />
-        <Toggle label={p.goal} active={settings.shortcuts?.goal} onClick={() => updateNested("shortcuts", "goal", !settings.shortcuts?.goal)} />
-        <Toggle label={p.protection} active={settings.shortcuts?.protection} onClick={() => updateNested("shortcuts", "protection", !settings.shortcuts?.protection)} />
-        <Toggle label={p.advice} active={settings.shortcuts?.advice} onClick={() => updateNested("shortcuts", "advice", !settings.shortcuts?.advice)} />
-        <Toggle label={p.project} active={settings.shortcuts?.project} onClick={() => updateNested("shortcuts", "project", !settings.shortcuts?.project)} />
-        <Toggle label={p.travel} active={settings.shortcuts?.travel} onClick={() => updateNested("shortcuts", "travel", !settings.shortcuts?.travel)} />
-        <Toggle label={p.house} active={settings.shortcuts?.house} onClick={() => updateNested("shortcuts", "house", !settings.shortcuts?.house)} />
-        <Toggle label={p.ai} active={settings.shortcuts?.ai} onClick={() => updateNested("shortcuts", "ai", !settings.shortcuts?.ai)} />
+      <Tile
+        open={openSection === "currency"}
+        onClick={() => toggle("currency")}
+        icon={<Wallet />}
+        title={p.currency}
+        color="var(--gold)"
+      >
+        <Option active={settings.currency === "CAD"} onClick={() => updateSetting("currency", "CAD")}>
+          🇨🇦 CAD
+        </Option>
+        <Option active={settings.currency === "USD"} onClick={() => updateSetting("currency", "USD")}>
+          🇺🇸 USD
+        </Option>
+        <Option active={settings.currency === "EUR"} onClick={() => updateSetting("currency", "EUR")}>
+          🇪🇺 EUR
+        </Option>
+        <Option active={settings.currency === "GBP"} onClick={() => updateSetting("currency", "GBP")}>
+          🇬🇧 GBP
+        </Option>
+        <Option active={settings.currency === "GNF"} onClick={() => updateSetting("currency", "GNF")}>
+          🇬🇳 GNF
+        </Option>
+        <Option active={settings.currency === "XOF"} onClick={() => updateSetting("currency", "XOF")}>
+          🌍 XOF — CFA BCEAO
+        </Option>
+        <Option active={settings.currency === "XAF"} onClick={() => updateSetting("currency", "XAF")}>
+          🌍 XAF — CFA BEAC
+        </Option>
+        <Option active={settings.currency === "CHF"} onClick={() => updateSetting("currency", "CHF")}>
+          🇨🇭 CHF
+        </Option>
+        <Option active={settings.currency === "MAD"} onClick={() => updateSetting("currency", "MAD")}>
+          🇲🇦 MAD
+        </Option>
       </Tile>
 
-      <Tile open={openSection === "display"} onClick={() => toggle("display")} icon={<Grid2X2 />} title={p.display} color="var(--green)">
-        <Option active={settings.tileSize === "compact"} onClick={() => updateSetting("tileSize", "compact")}>{p.compact}</Option>
-        <Option active={settings.tileSize === "standard"} onClick={() => updateSetting("tileSize", "standard")}>{p.standard}</Option>
-        <Option active={settings.tileSize === "large"} onClick={() => updateSetting("tileSize", "large")}>{p.large}</Option>
+      <Tile
+        open={openSection === "appearance"}
+        onClick={() => toggle("appearance")}
+        icon={<Palette />}
+        title={p.appearance}
+        color="var(--purple)"
+      >
+        <Option active={settings.theme === "sombre"} onClick={() => updateSetting("theme", "sombre")}>
+          {p.dark}
+        </Option>
 
-        <Option active={settings.viewMode === "grid"} onClick={() => updateSetting("viewMode", "grid")} icon={<Grid2X2 size={16} />}>{p.grid}</Option>
-        <Option active={settings.viewMode === "list"} onClick={() => updateSetting("viewMode", "list")} icon={<LayoutList size={16} />}>{p.list}</Option>
+        <Option active={settings.theme === "clair"} onClick={() => updateSetting("theme", "clair")}>
+          {p.light}
+        </Option>
       </Tile>
 
-      <Tile open={openSection === "security"} onClick={() => toggle("security")} icon={<Lock />} title={p.security} color="var(--gold)">
-        <Toggle label={p.hideAmountsStart} active={settings.privacyMode} onClick={() => updateSetting("privacyMode", !settings.privacyMode)} />
-        <Toggle label={p.autoHide} active={settings.autoHideAmounts} onClick={() => updateSetting("autoHideAmounts", !settings.autoHideAmounts)} />
-        <Toggle label={p.demoMode} active={settings.demoMode} onClick={() => updateSetting("demoMode", !settings.demoMode)} />
-        <Toggle label={p.privateMode} active={settings.privacyMode} onClick={() => updateSetting("privacyMode", !settings.privacyMode)} />
-        <Locked label={p.pin} soon={p.soon} />
-        <Locked label={p.biometric} soon={p.soon} />
-        <Locked label={p.twoFactor} soon={p.soon} />
+      <Tile
+        open={openSection === "notifications"}
+        onClick={() => toggle("notifications")}
+        icon={<Bell />}
+        title={p.notifications}
+        color="var(--green)"
+      >
+        <Option active={settings.notifications} onClick={() => updateSetting("notifications", true)}>
+          {p.on}
+        </Option>
+
+        <Option active={!settings.notifications} onClick={() => updateSetting("notifications", false)}>
+          {p.off}
+        </Option>
       </Tile>
 
-      <Tile open={openSection === "language"} onClick={() => toggle("language")} icon={<Languages />} title={p.language} color="var(--green)">
-        <Option active={settings.language === "FR"} onClick={() => updateSetting("language", "FR")}>{p.french}</Option>
-        <Option active={settings.language === "EN"} onClick={() => updateSetting("language", "EN")}>{p.english}</Option>
-        <Option active={settings.language === "ES"} onClick={() => updateSetting("language", "ES")}>{p.spanish}</Option>
-      </Tile>
-
-      <Tile open={openSection === "currency"} onClick={() => toggle("currency")} icon={<Wallet />} title={p.currency} color="var(--gold)">
-        {["CAD", "USD", "EUR", "GBP", "GNF", "XOF", "XAF", "CHF", "MAD"].map((currency) => (
-          <Option key={currency} active={settings.currency === currency} onClick={() => updateSetting("currency", currency)}>
-            {currency}
-          </Option>
-        ))}
-      </Tile>
-
-      <Tile open={openSection === "appearance"} onClick={() => toggle("appearance")} icon={<Palette />} title={p.appearance} color="var(--purple)">
-        <Option active={settings.theme === "sombre"} onClick={() => updateSetting("theme", "sombre")}>{p.dark}</Option>
-        <Option active={settings.theme === "clair"} onClick={() => updateSetting("theme", "clair")}>{p.light}</Option>
-      </Tile>
-
-      <Tile open={openSection === "notifications"} onClick={() => toggle("notifications")} icon={<Bell />} title={p.notifications} color="var(--green)">
-        <Option active={settings.notifications} onClick={() => updateSetting("notifications", true)}>{p.on}</Option>
-        <Option active={!settings.notifications} onClick={() => updateSetting("notifications", false)}>{p.off}</Option>
-      </Tile>
-
-      <Tile open={openSection === "sync"} onClick={() => toggle("sync")} icon={<Cloud />} title={p.synchronization} color="var(--blue)">
+      <Tile
+        open={openSection === "sync"}
+        onClick={() => toggle("sync")}
+        icon={<Cloud />}
+        title={p.synchronization}
+        color="var(--blue)"
+      >
         <p>{p.syncSoon}</p>
         <p style={muted}>{p.syncText}</p>
       </Tile>
 
-      <Tile open={openSection === "backup"} onClick={() => toggle("backup")} icon={<Shield />} title={p.backup} color="var(--gold)">
+      <Tile
+        open={openSection === "backup"}
+        onClick={() => toggle("backup")}
+        icon={<Shield />}
+        title={p.backup}
+        color="var(--gold)"
+      >
         <p>{p.backupText}</p>
       </Tile>
 
-      <Tile open={openSection === "reset"} onClick={() => toggle("reset")} icon={<RefreshCcw />} title={p.reset} color="var(--red)">
-        <button onClick={resetGoalsOnly} style={dangerBtn}>{p.resetGoals}</button>
-        <button onClick={resetFinanceOnly} style={dangerBtn}>{p.resetFinance}</button>
-        <button onClick={resetSettingsOnly} style={dangerBtn}>{p.resetSettings}</button>
-        <button onClick={resetAll} style={dangerBtn}>{p.resetAll}</button>
+      <Tile
+        open={openSection === "reset"}
+        onClick={() => toggle("reset")}
+        icon={<RefreshCcw />}
+        title={p.reset}
+        color="var(--red)"
+      >
+        <button onClick={resetGoalsOnly} style={dangerBtn}>
+          {p.resetGoals}
+        </button>
+
+        <button onClick={resetFinanceOnly} style={dangerBtn}>
+          {p.resetFinance}
+        </button>
+
+        <button onClick={resetSettingsOnly} style={dangerBtn}>
+          {p.resetSettings}
+        </button>
+
+        <button onClick={resetAll} style={dangerBtn}>
+          {p.resetAll}
+        </button>
       </Tile>
 
-      <Tile open={openSection === "credits"} onClick={() => toggle("credits")} icon={<Info />} title={p.credits} color="var(--purple)">
+      <Tile
+        open={openSection === "credits"}
+        onClick={() => toggle("credits")}
+        icon={<Info />}
+        title={p.credits}
+        color="var(--purple)"
+      >
         <InfoRow label={p.creator} value="Thierno Diallo" />
         <InfoRow label="OnJarama" value={p.founder} />
         <InfoRow label="Version" value={p.appVersion} />
         <InfoRow label="Écosystème" value={p.ecosystem} />
+      </Tile>
+
+      <Tile
+        open={openSection === "privacy"}
+        onClick={() => toggle("privacy")}
+        icon={<Lock />}
+        title={p.privacy}
+        color="var(--gold)"
+      >
+        <p style={muted}>{p.privacyText}</p>
+      </Tile>
+
+      <Tile
+        open={openSection === "account"}
+        onClick={() => toggle("account")}
+        icon={<UserCircle />}
+        title={p.account}
+        color="var(--blue)"
+      >
+        <p style={muted}>{p.accountText}</p>
+
+        <button onClick={() => setCurrentPage("profil")} style={profileBtn}>
+          {t.profil}
+        </button>
       </Tile>
     </div>
   );
@@ -225,37 +347,25 @@ function Tile({ icon, title, color, open, onClick, children }) {
         <strong>{title}</strong>
         <span style={toggleIcon}>{open ? "−" : "+"}</span>
       </button>
+
       {open && <div style={tileContent}>{children}</div>}
     </section>
   );
 }
 
-function Option({ active, children, onClick, icon }) {
+function Option({ active, children, onClick }) {
   return (
-    <button onClick={onClick} style={{ ...option, borderColor: active ? "var(--green)" : "var(--border)", background: active ? "rgba(34,197,94,.12)" : "var(--bg-panel)" }}>
+    <button
+      onClick={onClick}
+      style={{
+        ...option,
+        borderColor: active ? "var(--green)" : "var(--border)",
+        background: active ? "rgba(34,197,94,.12)" : "var(--bg-panel)",
+      }}
+    >
       <span>{active ? "✓" : "○"}</span>
-      {icon}
       <span>{children}</span>
     </button>
-  );
-}
-
-function Toggle({ label, active, onClick }) {
-  return (
-    <button onClick={onClick} style={{ ...option, borderColor: active ? "var(--green)" : "var(--border)", background: active ? "rgba(34,197,94,.12)" : "var(--bg-panel)" }}>
-      <span>{active ? "✓" : "○"}</span>
-      <span>{label}</span>
-    </button>
-  );
-}
-
-function Locked({ label, soon }) {
-  return (
-    <div style={locked}>
-      <Eye size={16} />
-      <span>{label}</span>
-      <strong>{soon}</strong>
-    </div>
   );
 }
 
@@ -321,19 +431,6 @@ const option = {
   gap: "10px",
   alignItems: "center",
   textAlign: "left",
-};
-
-const locked = {
-  width: "100%",
-  padding: "12px",
-  borderRadius: "13px",
-  border: "1px dashed var(--border)",
-  color: "var(--text-muted)",
-  marginTop: "8px",
-  display: "grid",
-  gridTemplateColumns: "24px 1fr auto",
-  gap: "10px",
-  alignItems: "center",
 };
 
 const dangerBtn = {

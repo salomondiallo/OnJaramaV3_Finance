@@ -20,9 +20,13 @@ const STORAGE_KEYS_TO_CLEAR = [
 
 function cleanPersonalDataOnce() {
   const alreadyCleaned = localStorage.getItem(PRIVACY_CLEAN_VERSION);
+
   if (alreadyCleaned === "done") return;
 
-  STORAGE_KEYS_TO_CLEAR.forEach((key) => localStorage.removeItem(key));
+  STORAGE_KEYS_TO_CLEAR.forEach((key) => {
+    localStorage.removeItem(key);
+  });
+
   localStorage.setItem(PRIVACY_CLEAN_VERSION, "done");
 }
 
@@ -44,72 +48,15 @@ const defaultSettings = {
   currency: "CAD",
   theme: "sombre",
   notifications: true,
-
   privacyMode: true,
-  demoMode: true,
+  demoMode: false,
   showAmounts: false,
-  autoHideAmounts: true,
-  autoHideDelay: 30,
-
-  tileSize: "compact",
-  viewMode: "grid",
-
-  homeCards: {
-    debt: true,
-    savings: false,
-    income: false,
-    goals: true,
-    advice: true,
-    path: false,
-  },
-
-  shortcuts: {
-    payment: true,
-    debt: true,
-    goal: true,
-    protection: true,
-    advice: true,
-    project: false,
-    travel: false,
-    house: false,
-    ai: false,
-    budget: false,
-    savings: false,
-  },
-
-  security: {
-    pinEnabled: false,
-    biometricEnabled: false,
-    twoFactorEnabled: false,
-    requireUnlock: false,
-  },
 };
-
-function mergeDefaults(saved, defaults) {
-  if (!saved || typeof saved !== "object") return defaults;
-
-  const merged = { ...defaults, ...saved };
-
-  Object.keys(defaults).forEach((key) => {
-    if (
-      defaults[key] &&
-      typeof defaults[key] === "object" &&
-      !Array.isArray(defaults[key])
-    ) {
-      merged[key] = {
-        ...defaults[key],
-        ...(saved[key] || {}),
-      };
-    }
-  });
-
-  return merged;
-}
 
 function readStorage(key, fallback) {
   try {
     const saved = localStorage.getItem(key);
-    return saved ? mergeDefaults(JSON.parse(saved), fallback) : fallback;
+    return saved ? JSON.parse(saved) : fallback;
   } catch {
     return fallback;
   }
@@ -156,7 +103,9 @@ function useAppState() {
   }
 
   function resetAll() {
-    STORAGE_KEYS_TO_CLEAR.forEach((key) => localStorage.removeItem(key));
+    STORAGE_KEYS_TO_CLEAR.forEach((key) => {
+      localStorage.removeItem(key);
+    });
 
     setFinanceData(defaultFinanceData);
     setSelectedGoals(defaultGoals);
