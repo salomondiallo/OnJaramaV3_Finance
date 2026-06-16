@@ -10,11 +10,9 @@ function useNavigation() {
   const [history, setHistory] = useState([]);
 
   function setCurrentPage(page) {
-    setHistory((previous) => {
-      if (previous[previous.length - 1] === currentPage) return previous;
-      return [...previous, currentPage];
-    });
+    if (!page || page === currentPage) return;
 
+    setHistory((previous) => [...previous, currentPage]);
     setCurrentPageState(page);
     localStorage.setItem("onjaramaCurrentPage", page);
   }
@@ -22,7 +20,8 @@ function useNavigation() {
   function goBack() {
     setHistory((previous) => {
       if (previous.length === 0) {
-        setCurrentPage("accueil");
+        setCurrentPageState("accueil");
+        localStorage.setItem("onjaramaCurrentPage", "accueil");
         return previous;
       }
 
@@ -34,15 +33,17 @@ function useNavigation() {
     });
   }
 
-  function goToNextPage() {
+  function goForwardBySwipe() {
     const index = SWIPE_PAGES.indexOf(currentPage);
+
     if (index >= 0 && index < SWIPE_PAGES.length - 1) {
       setCurrentPage(SWIPE_PAGES[index + 1]);
     }
   }
 
-  function goToPreviousPage() {
+  function goBackwardBySwipe() {
     const index = SWIPE_PAGES.indexOf(currentPage);
+
     if (index > 0) {
       setCurrentPage(SWIPE_PAGES[index - 1]);
     }
@@ -52,8 +53,8 @@ function useNavigation() {
     currentPage,
     setCurrentPage,
     goBack,
-    goToNextPage,
-    goToPreviousPage,
+    goForwardBySwipe,
+    goBackwardBySwipe,
   };
 }
 

@@ -35,8 +35,8 @@ function App() {
     currentPage,
     setCurrentPage,
     goBack,
-    goToNextPage,
-    goToPreviousPage,
+    goForwardBySwipe,
+    goBackwardBySwipe,
   } = useNavigation();
 
   useEffect(() => {
@@ -93,14 +93,19 @@ function App() {
     touchStartX.current = null;
     touchStartY.current = null;
 
-    if (Math.abs(deltaY) > 70) return;
-    if (Math.abs(deltaX) < 70) return;
+    const isMostlyHorizontal = Math.abs(deltaX) > Math.abs(deltaY);
+    const isRealSwipe = Math.abs(deltaX) >= 80;
 
+    if (!isMostlyHorizontal || !isRealSwipe) return;
+
+    // Doigt vers la gauche = page suivante.
     if (deltaX < 0) {
-      goToNextPage();
-    } else {
-      goToPreviousPage();
+      goForwardBySwipe();
+      return;
     }
+
+    // Doigt vers la droite = page précédente.
+    goBackwardBySwipe();
   }
 
   return (
