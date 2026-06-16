@@ -1,14 +1,38 @@
 import { useEffect, useState } from "react";
-import { defaultFinanceData } from "../data/defaultFinanceData";
 
-const defaultSettings = {
-  theme: "sombre",
-  language: "FR",
-  currency: "CAD",
-  notifications: true,
-};
+const PRIVACY_CLEAN_VERSION = "OJ_PATH_PRIVACY_CLEAN_V1_1";
 
-const emptyFinanceData = {
+const STORAGE_KEYS_TO_CLEAR = [
+  "onjaramaFinanceData",
+  "onjaramaSelectedGoals",
+  "onjaramaSettings",
+  "onjaramaSituationDetails",
+  "onjaramaScheduledPayments",
+  "onjaramaTransactions",
+  "financeData",
+  "selectedGoals",
+  "settings",
+  "debts",
+  "goals",
+  "payments",
+  "transactions",
+];
+
+function cleanPersonalDataOnce() {
+  const alreadyCleaned = localStorage.getItem(PRIVACY_CLEAN_VERSION);
+
+  if (alreadyCleaned === "done") return;
+
+  STORAGE_KEYS_TO_CLEAR.forEach((key) => {
+    localStorage.removeItem(key);
+  });
+
+  localStorage.setItem(PRIVACY_CLEAN_VERSION, "done");
+}
+
+cleanPersonalDataOnce();
+
+const defaultFinanceData = {
   overview: {
     monthlyIncome: 0,
     monthlyExpenses: 0,
@@ -17,127 +41,90 @@ const emptyFinanceData = {
   debts: [],
 };
 
-function safeParse(value, fallback) {
+const defaultGoals = [];
+
+const defaultSettings = {
+  language: "FR",
+  currency: "CAD",
+  theme: "sombre",
+  notifications: true,
+  privacyMode: true,
+  demoMode: false,
+  showAmounts: false,
+};
+
+function readStorage(key, fallback) {
   try {
-    return value ? JSON.parse(value) : fallback;
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : fallback;
   } catch {
     return fallback;
   }
 }
 
-function normalizeSettings(settings) {
-  const normalized = {
-    ...defaultSettings,
-    ...settings,
-  };
-
-  if (normalized.theme === "doux") {
-    normalized.theme = "clair";
-  }
-
-  if (!["sombre", "clair"].includes(normalized.theme)) {
-    normalized.theme = "sombre";
-  }
-
-  return normalized;
-}
-
-function normalizeFinanceData(data) {
-  return {
-    overview: {
-      monthlyIncome: Number(data?.overview?.monthlyIncome || 0),
-      monthlyExpenses: Number(data?.overview?.monthlyExpenses || 0),
-      monthlySavings: Number(data?.overview?.monthlySavings || 0),
-    },
-    debts: Array.isArray(data?.debts)
-      ? data.debts.map((debt) => ({
-          name: debt.name || "Dette",
-          type: debt.type || "Autre",
-          balance: Number(debt.balance || 0),
-          interestRate: Number(debt.interestRate || 0),
-          minimumPayment: Number(debt.minimumPayment || 0),
-        }))
-      : [],
-  };
-}
-
 function useAppState() {
-  const [financeData, setFinanceData] = useState(() => {
-    const saved = localStorage.getItem("onjaramaFinanceData");
+  const [financeData, setFinanceData] = useState(() =>
+    readStorage("onjaramaFinanceData", defaultFinanceData)
+  );
 
-    if (saved) {
-      return normalizeFinanceData(safeParse(saved, emptyFinanceData));
-    }
+  const [selectedGoals, setSelectedGoals] = useState(() =>
+    readStorage("onjaramaSelectedGoals", defaultGoals)
+  );
 
-    return normalizeFinanceData(defaultFinanceData || emptyFinanceData);
-  });
-
-  const [settings, setSettings] = useState(() => {
-    const saved = localStorage.getItem("onjaramaSettings");
-    return normalizeSettings(safeParse(saved, defaultSettings));
-  });
-
-  const [selectedGoals, setSelectedGoals] = useState(() => {
-    const saved = localStorage.getItem("onjaramaSelectedGoals");
-    return safeParse(saved, []);
-  });
+  const [settings, setSettings] = useState(() =>
+    readStorage("onjaramaSettings", defaultSettings)
+  );
 
   useEffect(() => {
-    localStorage.setItem(
-      "onjaramaFinanceData",
-      JSON.stringify(normalizeFinanceData(financeData))
-    );
+    localStorage.setItem("onjaramaFinanceData", JSON.stringify(financeData));
   }, [financeData]);
-
-  useEffect(() => {
-    localStorage.setItem(
-      "onjaramaSettings",
-      JSON.stringify(normalizeSettings(settings))
-    );
-  }, [settings]);
 
   useEffect(() => {
     localStorage.setItem("onjaramaSelectedGoals", JSON.stringify(selectedGoals));
   }, [selectedGoals]);
 
-  function resetAll() {
-    setFinanceData(emptyFinanceData);
-    setSettings(defaultSettings);
-    setSelectedGoals([]);
-
-    localStorage.removeItem("onjaramaFinanceData");
-    localStorage.removeItem("onjaramaSettings");
-    localStorage.removeItem("onjaramaSelectedGoals");
-    localStorage.removeItem("onjaramaCurrentPage");
-    localStorage.removeItem("onjaramaBottomNav");
-  }
+  useEffect(() => {
+    localStorage.setItem("onjaramaSettings", JSON.stringify(settings));
+  }, [settings]);
 
   function resetFinanceOnly() {
-    setFinanceData(emptyFinanceData);
-    localStorage.removeItem("onjaramaFinanceData");
+    setFinanceData(defaultFinanceData);
+    localStorage.removeItem("onjaramaSituationDetails");
+    localStorage.removeItem("onjaramaScheduledPayments");
+    localStorage.removeItem("onjaramaTransactions");
+  }
+
+  function resetGoalsOnly() {
+    setSelectedGoals(defaultGoals);
   }
 
   function resetSettingsOnly() {
     setSettings(defaultSettings);
-    localStorage.removeItem("onjaramaSettings");
   }
 
-  function resetGoalsOnly() {
-    setSelectedGoals([]);
-    localStorage.removeItem("onjaramaSelectedGoals");
+  function resetAll() {
+    STORAGE_KEYS_TO_CLEAR.forEach((key) => {
+      localStorage.removeItem(key);
+    });
+
+    setFinanceData(defaultFinanceData);
+    setSelectedGoals(defaultGoals);
+    setSettings(defaultSettings);
+
+    localStorage.setItem(PRIVACY_CLEAN_VERSION, "done");
   }
 
   return {
     financeData,
     setFinanceData,
-    settings,
-    setSettings,
     selectedGoals,
     setSelectedGoals,
+    settings,
+    setSettings,
     resetAll,
     resetFinanceOnly,
-    resetSettingsOnly,
     resetGoalsOnly,
+    resetSettingsOnly,
   };
 }
 
