@@ -1,6 +1,6 @@
 import "./App.css";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import useAppState from "./hooks/useAppState";
 import useNavigation from "./hooks/useNavigation";
@@ -28,7 +28,16 @@ import Transactions from "./pages/Transactions";
 
 function App() {
   const appState = useAppState();
-  const { currentPage, setCurrentPage, goBack } = useNavigation();
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
+
+  const {
+    currentPage,
+    setCurrentPage,
+    goBack,
+    goToNextPage,
+    goToPreviousPage,
+  } = useNavigation();
 
   useEffect(() => {
     document.body.classList.remove("theme-light", "theme-dark");
@@ -68,9 +77,39 @@ function App() {
     reglages: <Reglages {...pageProps} />,
   };
 
+  function handleTouchStart(event) {
+    const touch = event.touches[0];
+    touchStartX.current = touch.clientX;
+    touchStartY.current = touch.clientY;
+  }
+
+  function handleTouchEnd(event) {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - touchStartX.current;
+    const deltaY = touch.clientY - touchStartY.current;
+
+    touchStartX.current = null;
+    touchStartY.current = null;
+
+    if (Math.abs(deltaY) > 70) return;
+    if (Math.abs(deltaX) < 70) return;
+
+    if (deltaX < 0) {
+      goToNextPage();
+    } else {
+      goToPreviousPage();
+    }
+  }
+
   return (
     <div className="app-shell">
-      <main className="page-container">
+      <main
+        className="page-container"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         <OnJaramaLive
           financeData={appState.financeData}
           selectedGoals={appState.selectedGoals}

@@ -1,247 +1,194 @@
 import {
-  AlertTriangle,
   Bot,
   CalendarDays,
-  CheckCircle,
+  Eye,
+  EyeOff,
   Lightbulb,
-  Map,
   PiggyBank,
-  Plus,
   ShieldCheck,
   Target,
   Wallet,
-  Trophy,
 } from "lucide-react";
+import { useState } from "react";
 import { getText } from "../data/translations";
 
 function Accueil({ financeData, selectedGoals, setCurrentPage, settings }) {
   const t = getText(settings);
+  const [showAmounts, setShowAmounts] = useState(false);
 
   const totalDebt = financeData.debts.reduce(
     (sum, debt) => sum + Number(debt.balance || 0),
     0
   );
 
-  const available =
-    Number(financeData.overview.monthlyIncome || 0) -
-    Number(financeData.overview.monthlyExpenses || 0) -
-    Number(financeData.overview.monthlySavings || 0);
-
-  const priorityDebt = [...financeData.debts].sort(
-    (a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0)
-  )[0];
-
-  const mainGoal =
-    selectedGoals.find((goal) => goal.highlighted && !goal.archived) ||
-    selectedGoals.find((goal) => !goal.archived);
-
-  const monthsToVictory = priorityDebt
-    ? Math.ceil(Number(priorityDebt.balance || 0) / 600)
-    : 0;
+  const activeGoals = selectedGoals.filter((goal) => !goal.archived);
+  const hasDebt = totalDebt > 0;
 
   function money(value) {
+    if (!showAmounts) return "000";
     return Number(value || 0).toLocaleString("fr-CA", {
       maximumFractionDigits: 2,
     });
   }
 
   return (
-    <div>
+    <div style={page}>
       <section style={hero}>
+        <div style={quickRail}>
+          <RailItem icon={<CalendarDays />} label="Paiement" />
+          <RailItem icon={<PiggyBank />} label="Dette" />
+          <RailItem icon={<Target />} label="Objectif" />
+          <RailItem icon={<ShieldCheck />} label="Protection" />
+          <RailItem icon={<Lightbulb />} label="Conseil" />
+        </div>
+
         <div style={heroText}>
           <h1 style={heroTitle}>
             {t.heroTitle}
             <br />
             <span style={heroAccent}>{t.heroAccent}</span>
           </h1>
-
           <p style={heroSubtitle}>Transformez vos objectifs en plan concret.</p>
+        </div>
+      </section>
 
-          <div style={heroTags}>
-            <span>🏠 Maison</span>
-            <span>🚗 Auto</span>
-            <span>✈️ Voyage</span>
-            <span>💰 Épargne</span>
-          </div>
+      <div style={privacyRow}>
+        <span style={privacyBadge}>🔒 Privé</span>
+        <span style={privacyBadge}>🌍 Démo</span>
+
+        <button onClick={() => setShowAmounts(!showAmounts)} style={eyeBtn}>
+          {showAmounts ? <EyeOff size={17} /> : <Eye size={17} />}
+          {showAmounts ? "Masquer" : "Afficher mes chiffres"}
+        </button>
+      </div>
+
+      <div style={actionsGrid}>
+        <ActionCard icon={<Wallet />} title="Situation" onClick={() => setCurrentPage("situation")} />
+        <ActionCard icon={<Target />} title="Objectifs" onClick={() => setCurrentPage("objectifs")} />
+        <ActionCard icon={<PiggyBank />} title="Parcours" onClick={() => setCurrentPage("parcours")} />
+        <ActionCard icon={<Bot />} title="IA" onClick={() => setCurrentPage("assistant")} />
+      </div>
+
+      <section style={statusCard}>
+        <div>
+          <p style={muted}>Aperçu sécurisé</p>
+          <h2 style={statusTitle}>
+            {hasDebt ? "Situation à surveiller" : "Prêt à commencer"}
+          </h2>
         </div>
 
-        <div style={sideRail}>
-          <RailItem icon={<CalendarDays />} label="Paiement" color="var(--gold)" />
-          <RailLine />
-          <RailItem icon={<PiggyBank />} label="Dette" color="var(--green)" />
-          <RailLine />
-          <RailItem icon={<Target />} label="Objectif" color="var(--purple)" />
-          <RailLine />
-          <RailItem icon={<ShieldCheck />} label="Protection" color="var(--blue)" />
-          <RailLine />
-          <RailItem icon={<Lightbulb />} label="Conseil" color="var(--gold)" />
+        <div style={statusGrid}>
+          <MiniLine label="Dette" value={showAmounts ? `${money(totalDebt)} $` : "000"} />
+          <MiniLine label="Objectifs" value={showAmounts ? activeGoals.length : "000"} />
+          <MiniLine label="Conseil" value="Disponible" />
         </div>
       </section>
 
       <div style={heroButtons}>
         <button onClick={() => setCurrentPage("situation")} style={primaryBtn}>
-          {t.start}
+          Commencer
         </button>
 
         <button onClick={() => setCurrentPage("assistant")} style={aiBtn}>
-          <Bot size={18} /> {t.assistant}
+          <Bot size={18} /> IA OnJarama
         </button>
       </div>
-
-      <section style={missionCard}>
-        <h2>{t.guideTitle}</h2>
-
-        <div style={missionGrid}>
-          <MissionItem icon={<Lightbulb />} title={t.understand} onClick={() => setCurrentPage("situation")} />
-          <MissionItem icon={<Wallet />} title={t.organize} onClick={() => setCurrentPage("budget")} />
-          <MissionItem icon={<Target />} title={t.simulate} onClick={() => setCurrentPage("simulateur")} />
-          <MissionItem icon={<CheckCircle />} title={t.advance} onClick={() => setCurrentPage("parcours")} />
-        </div>
-      </section>
-
-      <h2 style={sectionTitle}>{t.currentProfile}</h2>
-
-      <div style={portraitScroll}>
-        <MiniCard icon={<Wallet />} color="var(--green)" title={t.available} value={`${money(available)} $`} />
-        <MiniCard icon={<AlertTriangle />} color="var(--red)" title={t.debt} value={`${money(totalDebt)} $`} />
-        <MiniCard icon={<Target />} color="var(--gold)" title={t.goals} value={selectedGoals.length} />
-        <MiniCard icon={<Trophy />} color="var(--purple)" title={t.victory} value={priorityDebt?.name || mainGoal?.title || t.toDefine} />
-      </div>
-
-      <section style={victoryCard}>
-        <p style={muted}>{t.nextVictory}</p>
-        <h2>{priorityDebt?.name || mainGoal?.title || t.takeControl}</h2>
-
-        <div style={victoryRow}>
-          <div>
-            <h1 style={{ color: "var(--gold)" }}>
-              {priorityDebt
-                ? `${money(priorityDebt.balance)} $`
-                : mainGoal
-                ? `${money(
-                    Number(mainGoal.targetAmount || 0) -
-                      Number(mainGoal.currentAmount || 0)
-                  )} $`
-                : "0 $"}
-            </h1>
-            <p style={muted}>{t.remainingAmount}</p>
-          </div>
-
-          <div>
-            <h1 style={{ color: "var(--green)" }}>
-              {priorityDebt ? monthsToVictory : selectedGoals.length} {t.months}
-            </h1>
-            <p style={muted}>{priorityDebt ? `600 $ / ${t.month}` : t.goals}</p>
-          </div>
-        </div>
-      </section>
-
-      <h2 style={sectionTitle}>{t.quickActions}</h2>
-
-      <div style={actionsGrid}>
-        <ActionCard icon={<Plus />} title={t.addDebt} onClick={() => setCurrentPage("situation")} color="var(--red)" />
-        <ActionCard icon={<CalendarDays />} title="Paiements" onClick={() => setCurrentPage("paiements")} color="var(--gold)" />
-        <ActionCard icon={<Target />} title={t.createGoal} onClick={() => setCurrentPage("objectifs")} color="var(--green)" />
-        <ActionCard icon={<Bot />} title={t.askAI} onClick={() => setCurrentPage("assistant")} color="var(--purple)" />
-      </div>
-
-      <section style={timeline}>
-        <div style={timelineHeader}>
-          <div>
-            <h2>{t.seePath}</h2>
-            <p style={muted}>{t.stepByStep}</p>
-          </div>
-          <Map color="var(--gold)" />
-        </div>
-
-        <Step title={t.today} subtitle={t.startingPoint} color="var(--blue)" />
-        <Step title={priorityDebt?.name || t.takeControl} subtitle={t.nextVictory} color="var(--gold)" />
-        <Step title={t.emergencyFund} subtitle={t.emergencySubtitle} color="var(--green)" />
-        <Step title={mainGoal?.title || t.houseGuinea} subtitle={mainGoal?.option || t.houseSubtitle} color="var(--gold)" />
-      </section>
     </div>
   );
 }
 
-function RailItem({ icon, label, color }) {
+function RailItem({ icon, label }) {
   return (
     <button style={railItem}>
-      <span style={{ ...railIcon, color }}>{icon}</span>
+      <span style={railIcon}>{icon}</span>
       <small>{label}</small>
     </button>
   );
 }
 
-function RailLine() {
-  return <span style={railLine} />;
-}
-
-function MissionItem({ icon, title, onClick }) {
+function ActionCard({ icon, title, onClick }) {
   return (
-    <button onClick={onClick} style={missionItem}>
-      <span style={{ color: "var(--green)" }}>{icon}</span>
+    <button onClick={onClick} style={actionCard}>
+      <span style={actionIcon}>{icon}</span>
       <strong>{title}</strong>
     </button>
   );
 }
 
-function MiniCard({ icon, color, title, value }) {
+function MiniLine({ label, value }) {
   return (
-    <div style={{ ...miniCard, borderColor: color }}>
-      <div style={{ color }}>{icon}</div>
-      <p style={mutedSmall}>{title}</p>
+    <div style={miniLine}>
+      <span>{label}</span>
       <strong>{value}</strong>
     </div>
   );
 }
 
-function ActionCard({ icon, title, onClick, color }) {
-  return (
-    <button onClick={onClick} style={{ ...action, borderColor: color }}>
-      <span style={{ color }}>{icon}</span>
-      <strong>{title}</strong>
-    </button>
-  );
-}
-
-function Step({ title, subtitle, color }) {
-  return (
-    <div style={step}>
-      <span style={{ ...dot, background: color }} />
-      <div>
-        <strong>{title}</strong>
-        <p style={mutedSmall}>{subtitle}</p>
-      </div>
-    </div>
-  );
-}
+const page = {
+  minHeight: "calc(100vh - 176px)",
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px",
+  overflowX: "hidden",
+};
 
 const hero = {
-  minHeight: "clamp(520px, 64vw, 600px)",
-  marginLeft: "-16px",
-  marginRight: "-16px",
-  borderRadius: "0 0 32px 32px",
+  height: "min(44vh, 360px)",
+  width: "100%",
+  borderRadius: "28px",
   backgroundImage:
-    "linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.04), rgba(0,0,0,.38)), url('/onjarama-hero.png')",
+    "linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.12), rgba(0,0,0,.50)), url('/onjarama-hero.png')",
   backgroundSize: "cover",
-  backgroundPosition: "center top",
+  backgroundPosition: "center 18%",
   position: "relative",
   overflow: "hidden",
+  border: "1px solid var(--border)",
+};
+
+const quickRail = {
+  position: "absolute",
+  top: "10px",
+  left: "10px",
+  right: "10px",
+  display: "grid",
+  gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+  gap: "6px",
+  zIndex: 4,
+};
+
+const railItem = {
+  minWidth: 0,
+  border: "1px solid rgba(212,175,55,.35)",
+  background: "rgba(7,17,31,.58)",
+  color: "white",
+  borderRadius: "16px",
+  padding: "8px 3px",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: "3px",
+  fontSize: "9px",
+  backdropFilter: "blur(8px)",
+};
+
+const railIcon = {
+  color: "var(--gold)",
+  display: "flex",
 };
 
 const heroText = {
   position: "absolute",
-  left: "clamp(22px, 5vw, 32px)",
-  right: "clamp(78px, 14vw, 110px)",
-  top: "clamp(34px, 6vw, 58px)",
-  zIndex: 5,
+  left: "20px",
+  right: "20px",
+  bottom: "18px",
+  zIndex: 3,
 };
 
 const heroTitle = {
   margin: 0,
   color: "white",
-  fontSize: "clamp(32px, 6.2vw, 44px)",
-  lineHeight: "1",
+  fontSize: "clamp(30px, 9vw, 44px)",
+  lineHeight: "0.98",
   fontWeight: "900",
   textShadow: "0 8px 24px rgba(0,0,0,.45)",
 };
@@ -253,71 +200,108 @@ const heroAccent = {
 };
 
 const heroSubtitle = {
-  marginTop: "clamp(12px, 3vw, 18px)",
-  color: "rgba(255,255,255,.95)",
-  fontSize: "clamp(15px, 3.5vw, 18px)",
-  lineHeight: "1.28",
-  maxWidth: "360px",
-  textShadow: "0 6px 18px rgba(0,0,0,.45)",
-};
-
-const heroTags = {
-  display: "flex",
-  flexWrap: "wrap",
-  gap: "7px",
   marginTop: "10px",
-  color: "rgba(255,255,255,.92)",
-  fontSize: "clamp(11px, 2.6vw, 13px)",
+  color: "rgba(255,255,255,.95)",
+  fontSize: "14px",
+  lineHeight: "1.25",
 };
 
-const sideRail = {
-  position: "absolute",
-  right: "10px",
-  top: "clamp(76px, 12vw, 88px)",
-  display: "flex",
-  flexDirection: "column",
+const privacyRow = {
+  display: "grid",
+  gridTemplateColumns: "auto auto minmax(0, 1fr)",
   alignItems: "center",
-  zIndex: 6,
+  gap: "8px",
 };
 
-const railItem = {
-  width: "clamp(44px, 11vw, 58px)",
-  minHeight: "clamp(44px, 11vw, 58px)",
+const privacyBadge = {
+  background: "var(--bg-card)",
+  border: "1px solid var(--border)",
+  color: "var(--text-main)",
+  borderRadius: "999px",
+  padding: "8px 10px",
+  fontSize: "12px",
+  whiteSpace: "nowrap",
+};
+
+const eyeBtn = {
+  minWidth: 0,
+  border: "1px solid var(--gold)",
+  background: "rgba(212,175,55,.12)",
+  color: "var(--gold)",
+  borderRadius: "999px",
+  padding: "9px 10px",
+  fontWeight: "bold",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "6px",
+  fontSize: "12px",
+};
+
+const actionsGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+  gap: "8px",
+};
+
+const actionCard = {
+  minHeight: "70px",
+  border: "1px solid var(--border)",
+  background: "var(--bg-card)",
+  color: "var(--text-main)",
   borderRadius: "18px",
-  border: "1px solid rgba(255,255,255,.18)",
-  background: "rgba(7,17,31,.42)",
-  backdropFilter: "blur(8px)",
-  color: "white",
+  padding: "8px 5px",
   display: "flex",
   flexDirection: "column",
-  alignItems: "center",
   justifyContent: "center",
-  gap: "2px",
-  fontSize: "clamp(7px, 1.9vw, 9px)",
+  alignItems: "center",
+  gap: "5px",
+  fontSize: "12px",
 };
 
-const railIcon = {
+const actionIcon = {
+  color: "var(--gold)",
   display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
 };
 
-const railLine = {
-  width: "2px",
-  height: "12px",
-  background: "var(--gold)",
-  opacity: 0.7,
+const statusCard = {
+  border: "1px solid var(--border)",
+  background: "var(--bg-card)",
+  borderRadius: "22px",
+  padding: "12px",
+};
+
+const statusTitle = {
+  margin: 0,
+  fontSize: "19px",
+};
+
+const statusGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  gap: "8px",
+  marginTop: "10px",
+};
+
+const miniLine = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "14px",
+  padding: "9px",
+  display: "flex",
+  flexDirection: "column",
+  gap: "4px",
+  fontSize: "12px",
 };
 
 const heroButtons = {
   display: "grid",
   gridTemplateColumns: "1fr 1fr",
   gap: "10px",
-  marginTop: "12px",
 };
 
 const primaryBtn = {
-  padding: "14px",
+  padding: "13px",
   borderRadius: "16px",
   border: "none",
   background: "var(--green)",
@@ -326,7 +310,7 @@ const primaryBtn = {
 };
 
 const aiBtn = {
-  padding: "14px",
+  padding: "13px",
   borderRadius: "16px",
   border: "none",
   background: "linear-gradient(90deg, var(--purple), #9b7cff)",
@@ -338,120 +322,10 @@ const aiBtn = {
   gap: "8px",
 };
 
-const missionCard = {
-  marginTop: "12px",
-  background: "var(--bg-card)",
-  border: "1px solid var(--border)",
-  borderRadius: "20px",
-  padding: "14px",
-};
-
-const missionGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(4, 1fr)",
-  gap: "8px",
-  marginTop: "12px",
-};
-
-const missionItem = {
-  background: "var(--bg-panel)",
-  border: "1px solid var(--border)",
-  borderRadius: "13px",
-  padding: "10px 6px",
-  color: "var(--text-main)",
-  display: "flex",
-  flexDirection: "column",
-  gap: "6px",
-  alignItems: "center",
-  textAlign: "center",
-  fontSize: "12px",
-};
-
-const sectionTitle = { marginTop: "20px" };
-
-const portraitScroll = {
-  display: "flex",
-  gap: "10px",
-  overflowX: "auto",
-  padding: "12px 0 4px",
-};
-
-const miniCard = {
-  minWidth: "140px",
-  background: "var(--bg-card)",
-  border: "1px solid var(--border)",
-  borderRadius: "17px",
-  padding: "14px",
-};
-
-const victoryCard = {
-  marginTop: "18px",
-  background: "linear-gradient(135deg, #2a210b, var(--bg-card))",
-  border: "1px solid var(--gold)",
-  borderRadius: "22px",
-  padding: "18px",
-};
-
-const victoryRow = {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: "12px",
-};
-
-const actionsGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(4, 1fr)",
-  gap: "10px",
-  marginTop: "12px",
-};
-
-const action = {
-  background: "var(--bg-card)",
-  border: "1px solid var(--border)",
-  borderRadius: "17px",
-  padding: "15px",
-  color: "var(--text-main)",
-  minHeight: "96px",
-  display: "flex",
-  flexDirection: "column",
-  gap: "8px",
-  alignItems: "flex-start",
-};
-
-const timeline = {
-  marginTop: "20px",
-  background: "var(--bg-card)",
-  border: "1px solid var(--border)",
-  borderRadius: "22px",
-  padding: "18px",
-};
-
-const timelineHeader = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-};
-
-const step = {
-  display: "flex",
-  alignItems: "center",
-  gap: "12px",
-  padding: "11px 0",
-  borderBottom: "1px solid rgba(255,255,255,.08)",
-};
-
-const dot = {
-  width: "11px",
-  height: "11px",
-  borderRadius: "50%",
-};
-
-const muted = { color: "var(--text-muted)", marginTop: "6px" };
-
-const mutedSmall = {
+const muted = {
   color: "var(--text-muted)",
-  fontSize: "13px",
-  marginTop: "4px",
+  margin: 0,
+  marginBottom: "4px",
 };
 
 export default Accueil;
