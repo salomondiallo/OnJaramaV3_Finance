@@ -22,18 +22,30 @@ function BottomNav({
       <button
         onClick={() => setNavHidden(!navHidden)}
         className="bottom-nav-handle"
+        aria-label={
+          navHidden
+            ? "Afficher la navigation"
+            : "Masquer la navigation"
+        }
       >
-        {navHidden ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        {navHidden ? (
+          <ChevronUp size={16} />
+        ) : (
+          <ChevronDown size={16} />
+        )}
       </button>
 
       <nav
-        className={`bottom-nav ${navHidden ? "bottom-nav-hidden" : ""}`}
+        className={`bottom-nav ${
+          navHidden ? "bottom-nav-hidden" : ""
+        }`}
       >
         <button
           onClick={() => go("accueil")}
           className={`bottom-logo-btn ${
             currentPage === "accueil" ? "active-logo" : ""
           }`}
+          aria-label="Accueil"
         >
           <img
             src="/onjarama-path-logo.png"
@@ -88,7 +100,9 @@ function NavButton({
       onClick={onClick}
       className={`bottom-nav-btn ${active ? "active" : ""}`}
     >
-      {icon}
+      <span className="bottom-nav-icon">
+        {icon}
+      </span>
       <span>{label}</span>
     </button>
   );

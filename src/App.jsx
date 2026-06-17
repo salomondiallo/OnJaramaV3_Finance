@@ -89,7 +89,10 @@ function App() {
   }
 
   function handleTouchEnd(event) {
-    if (touchStartX.current === null || touchStartY.current === null) {
+    if (
+      touchStartX.current === null ||
+      touchStartY.current === null
+    ) {
       return;
     }
 
@@ -101,7 +104,9 @@ function App() {
     touchStartX.current = null;
     touchStartY.current = null;
 
-    const isMostlyHorizontal = Math.abs(deltaX) > Math.abs(deltaY);
+    const isMostlyHorizontal =
+      Math.abs(deltaX) > Math.abs(deltaY);
+
     const isRealSwipe = Math.abs(deltaX) >= 80;
 
     if (!isMostlyHorizontal || !isRealSwipe) {
@@ -117,7 +122,11 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${navHidden ? "nav-is-hidden" : ""}`}>
+    <div
+      className={`app-shell ${
+        navHidden ? "nav-is-hidden" : ""
+      }`}
+    >
       <main
         className="page-container"
         onTouchStart={handleTouchStart}
