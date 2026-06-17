@@ -36,7 +36,7 @@ function BottomNav({ currentPage, setCurrentPage, settings }) {
       />
 
       <button
-        onClick={() => go("profil")}
+        onClick={() => go("reglages")}
         style={{
           ...menuButton,
           color:
@@ -46,6 +46,7 @@ function BottomNav({ currentPage, setCurrentPage, settings }) {
               ? "var(--gold)"
               : "var(--text-muted)",
         }}
+        aria-label="Menu et réglages"
       >
         <Menu size={24} />
       </button>
