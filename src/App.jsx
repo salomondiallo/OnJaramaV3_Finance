@@ -1,6 +1,6 @@
 import "./App.css";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import useAppState from "./hooks/useAppState";
 import useNavigation from "./hooks/useNavigation";
@@ -28,8 +28,11 @@ import Transactions from "./pages/Transactions";
 
 function App() {
   const appState = useAppState();
+
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
+
+  const [navHidden, setNavHidden] = useState(false);
 
   const {
     currentPage,
@@ -37,6 +40,7 @@ function App() {
     goBack,
     goForwardBySwipe,
     goBackwardBySwipe,
+    canGoBack,
   } = useNavigation();
 
   useEffect(() => {
@@ -79,14 +83,18 @@ function App() {
 
   function handleTouchStart(event) {
     const touch = event.touches[0];
+
     touchStartX.current = touch.clientX;
     touchStartY.current = touch.clientY;
   }
 
   function handleTouchEnd(event) {
-    if (touchStartX.current === null || touchStartY.current === null) return;
+    if (touchStartX.current === null || touchStartY.current === null) {
+      return;
+    }
 
     const touch = event.changedTouches[0];
+
     const deltaX = touch.clientX - touchStartX.current;
     const deltaY = touch.clientY - touchStartY.current;
 
@@ -96,20 +104,20 @@ function App() {
     const isMostlyHorizontal = Math.abs(deltaX) > Math.abs(deltaY);
     const isRealSwipe = Math.abs(deltaX) >= 80;
 
-    if (!isMostlyHorizontal || !isRealSwipe) return;
+    if (!isMostlyHorizontal || !isRealSwipe) {
+      return;
+    }
 
-    // Doigt vers la gauche = page suivante.
     if (deltaX < 0) {
       goForwardBySwipe();
       return;
     }
 
-    // Doigt vers la droite = page précédente.
     goBackwardBySwipe();
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${navHidden ? "nav-is-hidden" : ""}`}>
       <main
         className="page-container"
         onTouchStart={handleTouchStart}
@@ -123,19 +131,23 @@ function App() {
 
         <TopBar
           currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          settings={appState.settings}
-          setSettings={appState.setSettings}
           goBack={goBack}
+          canGoBack={canGoBack}
+          setCurrentPage={setCurrentPage}
         />
 
-        {pages[currentPage] || <Accueil {...pageProps} />}
+        <div className="page-stage">
+          <div className="page-scroll-shell">
+            {pages[currentPage] || <Accueil {...pageProps} />}
+          </div>
+        </div>
       </main>
 
       <BottomNav
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
-        settings={appState.settings}
+        navHidden={navHidden}
+        setNavHidden={setNavHidden}
       />
     </div>
   );

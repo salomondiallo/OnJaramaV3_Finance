@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const SWIPE_PAGES = ["accueil", "situation", "objectifs", "parcours"];
+const SWIPE_PAGES = ["accueil", "parcours", "objectifs", "simulateur", "profil"];
 
 function useNavigation() {
   const [currentPage, setCurrentPageState] = useState(() => {
@@ -55,6 +55,7 @@ function useNavigation() {
     goBack,
     goForwardBySwipe,
     goBackwardBySwipe,
+    canGoBack: history.length > 0,
   };
 }
 

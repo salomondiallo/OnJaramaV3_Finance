@@ -1,17 +1,25 @@
 import {
   Bot,
-  CalendarDays,
   Eye,
   EyeOff,
   Lightbulb,
   PiggyBank,
   ShieldCheck,
   Target,
+  TrendingUp,
+  Landmark,
+  Sparkles,
 } from "lucide-react";
+
 import { useState } from "react";
 import { getText } from "../data/translations";
 
-function Accueil({ financeData, selectedGoals, setCurrentPage, settings }) {
+function Accueil({
+  financeData,
+  selectedGoals,
+  setCurrentPage,
+  settings,
+}) {
   const t = getText(settings);
   const [showAmounts, setShowAmounts] = useState(false);
 
@@ -20,274 +28,258 @@ function Accueil({ financeData, selectedGoals, setCurrentPage, settings }) {
     0
   );
 
-  const activeGoals = selectedGoals.filter((goal) => !goal.archived);
-  const hasDebt = totalDebt > 0;
+  const activeGoals = selectedGoals.filter(
+    (goal) => !goal.archived
+  );
+
+  const mainGoal =
+    activeGoals.find((goal) => goal.highlighted) ||
+    activeGoals[0];
 
   function money(value) {
-    if (!showAmounts) return "000";
-    return Number(value || 0).toLocaleString("fr-CA", {
+    if (!showAmounts) return "Chiffres masqués";
+
+    return `${Number(value || 0).toLocaleString("fr-CA", {
       maximumFractionDigits: 2,
-    });
+    })} $`;
   }
 
   return (
-    <div style={page}>
-      <section style={hero}>
-        <div style={quickRail}>
-          <RailItem icon={<CalendarDays />} label="Paiement" onClick={() => setCurrentPage("paiements")} />
-          <RailItem icon={<PiggyBank />} label="Dette" onClick={() => setCurrentPage("situation")} />
-          <RailItem icon={<Target />} label="Objectif" onClick={() => setCurrentPage("objectifs")} />
-          <RailItem icon={<ShieldCheck />} label="Protection" onClick={() => setCurrentPage("situation")} />
-          <RailItem icon={<Lightbulb />} label="Conseil" onClick={() => setCurrentPage("assistant")} />
-        </div>
+    <div className="native-page accueil-page">
+      <section className="accueil-hero" />
 
-        <div style={heroTextBox}>
-          <h1 style={heroTitle}>
-            {t.heroTitle}
-            <br />
-            <span style={heroAccent}>{t.heroAccent}</span>
-          </h1>
-          <p style={heroSubtitle}>Transformez vos objectifs en plan concret.</p>
-        </div>
+      <section className="accueil-headline">
+        <p className="accueil-eyebrow">
+          OnJarama Path V4.3
+        </p>
+
+        <h1 className="accueil-title">
+          {t.heroTitle}
+          <br />
+          <span>{t.heroAccent}</span>
+        </h1>
+
+        <p className="accueil-subtitle">
+          Transformez vos objectifs en un plan
+          concret, réaliste et motivant.
+        </p>
       </section>
 
-      <div style={privacyRow}>
-        <span style={privacyBadge}>🔒 Privé</span>
-        <span style={privacyBadge}>🌍 Démo</span>
+      <div className="accueil-actions">
+        <button
+          onClick={() => setCurrentPage("situation")}
+          className="primary-action"
+        >
+          Commencer ma situation
+        </button>
 
-        <button onClick={() => setShowAmounts(!showAmounts)} style={eyeBtn}>
-          {showAmounts ? <EyeOff size={17} /> : <Eye size={17} />}
-          {showAmounts ? "Masquer" : "Afficher mes chiffres"}
+        <button
+          onClick={() => setCurrentPage("assistant")}
+          className="ai-action"
+        >
+          <Bot size={18} />
+          IA OnJarama
         </button>
       </div>
 
-      <div style={heroButtons}>
-        <button onClick={() => setCurrentPage("situation")} style={primaryBtn}>
-          Commencer
-        </button>
+      <section className="accueil-safe-row">
+        <span className="accueil-badge">
+          🔒 Privé
+        </span>
 
-        <button onClick={() => setCurrentPage("assistant")} style={aiBtn}>
-          <Bot size={18} /> IA OnJarama
-        </button>
-      </div>
+        <span className="accueil-badge">
+          🌍 Démo
+        </span>
 
-      <section style={statusCard}>
-        <div>
-          <p style={muted}>Aperçu sécurisé</p>
-          <h2 style={statusTitle}>
-            {hasDebt ? "Situation à surveiller" : "Prêt à commencer"}
-          </h2>
+        <button
+          onClick={() =>
+            setShowAmounts(!showAmounts)
+          }
+          className="eye-action"
+        >
+          {showAmounts ? (
+            <EyeOff size={16} />
+          ) : (
+            <Eye size={16} />
+          )}
+
+          {showAmounts
+            ? "Masquer"
+            : "Afficher"}
+        </button>
+      </section>
+
+      <section className="accueil-grid">
+        <QuickTile
+          icon={<TrendingUp />}
+          title="Vue rapide"
+          text={money(totalDebt)}
+          color="var(--gold)"
+          onClick={() =>
+            setCurrentPage("situation")
+          }
+        />
+
+        <QuickTile
+          icon={<Target />}
+          title="Objectif"
+          text={
+            mainGoal
+              ? mainGoal.title
+              : "Créer un objectif"
+          }
+          color="var(--green)"
+          onClick={() =>
+            setCurrentPage("objectifs")
+          }
+        />
+
+        <QuickTile
+          icon={<PiggyBank />}
+          title="Victoire"
+          text={
+            totalDebt > 0
+              ? "Réduire la dette"
+              : "Bâtir le plan"
+          }
+          color="var(--blue)"
+          onClick={() =>
+            setCurrentPage("parcours")
+          }
+        />
+
+        <QuickTile
+          icon={<ShieldCheck />}
+          title="Sécurité"
+          text="Données locales"
+          color="var(--purple)"
+          onClick={() =>
+            setCurrentPage("profil")
+          }
+        />
+      </section>
+
+      <section className="accueil-headline">
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            alignItems: "center",
+            marginBottom: 8,
+          }}
+        >
+          <Landmark
+            size={20}
+            color="var(--gold)"
+          />
+
+          <strong>
+            Connexion bancaire
+          </strong>
         </div>
 
-        <div style={statusGrid}>
-          <MiniLine label="Dette" value={showAmounts ? `${money(totalDebt)} $` : "000"} />
-          <MiniLine label="Objectifs" value={showAmounts ? activeGoals.length : "000"} />
-          <MiniLine label="Conseil" value="Disponible" />
+        <p
+          style={{
+            margin: 0,
+            color: "var(--text-muted)",
+          }}
+        >
+          Bientôt disponible.
+          Synchronisation lecture seule
+          sécurisée de vos comptes,
+          dépenses, épargne et
+          progression financière.
+        </p>
+      </section>
+
+      <section className="accueil-headline">
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            alignItems: "center",
+            marginBottom: 8,
+          }}
+        >
+          <Sparkles
+            size={20}
+            color="var(--blue)"
+          />
+
+          <strong>
+            Ce que peut faire
+            OnJarama Path
+          </strong>
         </div>
+
+        <p
+          style={{
+            margin: 0,
+            color: "var(--text-muted)",
+            lineHeight: 1.4,
+          }}
+        >
+          • Prioriser vos dettes
+          automatiquement.
+          <br />
+          • Construire un plan
+          financier personnalisé.
+          <br />
+          • Simuler plusieurs
+          objectifs.
+          <br />
+          • Suivre votre progression
+          dans une timeline claire.
+          <br />
+          • Recevoir des recommandations
+          intelligentes.
+        </p>
+      </section>
+
+      <section className="accueil-hint">
+        <Lightbulb
+          size={16}
+          color="var(--gold)"
+        />
+
+        <p>
+          Appui long, cartes
+          réversibles et synchronisation
+          bancaire arrivent dans les
+          prochaines versions.
+        </p>
       </section>
     </div>
   );
 }
 
-function RailItem({ icon, label, onClick }) {
+function QuickTile({
+  icon,
+  title,
+  text,
+  color,
+  onClick,
+}) {
   return (
-    <button onClick={onClick} style={railItem}>
-      <span style={railIcon}>{icon}</span>
-      <small>{label}</small>
+    <button
+      onClick={onClick}
+      className="accueil-tile"
+      style={{
+        borderColor: color,
+      }}
+    >
+      <span
+        className="accueil-tile-icon"
+        style={{ color }}
+      >
+        {icon}
+      </span>
+
+      <strong>{title}</strong>
+
+      <small>{text}</small>
     </button>
   );
 }
-
-function MiniLine({ label, value }) {
-  return (
-    <div style={miniLine}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-
-const page = {
-  minHeight: "calc(100vh - 176px)",
-  display: "flex",
-  flexDirection: "column",
-  gap: "10px",
-  overflowX: "hidden",
-};
-
-const hero = {
-  height: "min(48vh, 380px)",
-  width: "100%",
-  borderRadius: "28px",
-  backgroundImage:
-    "linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.05), rgba(0,0,0,.44)), url('/onjarama-hero.png')",
-  backgroundSize: "cover",
-  backgroundPosition: "center 20%",
-  position: "relative",
-  overflow: "hidden",
-  border: "1px solid var(--border)",
-};
-
-const quickRail = {
-  position: "absolute",
-  top: "10px",
-  left: "10px",
-  right: "10px",
-  display: "grid",
-  gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
-  gap: "6px",
-  zIndex: 4,
-};
-
-const railItem = {
-  minWidth: 0,
-  border: "1px solid rgba(212,175,55,.35)",
-  background: "rgba(7,17,31,.55)",
-  color: "white",
-  borderRadius: "16px",
-  padding: "7px 3px",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  gap: "3px",
-  fontSize: "9px",
-  backdropFilter: "blur(8px)",
-};
-
-const railIcon = {
-  color: "var(--gold)",
-  display: "flex",
-};
-
-const heroTextBox = {
-  position: "absolute",
-  left: "14px",
-  right: "14px",
-  bottom: "14px",
-  zIndex: 3,
-  padding: "12px",
-  borderRadius: "20px",
-  background: "rgba(7,17,31,.58)",
-  backdropFilter: "blur(10px)",
-  border: "1px solid rgba(255,255,255,.12)",
-};
-
-const heroTitle = {
-  margin: 0,
-  color: "white",
-  fontSize: "clamp(24px, 7.2vw, 36px)",
-  lineHeight: "0.98",
-  fontWeight: "900",
-};
-
-const heroAccent = {
-  background: "linear-gradient(90deg, #38bdf8, #a78bfa)",
-  WebkitBackgroundClip: "text",
-  WebkitTextFillColor: "transparent",
-};
-
-const heroSubtitle = {
-  marginTop: "8px",
-  marginBottom: 0,
-  color: "rgba(255,255,255,.92)",
-  fontSize: "13px",
-  lineHeight: "1.25",
-};
-
-const privacyRow = {
-  display: "grid",
-  gridTemplateColumns: "auto auto minmax(0, 1fr)",
-  alignItems: "center",
-  gap: "8px",
-};
-
-const privacyBadge = {
-  background: "var(--bg-card)",
-  border: "1px solid var(--border)",
-  color: "var(--text-main)",
-  borderRadius: "999px",
-  padding: "8px 10px",
-  fontSize: "12px",
-  whiteSpace: "nowrap",
-};
-
-const eyeBtn = {
-  minWidth: 0,
-  border: "1px solid var(--gold)",
-  background: "rgba(212,175,55,.12)",
-  color: "var(--gold)",
-  borderRadius: "999px",
-  padding: "9px 10px",
-  fontWeight: "bold",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "6px",
-  fontSize: "12px",
-};
-
-const heroButtons = {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: "10px",
-};
-
-const primaryBtn = {
-  padding: "13px",
-  borderRadius: "16px",
-  border: "none",
-  background: "var(--green)",
-  color: "white",
-  fontWeight: "bold",
-};
-
-const aiBtn = {
-  padding: "13px",
-  borderRadius: "16px",
-  border: "none",
-  background: "linear-gradient(90deg, var(--purple), #9b7cff)",
-  color: "white",
-  fontWeight: "bold",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  gap: "8px",
-};
-
-const statusCard = {
-  border: "1px solid var(--border)",
-  background: "var(--bg-card)",
-  borderRadius: "22px",
-  padding: "12px",
-};
-
-const statusTitle = {
-  margin: 0,
-  fontSize: "19px",
-};
-
-const statusGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-  gap: "8px",
-  marginTop: "10px",
-};
-
-const miniLine = {
-  background: "var(--bg-panel)",
-  border: "1px solid var(--border)",
-  borderRadius: "14px",
-  padding: "9px",
-  display: "flex",
-  flexDirection: "column",
-  gap: "4px",
-  fontSize: "12px",
-};
-
-const muted = {
-  color: "var(--text-muted)",
-  margin: 0,
-  marginBottom: "4px",
-};
 
 export default Accueil;

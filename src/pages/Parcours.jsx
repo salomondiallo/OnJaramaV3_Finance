@@ -54,6 +54,15 @@ const pageText = {
       "Votre objectif principal est actif. Continuez à l’alimenter régulièrement.",
     startAdvice:
       "Commencez par ajouter votre situation financière et un objectif principal.",
+    step1: "Étape 1",
+    step2: "Étape 2",
+    step3: "Étape 3",
+    step4: "Étape 4",
+    step5: "Étape 5",
+    eliminateDebt: "Éliminer la dette prioritaire",
+    secureBase: "Sécuriser la base",
+    buildGoals: "Construire les objectifs",
+    longTerm: "Vision long terme",
   },
 
   EN: {
@@ -94,6 +103,15 @@ const pageText = {
       "Your main goal is active. Keep funding it regularly.",
     startAdvice:
       "Start by adding your financial situation and one main goal.",
+    step1: "Step 1",
+    step2: "Step 2",
+    step3: "Step 3",
+    step4: "Step 4",
+    step5: "Step 5",
+    eliminateDebt: "Eliminate priority debt",
+    secureBase: "Secure the base",
+    buildGoals: "Build goals",
+    longTerm: "Long-term vision",
   },
 
   ES: {
@@ -134,6 +152,15 @@ const pageText = {
       "Tu objetivo principal está activo. Sigue financiándolo regularmente.",
     startAdvice:
       "Empieza agregando tu situación financiera y un objetivo principal.",
+    step1: "Paso 1",
+    step2: "Paso 2",
+    step3: "Paso 3",
+    step4: "Paso 4",
+    step5: "Paso 5",
+    eliminateDebt: "Eliminar deuda prioritaria",
+    secureBase: "Asegurar la base",
+    buildGoals: "Construir objetivos",
+    longTerm: "Visión a largo plazo",
   },
 };
 
@@ -144,20 +171,23 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
   const currency = settings?.currency || "CAD";
 
   const debts = Array.isArray(financeData?.debts) ? financeData.debts : [];
-  const goals = Array.isArray(selectedGoals) ? selectedGoals : [];
+  const goals = Array.isArray(selectedGoals)
+    ? selectedGoals.filter((goal) => !goal.archived)
+    : [];
 
   const totalDebt = debts.reduce(
     (sum, debt) => sum + Number(debt.balance || 0),
     0
   );
 
-  const priorityDebt = [...debts].sort(
-    (a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0)
-  )[0];
+  const priorityDebt = [...debts]
+    .filter((debt) => Number(debt.balance || 0) > 0)
+    .sort(
+      (a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0)
+    )[0];
 
   const highlightedGoal =
-    goals.find((goal) => goal.highlighted && !goal.archived) ||
-    goals.find((goal) => !goal.archived);
+    goals.find((goal) => goal.highlighted) || goals[0];
 
   const totalGoalTarget = goals.reduce(
     (sum, goal) => sum + Number(goal.targetAmount || 0),
@@ -174,10 +204,8 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
       ? Math.min(100, Math.round((totalGoalCurrent / totalGoalTarget) * 100))
       : 0;
 
-  const nextVictory = priorityDebt || highlightedGoal;
-
   return (
-    <div>
+    <div className="native-page">
       <h1>{t.parcours}</h1>
       <p style={muted}>{p.subtitle}</p>
 
@@ -186,11 +214,7 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
 
         <p style={muted}>{p.nextVictory}</p>
 
-        <h2>
-          {priorityDebt?.name ||
-            highlightedGoal?.title ||
-            p.recommendedAction}
-        </h2>
+        <h2>{priorityDebt?.name || highlightedGoal?.title || p.recommendedAction}</h2>
 
         <h1 style={{ color: "var(--gold)" }}>
           {priorityDebt
@@ -256,11 +280,12 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
 
         <TimelineStep
           icon={<CheckCircle />}
-          title={p.today}
-          subtitle={p.startingPoint}
+          stepLabel={p.today}
+          title={p.startingPoint}
+          subtitle="OnJarama analyse votre point de départ financier."
           current={formatMoney(0, currency)}
-          target={formatMoney(0, currency)}
-          remaining={formatMoney(0, currency)}
+          target="Plan"
+          remaining="À construire"
           progress={100}
           action={p.startingPoint}
           color="var(--blue)"
@@ -269,10 +294,11 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
 
         <TimelineStep
           icon={<CreditCard />}
-          title={priorityDebt?.name || p.priorityDebt}
+          stepLabel={p.step1}
+          title={priorityDebt ? p.eliminateDebt : p.priorityDebt}
           subtitle={
             priorityDebt
-              ? `${p.highRate} : ${priorityDebt.interestRate}%`
+              ? `${priorityDebt.name} · ${p.highRate} : ${priorityDebt.interestRate}%`
               : p.noDebt
           }
           current={
@@ -286,24 +312,25 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
               ? formatMoney(priorityDebt.balance, currency)
               : formatMoney(0, currency)
           }
-          progress={priorityDebt ? getDebtProgress(priorityDebt.balance) : 0}
+          progress={priorityDebt ? getDebtProgress(priorityDebt.balance) : 100}
           action={
             priorityDebt
               ? `${p.recommendedAction} : ${priorityDebt.name}`
               : p.addDebtGoal
           }
-          color="var(--gold)"
+          color={priorityDebt ? "var(--gold)" : "var(--green)"}
           p={p}
         />
 
         <TimelineStep
           icon={<ShieldCheck />}
-          title={p.emergencyFund}
+          stepLabel={p.step2}
+          title={p.secureBase}
           subtitle={p.emergencySubtitle}
           current={formatMoney(0, currency)}
           target="3 mois"
           remaining="À définir"
-          progress={20}
+          progress={priorityDebt ? 20 : 40}
           action={p.emergencySubtitle}
           color="var(--green)"
           p={p}
@@ -312,6 +339,7 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
         <GoalStep
           goals={goals}
           category="voyage"
+          stepLabel={p.step3}
           fallbackTitle={p.travel}
           fallbackSubtitle={p.travelSubtitle}
           icon={<Plane />}
@@ -323,6 +351,7 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
         <GoalStep
           goals={goals}
           category="maison"
+          stepLabel={p.step4}
           fallbackTitle={p.house}
           fallbackSubtitle={p.houseSubtitle}
           icon={<Home />}
@@ -334,6 +363,7 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
         <GoalStep
           goals={goals}
           category="liberte"
+          stepLabel={p.step5}
           fallbackTitle={p.freedom}
           fallbackSubtitle={p.freedomSubtitle}
           icon={<Trophy />}
@@ -342,18 +372,22 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
           p={p}
         />
 
-        {highlightedGoal && !["voyage", "maison", "liberte"].includes(highlightedGoal.category) && (
-          <GoalStep
-            goals={[highlightedGoal]}
-            category={highlightedGoal.category}
-            fallbackTitle={highlightedGoal.title}
-            fallbackSubtitle={highlightedGoal.option || p.recommendedAction}
-            icon={<Star />}
-            color="var(--gold)"
-            currency={currency}
-            p={p}
-          />
-        )}
+        {highlightedGoal &&
+          !["voyage", "maison", "liberte"].includes(
+            highlightedGoal.category
+          ) && (
+            <GoalStep
+              goals={[highlightedGoal]}
+              category={highlightedGoal.category}
+              stepLabel={p.buildGoals}
+              fallbackTitle={highlightedGoal.title}
+              fallbackSubtitle={highlightedGoal.option || p.recommendedAction}
+              icon={<Star />}
+              color="var(--gold)"
+              currency={currency}
+              p={p}
+            />
+          )}
       </section>
 
       <section style={adviceCard}>
@@ -390,6 +424,7 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
 function GoalStep({
   goals,
   category,
+  stepLabel,
   fallbackTitle,
   fallbackSubtitle,
   icon,
@@ -409,6 +444,7 @@ function GoalStep({
   return (
     <TimelineStep
       icon={icon}
+      stepLabel={stepLabel}
       title={goal?.title || fallbackTitle}
       subtitle={goal?.option || fallbackSubtitle}
       current={formatMoney(current, currency)}
@@ -428,6 +464,7 @@ function GoalStep({
 
 function TimelineStep({
   icon,
+  stepLabel,
   title,
   subtitle,
   current,
@@ -445,6 +482,8 @@ function TimelineStep({
       <div style={{ ...stepIcon, color }}>{icon}</div>
 
       <div style={{ flex: 1 }}>
+        <p style={{ ...stepLabelStyle, color }}>{stepLabel}</p>
+
         <div style={stepTop}>
           <strong>{title}</strong>
           <strong style={{ color }}>{safeProgress}%</strong>
@@ -586,6 +625,14 @@ const stepTop = {
   display: "flex",
   justifyContent: "space-between",
   gap: "12px",
+};
+
+const stepLabelStyle = {
+  margin: "0 0 6px",
+  fontSize: "12px",
+  fontWeight: "900",
+  letterSpacing: "0.04em",
+  textTransform: "uppercase",
 };
 
 const amountGrid = {
