@@ -11,6 +11,7 @@ const STORAGE_KEYS_TO_CLEAR = [
   "onjaramaTransactions",
   "onjaramaActivityHistory",
   "onjaramaNotifications",
+  "onjaramaVictorySeenIds",
   "financeData",
   "selectedGoals",
   "settings",
@@ -59,6 +60,8 @@ const defaultActivityHistory = [];
 
 const defaultNotifications = [];
 
+const defaultVictorySeenIds = [];
+
 function readStorage(key, fallback) {
   try {
     const saved = localStorage.getItem(key);
@@ -100,6 +103,23 @@ function useAppState() {
     readStorage("onjaramaNotifications", defaultNotifications)
   );
 
+  const [victorySeenIds, setVictorySeenIds] = useState(() =>
+    readStorage("onjaramaVictorySeenIds", defaultVictorySeenIds)
+  );
+
+  const achievedGoals = Array.isArray(selectedGoals)
+    ? selectedGoals.filter(
+        (goal) =>
+          !goal.archived &&
+          Number(goal.targetAmount || 0) > 0 &&
+          Number(goal.currentAmount || 0) >= Number(goal.targetAmount || 0)
+      )
+    : [];
+
+  const unseenVictories = achievedGoals.filter(
+    (goal) => !victorySeenIds.includes(goal.id)
+  );
+
   useEffect(() => {
     localStorage.setItem("onjaramaFinanceData", JSON.stringify(financeData));
   }, [financeData]);
@@ -125,6 +145,13 @@ function useAppState() {
       JSON.stringify(notifications)
     );
   }, [notifications]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "onjaramaVictorySeenIds",
+      JSON.stringify(victorySeenIds)
+    );
+  }, [victorySeenIds]);
 
   function addActivity(type, title, message) {
     const log = createLog(type, title, message);
@@ -155,6 +182,15 @@ function useAppState() {
     setActivityHistory([]);
   }
 
+  function markVictoriesSeen(goalIds) {
+    if (!Array.isArray(goalIds) || goalIds.length === 0) return;
+
+    setVictorySeenIds((current) => {
+      const merged = [...new Set([...current, ...goalIds])];
+      return merged.slice(-100);
+    });
+  }
+
   function resetFinanceOnly() {
     setFinanceData(defaultFinanceData);
     localStorage.removeItem("onjaramaSituationDetails");
@@ -170,6 +206,7 @@ function useAppState() {
 
   function resetGoalsOnly() {
     setSelectedGoals(defaultGoals);
+    setVictorySeenIds(defaultVictorySeenIds);
 
     addActivity(
       "objectif",
@@ -198,6 +235,7 @@ function useAppState() {
     setSettings(defaultSettings);
     setActivityHistory(defaultActivityHistory);
     setNotifications(defaultNotifications);
+    setVictorySeenIds(defaultVictorySeenIds);
 
     localStorage.setItem(PRIVACY_CLEAN_VERSION, "done");
   }
@@ -213,10 +251,15 @@ function useAppState() {
     setActivityHistory,
     notifications,
     setNotifications,
+    victorySeenIds,
+    setVictorySeenIds,
+    achievedGoals,
+    unseenVictories,
     addActivity,
     markNotificationsRead,
     clearNotifications,
     clearActivityHistory,
+    markVictoriesSeen,
     resetAll,
     resetFinanceOnly,
     resetGoalsOnly,

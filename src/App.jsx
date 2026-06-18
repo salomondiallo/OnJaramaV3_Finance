@@ -1,6 +1,7 @@
 import "./App.css";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Trophy, X } from "lucide-react";
 
 import useAppState from "./hooks/useAppState";
 import useNavigation from "./hooks/useNavigation";
@@ -36,6 +37,7 @@ function App() {
   const swipeAllowed = useRef(false);
 
   const [navHidden, setNavHidden] = useState(false);
+  const [showVictoryOverlay, setShowVictoryOverlay] = useState(false);
 
   const {
     currentPage,
@@ -70,6 +72,19 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!Array.isArray(appState.unseenVictories)) return;
+    if (appState.unseenVictories.length === 0) return;
+
+    setShowVictoryOverlay(true);
+
+    const timer = setTimeout(() => {
+      closeVictoryOverlay();
+    }, 2400);
+
+    return () => clearTimeout(timer);
+  }, [appState.unseenVictories]);
+
   const pageProps = useMemo(
     () => ({
       ...appState,
@@ -99,6 +114,18 @@ function App() {
     notifications: <Notifications {...pageProps} />,
     historique: <Historique {...pageProps} />,
   };
+
+  function closeVictoryOverlay() {
+    const ids = Array.isArray(appState.unseenVictories)
+      ? appState.unseenVictories.map((goal) => goal.id)
+      : [];
+
+    if (ids.length > 0) {
+      appState.markVictoriesSeen(ids);
+    }
+
+    setShowVictoryOverlay(false);
+  }
 
   function handleTouchStart(event) {
     const touch = event.touches[0];
@@ -143,6 +170,12 @@ function App() {
     goBackwardBySwipe();
   }
 
+  const victoryCount = Array.isArray(appState.unseenVictories)
+    ? appState.unseenVictories.length
+    : 0;
+
+  const firstVictory = victoryCount > 0 ? appState.unseenVictories[0] : null;
+
   return (
     <div className={`app-shell ${navHidden ? "nav-is-hidden" : ""}`}>
       <main
@@ -171,6 +204,38 @@ function App() {
         </div>
       </main>
 
+      {showVictoryOverlay && victoryCount > 0 && (
+        <div style={victoryOverlay}>
+          <div style={victoryModal}>
+            <button
+              onClick={closeVictoryOverlay}
+              style={victoryClose}
+              aria-label="Fermer"
+            >
+              <X size={18} />
+            </button>
+
+            <div style={trophyCircle}>
+              <Trophy size={42} />
+            </div>
+
+            <h1 style={victoryTitle}>
+              {victoryCount > 1
+                ? `🏆 ${victoryCount} objectifs atteints`
+                : "🏆 Objectif atteint !"}
+            </h1>
+
+            <p style={victoryText}>
+              {victoryCount > 1
+                ? "Votre discipline porte ses fruits."
+                : `${firstVictory?.title || "Votre objectif"} est complété.`}
+            </p>
+
+            <p style={victoryMuted}>Félicitations. Vous avancez réellement.</p>
+          </div>
+        </div>
+      )}
+
       <BottomNav
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
@@ -180,5 +245,72 @@ function App() {
     </div>
   );
 }
+
+const victoryOverlay = {
+  position: "fixed",
+  inset: 0,
+  zIndex: 9999,
+  background: "rgba(0,0,0,.56)",
+  display: "grid",
+  placeItems: "center",
+  padding: "22px",
+  backdropFilter: "blur(5px)",
+};
+
+const victoryModal = {
+  position: "relative",
+  width: "min(360px, 100%)",
+  background: "linear-gradient(135deg, rgba(212,175,55,.22), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "26px",
+  padding: "28px 20px",
+  textAlign: "center",
+  boxShadow: "0 0 36px rgba(212,175,55,.32)",
+  animation: "fadeIn .24s ease",
+};
+
+const victoryClose = {
+  position: "absolute",
+  top: "12px",
+  right: "12px",
+  width: "34px",
+  height: "34px",
+  borderRadius: "999px",
+  border: "1px solid var(--border)",
+  background: "var(--bg-panel)",
+  color: "var(--text-main)",
+  display: "grid",
+  placeItems: "center",
+};
+
+const trophyCircle = {
+  width: "86px",
+  height: "86px",
+  borderRadius: "999px",
+  margin: "0 auto 16px",
+  background: "rgba(212,175,55,.18)",
+  border: "1px solid var(--gold)",
+  color: "var(--gold)",
+  display: "grid",
+  placeItems: "center",
+  boxShadow: "0 0 22px rgba(212,175,55,.28)",
+};
+
+const victoryTitle = {
+  margin: "0 0 8px",
+  color: "var(--text-main)",
+  fontSize: "24px",
+};
+
+const victoryText = {
+  margin: "0",
+  color: "var(--text-main)",
+  fontWeight: "700",
+};
+
+const victoryMuted = {
+  margin: "10px 0 0",
+  color: "var(--text-muted)",
+};
 
 export default App;
