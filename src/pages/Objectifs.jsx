@@ -1,16 +1,18 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
+  ArrowLeft,
   Briefcase,
   Calendar,
   Car,
   ChevronRight,
-  Hammer,
+  CreditCard,
   HeartHandshake,
   Home,
   PiggyBank,
   Plane,
   Plus,
   RotateCcw,
+  Sparkles,
   Star,
   Target,
   Trash2,
@@ -22,534 +24,793 @@ import { getText } from "../data/translations";
 
 const pageText = {
   FR: {
-    subtitle: "Choisissez une catégorie, puis le type exact de projet à planifier.",
+    subtitle: "Choisissez une catégorie, puis une sous-catégorie intelligente.",
     smartCategories: "Catégories intelligentes",
-    adaptedOptions: "Options adaptées",
-    planGoal: "Planifier l’objectif",
-    goalName: "Nom de l’objectif",
-    targetAmount: "Montant cible",
-    currentAmount: "Montant déjà disponible",
-    targetDate: "Date cible",
-    quickAnalysis: "Analyse rapide",
-    progress: "Progression",
-    remaining: "Reste",
-    createGoal: "Créer l’objectif",
+    chooseSubcategory: "Choisir une sous-catégorie",
+    configure: "Configurer",
+    backToGoals: "Retour aux objectifs",
+    backToCategories: "Retour aux catégories",
     activeGoals: "Mes objectifs actifs",
     noGoal: "Aucun objectif actif pour le moment.",
-    remainingToGet: "Reste à obtenir",
+    createGoal: "Créer l’objectif",
     mainGoal: "Objectif principal",
     setMain: "Mettre en avant",
-    project: "Projet",
-    source: "Source",
-    fromSimulator: "Créé depuis le simulateur",
-    flip: "Retourner",
+    progress: "Progression",
+    remainingToGet: "Reste à obtenir",
     details: "Détails",
-    auto: "Auto",
-    house: "Maison",
-    travel: "Voyage",
-    family: "Famille",
-    freedom: "Liberté financière",
-    business: "Projet / business",
-  },
-
-  EN: {
-    subtitle: "Choose a category, then the exact type of project to plan.",
-    smartCategories: "Smart categories",
-    adaptedOptions: "Adapted options",
-    planGoal: "Plan the goal",
-    goalName: "Goal name",
-    targetAmount: "Target amount",
-    currentAmount: "Amount already available",
-    targetDate: "Target date",
-    quickAnalysis: "Quick analysis",
-    progress: "Progress",
-    remaining: "Remaining",
-    createGoal: "Create goal",
-    activeGoals: "My active goals",
-    noGoal: "No active goal yet.",
-    remainingToGet: "Remaining to collect",
-    mainGoal: "Main goal",
-    setMain: "Highlight",
-    project: "Project",
-    source: "Source",
-    fromSimulator: "Created from simulator",
-    flip: "Flip",
-    details: "Details",
-    auto: "Car",
-    house: "Home",
-    travel: "Travel",
-    family: "Family",
-    freedom: "Financial freedom",
-    business: "Project / business",
-  },
-
-  ES: {
-    subtitle: "Elige una categoría y luego el tipo exacto de proyecto.",
-    smartCategories: "Categorías inteligentes",
-    adaptedOptions: "Opciones adaptadas",
-    planGoal: "Planificar el objetivo",
-    goalName: "Nombre del objetivo",
-    targetAmount: "Monto objetivo",
-    currentAmount: "Monto ya disponible",
-    targetDate: "Fecha objetivo",
-    quickAnalysis: "Análisis rápido",
-    progress: "Progreso",
-    remaining: "Restante",
-    createGoal: "Crear objetivo",
-    activeGoals: "Mis objetivos activos",
-    noGoal: "No hay objetivos activos por ahora.",
-    remainingToGet: "Restante por conseguir",
-    mainGoal: "Objetivo principal",
-    setMain: "Destacar",
-    project: "Proyecto",
-    source: "Fuente",
-    fromSimulator: "Creado desde el simulador",
-    flip: "Girar",
-    details: "Detalles",
-    auto: "Auto",
-    house: "Casa",
-    travel: "Viaje",
-    family: "Familia",
-    freedom: "Libertad financiera",
-    business: "Proyecto / negocio",
+    targetAmount: "Montant cible",
+    currentAmount: "Montant disponible",
+    targetDate: "Date cible",
+    quickAnalysis: "Analyse rapide",
+    remaining: "Reste",
+    flip: "Retourner",
+    delete: "Supprimer",
+    simulateLater: "Simulation détaillée bientôt disponible",
+    achieved: "Objectif atteint",
+    congratulations: "Félicitations, tu avances vraiment.",
+    almostThere: "🔥 Presque atteint",
+    startedToday: "Commencé aujourd’hui",
+    startedAgo: "Commencé il y a",
+    lastDeposit: "Dernier dépôt",
   },
 };
 
-const categoryLabels = {
-  FR: {
-    auto: "Auto",
-    maison: "Maison",
-    voyage: "Voyage",
-    famille: "Famille",
-    liberte: "Liberté financière",
-    business: "Projet / business",
-    securite: "Épargne",
-  },
-  EN: {
-    auto: "Car",
-    maison: "Home",
-    voyage: "Travel",
-    famille: "Family",
-    liberte: "Financial freedom",
-    business: "Project / business",
-    securite: "Savings",
-  },
-  ES: {
-    auto: "Auto",
-    maison: "Casa",
-    voyage: "Viaje",
-    famille: "Familia",
-    liberte: "Libertad financiera",
-    business: "Proyecto / negocio",
-    securite: "Ahorro",
-  },
-};
-
-const optionLabels = {
-  FR: {
-    auto: [
-      "Achat comptant",
-      "Financement",
-      "Location",
-      "Mise de fonds",
-      "Réparation majeure",
-      "Remplacement",
-    ],
-    maison: [
-      "Mise de fonds",
-      "Achat",
-      "Construction",
-      "Rénovation",
-      "Hypothèque",
-      "Meubles / électros",
-    ],
-    voyage: ["Guinée", "Vacances", "Billet", "Dépenses sur place", "Famille"],
-    famille: [
-      "Soutien familial",
-      "Études enfants",
-      "Mariage",
-      "Regroupement familial",
-    ],
-    liberte: [
-      "Fonds d’urgence",
-      "Dette zéro",
-      "Épargne long terme",
-      "Investissement",
-      "Revenus passifs",
-    ],
-    business: ["Commerce", "Formation", "Matériel", "Lancement", "Croissance"],
-    securite: ["Épargne libre", "Coussin", "Projet futur", "Objectif personnel"],
-  },
-
-  EN: {
-    auto: [
-      "Cash purchase",
-      "Financing",
-      "Lease",
-      "Down payment",
-      "Major repair",
-      "Replacement",
-    ],
-    maison: [
-      "Down payment",
-      "Purchase",
-      "Construction",
-      "Renovation",
-      "Mortgage",
-      "Furniture / appliances",
-    ],
-    voyage: ["Guinea", "Vacation", "Ticket", "On-site expenses", "Family"],
-    famille: [
-      "Family support",
-      "Children education",
-      "Wedding",
-      "Family reunification",
-    ],
-    liberte: [
-      "Emergency fund",
-      "Debt zero",
-      "Long-term savings",
-      "Investment",
-      "Passive income",
-    ],
-    business: ["Business", "Training", "Equipment", "Launch", "Growth"],
-    securite: ["Free savings", "Safety cushion", "Future project", "Personal goal"],
-  },
-
-  ES: {
-    auto: [
-      "Compra al contado",
-      "Financiamiento",
-      "Alquiler",
-      "Pago inicial",
-      "Reparación mayor",
-      "Reemplazo",
-    ],
-    maison: [
-      "Pago inicial",
-      "Compra",
-      "Construcción",
-      "Renovación",
-      "Hipoteca",
-      "Muebles / electrodomésticos",
-    ],
-    voyage: ["Guinea", "Vacaciones", "Boleto", "Gastos en destino", "Familia"],
-    famille: [
-      "Apoyo familiar",
-      "Estudios de hijos",
-      "Matrimonio",
-      "Reagrupación familiar",
-    ],
-    liberte: [
-      "Fondo de emergencia",
-      "Deuda cero",
-      "Ahorro a largo plazo",
-      "Inversión",
-      "Ingresos pasivos",
-    ],
-    business: ["Comercio", "Formación", "Material", "Lanzamiento", "Crecimiento"],
-    securite: ["Ahorro libre", "Colchón", "Proyecto futuro", "Objetivo personal"],
-  },
-};
-
-function getCategories(language) {
-  const labels = categoryLabels[language] || categoryLabels.FR;
-  const options = optionLabels[language] || optionLabels.FR;
-
-  return [
-    {
-      id: "auto",
-      label: labels.auto,
-      icon: <Car />,
-      color: "var(--blue)",
-      options: options.auto,
-    },
-    {
-      id: "maison",
-      label: labels.maison,
-      icon: <Home />,
-      color: "var(--green)",
-      options: options.maison,
-    },
-    {
-      id: "voyage",
-      label: labels.voyage,
-      icon: <Plane />,
-      color: "var(--gold)",
-      options: options.voyage,
-    },
-    {
-      id: "famille",
-      label: labels.famille,
-      icon: <Users />,
-      color: "var(--purple)",
-      options: options.famille,
-    },
-    {
-      id: "liberte",
-      label: labels.liberte,
-      icon: <PiggyBank />,
-      color: "var(--green)",
-      options: options.liberte,
-    },
-    {
-      id: "business",
-      label: labels.business,
-      icon: <Briefcase />,
-      color: "var(--blue)",
-      options: options.business,
-    },
-    {
-      id: "securite",
-      label: labels.securite,
-      icon: <Trophy />,
-      color: "var(--green)",
-      options: options.securite,
-    },
-  ];
+function n(value) {
+  return Number(value || 0);
 }
 
-function Objectifs({ selectedGoals, setSelectedGoals, settings }) {
-  const t = getText(settings);
-  const language = settings?.language || "FR";
-  const p = pageText[language] || pageText.FR;
-  const currency = settings?.currency || "CAD";
-  const categories = getCategories(language);
-  const [flippedId, setFlippedId] = useState(null);
+function getStartedLabel(createdAt, text) {
+  if (!createdAt) return text.startedToday;
 
-  const [newGoal, setNewGoal] = useState({
+  const start = new Date(createdAt);
+  const now = new Date();
+
+  if (Number.isNaN(start.getTime())) return text.startedToday;
+
+  const diffMs = now.getTime() - start.getTime();
+  const days = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+
+  if (days === 0) return text.startedToday;
+  if (days === 1) return `${text.startedAgo} 1 jour`;
+
+  return `${text.startedAgo} ${days} jours`;
+}
+
+const goalTemplates = {
+  auto: {
+    label: "Auto",
+    icon: <Car />,
+    color: "var(--blue)",
+    subcategories: {
+      comptant: {
+        label: "Achat comptant",
+        fields: [
+          ["vehiclePrice", "Prix du véhicule"],
+          ["taxes", "Taxes / immatriculation"],
+          ["inspection", "Inspection"],
+          ["repairs", "Réparations prévues"],
+        ],
+        calculate: (v) =>
+          n(v.vehiclePrice) + n(v.taxes) + n(v.inspection) + n(v.repairs),
+      },
+      financement: {
+        label: "Financement",
+        fields: [
+          ["vehiclePrice", "Prix du véhicule"],
+          ["downPayment", "Mise de fonds"],
+          ["insurance", "Assurance estimée"],
+          ["fees", "Frais / inspection"],
+        ],
+        calculate: (v) =>
+          Math.max(0, n(v.vehiclePrice) - n(v.downPayment)) +
+          n(v.insurance) +
+          n(v.fees),
+      },
+      location: {
+        label: "Location",
+        fields: [
+          ["firstPayment", "Premier paiement"],
+          ["deposit", "Dépôt de sécurité"],
+          ["insurance", "Assurance"],
+          ["fees", "Frais de départ"],
+        ],
+        calculate: (v) =>
+          n(v.firstPayment) + n(v.deposit) + n(v.insurance) + n(v.fees),
+      },
+      reparation: {
+        label: "Réparation",
+        fields: [
+          ["parts", "Pièces"],
+          ["labor", "Main-d’œuvre"],
+          ["diagnostic", "Diagnostic"],
+          ["extra", "Marge imprévus"],
+        ],
+        calculate: (v) => n(v.parts) + n(v.labor) + n(v.diagnostic) + n(v.extra),
+      },
+      remplacement: {
+        label: "Remplacement",
+        fields: [
+          ["newVehicle", "Nouveau véhicule"],
+          ["oldVehicleValue", "Valeur estimée ancien véhicule"],
+          ["fees", "Frais"],
+          ["repairs", "Mise à niveau / réparations"],
+        ],
+        calculate: (v) =>
+          Math.max(0, n(v.newVehicle) - n(v.oldVehicleValue)) +
+          n(v.fees) +
+          n(v.repairs),
+      },
+    },
+  },
+
+  maison: {
+    label: "Maison",
+    icon: <Home />,
+    color: "var(--green)",
+    subcategories: {
+      construction: {
+        label: "Construction",
+        fields: [
+          ["land", "Terrain"],
+          ["foundation", "Fondation"],
+          ["structure", "Structure"],
+          ["electricity", "Électricité / plomberie"],
+          ["finishing", "Finition"],
+          ["extra", "Marge imprévus"],
+        ],
+        calculate: (v) =>
+          n(v.land) +
+          n(v.foundation) +
+          n(v.structure) +
+          n(v.electricity) +
+          n(v.finishing) +
+          n(v.extra),
+      },
+      hypotheque: {
+        label: "Hypothèque",
+        fields: [
+          ["downPayment", "Mise de fonds"],
+          ["notary", "Notaire"],
+          ["inspection", "Inspection"],
+          ["taxes", "Taxes / frais"],
+        ],
+        calculate: (v) =>
+          n(v.downPayment) + n(v.notary) + n(v.inspection) + n(v.taxes),
+      },
+      terrain: {
+        label: "Terrain",
+        fields: [
+          ["landPrice", "Prix du terrain"],
+          ["documents", "Documents / notaire"],
+          ["survey", "Bornage"],
+          ["extra", "Marge imprévus"],
+        ],
+        calculate: (v) =>
+          n(v.landPrice) + n(v.documents) + n(v.survey) + n(v.extra),
+      },
+      renovation: {
+        label: "Rénovation",
+        fields: [
+          ["materials", "Matériaux"],
+          ["labor", "Main-d’œuvre"],
+          ["permits", "Permis"],
+          ["extra", "Marge imprévus"],
+        ],
+        calculate: (v) => n(v.materials) + n(v.labor) + n(v.permits) + n(v.extra),
+      },
+      solaire: {
+        label: "Solaire",
+        fields: [
+          ["panels", "Panneaux"],
+          ["batteries", "Batteries"],
+          ["inverter", "Onduleur"],
+          ["installation", "Installation"],
+          ["extra", "Marge imprévus"],
+        ],
+        calculate: (v) =>
+          n(v.panels) +
+          n(v.batteries) +
+          n(v.inverter) +
+          n(v.installation) +
+          n(v.extra),
+      },
+    },
+  },
+
+  voyage: {
+    label: "Voyage",
+    icon: <Plane />,
+    color: "var(--gold)",
+    subcategories: {
+      vacances: {
+        label: "Vacances",
+        fields: [
+          ["ticket", "Billet"],
+          ["hotel", "Hébergement"],
+          ["activities", "Activités"],
+          ["spending", "Argent sur place"],
+          ["emergency", "Marge urgence"],
+        ],
+        calculate: (v) =>
+          n(v.ticket) +
+          n(v.hotel) +
+          n(v.activities) +
+          n(v.spending) +
+          n(v.emergency),
+      },
+      guinee: {
+        label: "Voyage Guinée",
+        fields: [
+          ["ticket", "Billet"],
+          ["bags", "Bagages"],
+          ["family", "Soutien famille"],
+          ["projects", "Projets sur place"],
+          ["emergency", "Marge urgence"],
+        ],
+        calculate: (v) =>
+          n(v.ticket) + n(v.bags) + n(v.family) + n(v.projects) + n(v.emergency),
+      },
+      famille: {
+        label: "Voyage famille",
+        fields: [
+          ["tickets", "Billets"],
+          ["stay", "Hébergement"],
+          ["food", "Nourriture"],
+          ["activities", "Activités"],
+          ["emergency", "Marge urgence"],
+        ],
+        calculate: (v) =>
+          n(v.tickets) + n(v.stay) + n(v.food) + n(v.activities) + n(v.emergency),
+      },
+      affaires: {
+        label: "Voyage affaires",
+        fields: [
+          ["ticket", "Billet"],
+          ["hotel", "Hôtel"],
+          ["transport", "Transport"],
+          ["documents", "Documents"],
+          ["businessFunds", "Fonds business"],
+        ],
+        calculate: (v) =>
+          n(v.ticket) +
+          n(v.hotel) +
+          n(v.transport) +
+          n(v.documents) +
+          n(v.businessFunds),
+      },
+    },
+  },
+
+  dette: {
+    label: "Dette / crédit",
+    icon: <CreditCard />,
+    color: "var(--red)",
+    subcategories: {
+      carteCredit: {
+        label: "Carte de crédit",
+        fields: [
+          ["balance", "Solde actuel"],
+          ["interestRate", "Taux d’intérêt %"],
+          ["minimumPayment", "Paiement minimum"],
+          ["targetPayment", "Paiement cible"],
+        ],
+        calculate: (v) => n(v.balance),
+      },
+      pretPersonnel: {
+        label: "Prêt personnel",
+        fields: [
+          ["balance", "Solde restant"],
+          ["interestRate", "Taux d’intérêt %"],
+          ["monthlyPayment", "Paiement mensuel"],
+          ["extraPayment", "Paiement extra visé"],
+        ],
+        calculate: (v) => n(v.balance),
+      },
+      margeCredit: {
+        label: "Marge de crédit",
+        fields: [
+          ["balance", "Solde utilisé"],
+          ["limit", "Limite totale"],
+          ["interestRate", "Taux d’intérêt %"],
+          ["targetPayment", "Paiement cible"],
+        ],
+        calculate: (v) => n(v.balance),
+      },
+      hypotheque: {
+        label: "Hypothèque",
+        fields: [
+          ["balance", "Solde hypothécaire"],
+          ["interestRate", "Taux d’intérêt %"],
+          ["monthlyPayment", "Paiement mensuel"],
+          ["extraPayment", "Paiement extra visé"],
+        ],
+        calculate: (v) => n(v.balance),
+      },
+    },
+  },
+
+  famille: {
+    label: "Famille",
+    icon: <Users />,
+    color: "var(--purple)",
+    fields: [
+      ["support", "Soutien familial"],
+      ["school", "Études / enfants"],
+      ["event", "Mariage / événement"],
+      ["travel", "Déplacements"],
+    ],
+    calculate: (v) => n(v.support) + n(v.school) + n(v.event) + n(v.travel),
+  },
+
+  liberte: {
+    label: "Liberté financière",
+    icon: <PiggyBank />,
+    color: "var(--green)",
+    fields: [
+      ["debtZero", "Dette zéro"],
+      ["emergencyFund", "Fonds d’urgence"],
+      ["investment", "Investissement"],
+      ["longTerm", "Épargne long terme"],
+    ],
+    calculate: (v) =>
+      n(v.debtZero) + n(v.emergencyFund) + n(v.investment) + n(v.longTerm),
+  },
+
+  business: {
+    label: "Projet / business",
+    icon: <Briefcase />,
+    color: "var(--blue)",
+    fields: [
+      ["launch", "Lancement"],
+      ["equipment", "Matériel"],
+      ["marketing", "Marketing"],
+      ["training", "Formation"],
+      ["cashflow", "Fonds de roulement"],
+    ],
+    calculate: (v) =>
+      n(v.launch) + n(v.equipment) + n(v.marketing) + n(v.training) + n(v.cashflow),
+  },
+
+  securite: {
+    label: "Épargne",
+    icon: <Trophy />,
+    color: "var(--green)",
+    fields: [
+      ["monthlyExpenses", "Dépenses mensuelles"],
+      ["months", "Nombre de mois visés"],
+      ["extra", "Marge supplémentaire"],
+    ],
+    calculate: (v) => n(v.monthlyExpenses) * Math.max(1, n(v.months)) + n(v.extra),
+  },
+};
+
+function Objectifs({
+  selectedGoals,
+  setSelectedGoals,
+  settings,
+  addActivity,
+}) {
+  const t = getText(settings);
+  const p = pageText.FR;
+  const currency = settings?.currency || "CAD";
+
+  const categories = Object.entries(goalTemplates).map(([id, item]) => ({
+    id,
+    ...item,
+  }));
+
+  const [selectedType, setSelectedType] = useState(null);
+  const [selectedSubType, setSelectedSubType] = useState(null);
+  const [flippedId, setFlippedId] = useState(null);
+  const [celebratingGoalId, setCelebratingGoalId] = useState(null);
+  const [form, setForm] = useState({
     title: "",
-    category: "auto",
-    option: categories[0].options[0],
-    targetAmount: "",
     currentAmount: "",
     targetDate: "",
     highlighted: false,
+    values: {},
   });
 
-  const selectedCategory =
-    categories.find((category) => category.id === newGoal.category) ||
-    categories[0];
+  const selectedCategory = selectedType ? goalTemplates[selectedType] : null;
+  const hasSubcategories = Boolean(selectedCategory?.subcategories);
 
-  function selectCategory(category) {
-    setNewGoal({
-      ...newGoal,
-      category: category.id,
-      option: category.options[0],
-      title: category.options[0],
+  const selectedTemplate = useMemo(() => {
+    if (!selectedCategory) return null;
+
+    if (selectedSubType && selectedCategory.subcategories?.[selectedSubType]) {
+      return {
+        ...selectedCategory.subcategories[selectedSubType],
+        categoryLabel: selectedCategory.label,
+        icon: selectedCategory.icon,
+        color: selectedCategory.color,
+      };
+    }
+
+    if (!hasSubcategories) {
+      return selectedCategory;
+    }
+
+    return null;
+  }, [selectedCategory, selectedSubType, hasSubcategories]);
+
+  const targetAmount = useMemo(() => {
+    if (!selectedTemplate) return 0;
+    return selectedTemplate.calculate(form.values);
+  }, [selectedTemplate, form.values]);
+
+  function resetForm() {
+    setSelectedType(null);
+    setSelectedSubType(null);
+    setForm({
+      title: "",
+      currentAmount: "",
+      targetDate: "",
+      highlighted: false,
+      values: {},
     });
   }
 
-  function selectOption(option) {
-    setNewGoal({
-      ...newGoal,
-      option,
-      title: option,
+  function backToSubcategories() {
+    setSelectedSubType(null);
+    setForm({
+      title: selectedCategory?.label || "",
+      currentAmount: "",
+      targetDate: "",
+      highlighted: selectedGoals.length === 0,
+      values: {},
+    });
+  }
+
+  function updateValue(key, value) {
+    setForm({
+      ...form,
+      values: {
+        ...form.values,
+        [key]: cleanMoneyInput(value),
+      },
+    });
+  }
+
+  function selectCategory(id) {
+    const template = goalTemplates[id];
+
+    setSelectedType(id);
+    setSelectedSubType(null);
+
+    setForm({
+      title: template.label,
+      currentAmount: "",
+      targetDate: "",
+      highlighted: selectedGoals.length === 0,
+      values: {},
+    });
+  }
+
+  function selectSubcategory(id) {
+    const subcategory = selectedCategory.subcategories[id];
+
+    setSelectedSubType(id);
+    setForm({
+      title: `${selectedCategory.label} - ${subcategory.label}`,
+      currentAmount: "",
+      targetDate: "",
+      highlighted: selectedGoals.length === 0,
+      values: {},
     });
   }
 
   function addGoal() {
-    if (!newGoal.title || !newGoal.targetAmount) return;
+    if (!selectedType || !selectedTemplate || targetAmount <= 0) return;
 
-    const shouldHighlight =
-      selectedGoals.length === 0 || Boolean(newGoal.highlighted);
+    const shouldHighlight = selectedGoals.length === 0 || form.highlighted;
 
     const updatedGoals = selectedGoals.map((goal) => ({
       ...goal,
       highlighted: shouldHighlight ? false : goal.highlighted,
     }));
 
-    setSelectedGoals([
-      ...updatedGoals,
-      {
-        id: Date.now(),
-        title: newGoal.title,
-        category: newGoal.category,
-        option: newGoal.option,
-        targetAmount: Number(newGoal.targetAmount || 0),
-        currentAmount: Number(newGoal.currentAmount || 0),
-        targetDate: newGoal.targetDate,
-        highlighted: shouldHighlight,
-        archived: false,
-        createdAt: new Date().toISOString(),
-      },
-    ]);
+    const newGoal = {
+      id: Date.now(),
+      title: form.title || selectedTemplate.label,
+      category: selectedType,
+      subcategory: selectedSubType,
+      option: selectedTemplate.label,
+      categoryLabel: selectedCategory.label,
+      targetAmount,
+      currentAmount: Number(form.currentAmount || 0),
+      targetDate: form.targetDate,
+      highlighted: shouldHighlight,
+      archived: false,
+      createdAt: new Date().toISOString(),
+      lastDeposit: null,
+      config: form.values,
+    };
 
-    setNewGoal({
-      title: "",
-      category: "auto",
-      option: categories[0].options[0],
-      targetAmount: "",
-      currentAmount: "",
-      targetDate: "",
-      highlighted: false,
-    });
+    setSelectedGoals([...updatedGoals, newGoal]);
+
+    addActivity?.(
+      "objectif",
+      "Objectif créé",
+      `${newGoal.title} a été ajouté à vos objectifs.`
+    );
+
+    if (shouldHighlight) {
+      addActivity?.(
+        "objectif",
+        "Objectif principal",
+        `${newGoal.title} est maintenant prioritaire.`
+      );
+    }
+
+    if (newGoal.currentAmount >= newGoal.targetAmount) {
+      setCelebratingGoalId(newGoal.id);
+      setTimeout(() => setCelebratingGoalId(null), 1800);
+
+      addActivity?.(
+        "victoire",
+        "Objectif atteint",
+        `${newGoal.title} a atteint 100 %.`
+      );
+    }
+
+    resetForm();
   }
 
   function removeGoal(id) {
+    const goalToRemove = selectedGoals.find((goal) => goal.id === id);
+
     setSelectedGoals(selectedGoals.filter((goal) => goal.id !== id));
+
+    addActivity?.(
+      "objectif",
+      "Objectif supprimé",
+      `${goalToRemove?.title || "Un objectif"} a été supprimé.`
+    );
   }
 
   function highlightGoal(id) {
+    const selectedGoal = selectedGoals.find((goal) => goal.id === id);
+
     setSelectedGoals(
       selectedGoals.map((goal) => ({
         ...goal,
         highlighted: goal.id === id,
       }))
     );
+
+    addActivity?.(
+      "objectif",
+      "Objectif principal",
+      `${selectedGoal?.title || "Un objectif"} est maintenant prioritaire.`
+    );
   }
 
   function addDeposit(goalId, amount) {
-    const cleanAmount = Number(cleanMoneyInput(String(amount || "")) || 0);
-    if (cleanAmount <= 0) return;
-
     setSelectedGoals(
       selectedGoals.map((goal) => {
         if (goal.id !== goalId) return goal;
 
+        const previousAmount = Number(goal.currentAmount || 0);
+        const target = Number(goal.targetAmount || 0);
+        const nextAmount = Math.min(target, previousAmount + amount);
+
+        addActivity?.(
+          "depot",
+          "Dépôt ajouté",
+          `${formatMoney(amount, currency)} ajoutés à ${goal.title}.`
+        );
+
+        if (previousAmount < target && nextAmount >= target) {
+          setCelebratingGoalId(goal.id);
+          setTimeout(() => setCelebratingGoalId(null), 1800);
+
+          addActivity?.(
+            "victoire",
+            "Objectif atteint",
+            `${goal.title} a atteint 100 %.`
+          );
+        }
+
         return {
           ...goal,
-          currentAmount: Math.min(
-            Number(goal.targetAmount || 0),
-            Number(goal.currentAmount || 0) + cleanAmount
-          ),
+          currentAmount: nextAmount,
+          lastDeposit: {
+            amount,
+            date: new Date().toISOString(),
+          },
         };
       })
     );
   }
 
   return (
-    <div>
-      <h1>{t.objectifs}</h1>
-      <p style={muted}>{p.subtitle}</p>
-
-      <section style={card}>
-        <div style={header}>
-          <Target color="var(--gold)" />
-          <h2>{p.smartCategories}</h2>
-        </div>
-
-        <div style={categoryGrid}>
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => selectCategory(category)}
-              style={{
-                ...categoryTile,
-                borderColor:
-                  newGoal.category === category.id
-                    ? category.color
-                    : "var(--border)",
-              }}
-            >
-              <span style={{ color: category.color }}>{category.icon}</span>
-              <strong>{category.label}</strong>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section style={{ ...card, borderColor: selectedCategory.color }}>
-        <div style={header}>
-          <Hammer color={selectedCategory.color} />
-          <h2>
-            {p.adaptedOptions} : {selectedCategory.label}
-          </h2>
-        </div>
-
-        <div style={optionGrid}>
-          {selectedCategory.options.map((option) => (
-            <button
-              key={option}
-              onClick={() => selectOption(option)}
-              style={{
-                ...optionTile,
-                borderColor:
-                  newGoal.option === option
-                    ? selectedCategory.color
-                    : "var(--border)",
-              }}
-            >
-              {newGoal.option === option ? "✓ " : ""}
-              {option}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section style={card}>
-        <div style={header}>
-          <Plus color="var(--green)" />
-          <h2>{p.planGoal}</h2>
-        </div>
-
-        <label>{p.goalName}</label>
-        <input
-          value={newGoal.title}
-          onChange={(event) => setNewGoal({ ...newGoal, title: event.target.value })}
-          placeholder={selectedCategory.options[0]}
-          style={input}
-        />
-
-        <label>{p.targetAmount}</label>
-        <input
-          value={newGoal.targetAmount}
-          onChange={(event) =>
-            setNewGoal({
-              ...newGoal,
-              targetAmount: cleanMoneyInput(event.target.value),
-            })
-          }
-          placeholder="10000"
-          inputMode="decimal"
-          style={input}
-        />
-
-        <label>{p.currentAmount}</label>
-        <input
-          value={newGoal.currentAmount}
-          onChange={(event) =>
-            setNewGoal({
-              ...newGoal,
-              currentAmount: cleanMoneyInput(event.target.value),
-            })
-          }
-          placeholder="1500"
-          inputMode="decimal"
-          style={input}
-        />
-
-        <label>{p.targetDate}</label>
-        <input
-          type="date"
-          value={newGoal.targetDate}
-          onChange={(event) =>
-            setNewGoal({ ...newGoal, targetDate: event.target.value })
-          }
-          style={input}
-        />
-
-        <button
-          onClick={() =>
-            setNewGoal({ ...newGoal, highlighted: !newGoal.highlighted })
-          }
-          style={{
-            ...highlightBtn,
-            borderColor: newGoal.highlighted ? "var(--gold)" : "var(--border)",
-            background: newGoal.highlighted
-              ? "rgba(212,175,55,.14)"
-              : "var(--bg-panel)",
-          }}
+    <div className="native-page" style={page}>
+      <section
+        style={{
+          ...heroCard,
+          borderColor: selectedCategory?.color || "var(--border)",
+        }}
+      >
+        <div
+          key={`${selectedType || "categories"}-${selectedSubType || "root"}`}
+          style={animatedPanel}
         >
-          <Star size={17} />
-          {newGoal.highlighted ? p.mainGoal : p.setMain}
-        </button>
+          {!selectedCategory && (
+            <>
+              <div style={header}>
+                <Target color="var(--gold)" />
+                <h1>{t.objectifs || p.smartCategories}</h1>
+              </div>
 
-        <Preview goal={newGoal} currency={currency} text={p} />
+              <p style={muted}>{p.subtitle}</p>
 
-        <button onClick={addGoal} style={addButton}>
-          {p.createGoal}
-        </button>
+              <div style={categoryGrid}>
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => selectCategory(category.id)}
+                    style={categoryTile}
+                  >
+                    <span style={{ color: category.color }}>{category.icon}</span>
+                    <strong>{category.label}</strong>
+                    {category.subcategories && (
+                      <small style={mutedSmall}>Sous-catégories</small>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {selectedCategory && hasSubcategories && !selectedTemplate && (
+            <>
+              <div style={formTop}>
+                <button onClick={resetForm} style={backButton}>
+                  <ArrowLeft size={17} />
+                  {p.backToCategories}
+                </button>
+
+                <span style={{ ...miniIcon, color: selectedCategory.color }}>
+                  {selectedCategory.icon}
+                </span>
+              </div>
+
+              <div style={header}>
+                <span style={{ color: selectedCategory.color }}>
+                  {selectedCategory.icon}
+                </span>
+                <h1>{selectedCategory.label}</h1>
+              </div>
+
+              <p style={muted}>{p.chooseSubcategory}</p>
+
+              <div style={subcategoryGrid}>
+                {Object.entries(selectedCategory.subcategories).map(
+                  ([id, subcategory]) => (
+                    <button
+                      key={id}
+                      onClick={() => selectSubcategory(id)}
+                      style={{
+                        ...subcategoryTile,
+                        borderColor: selectedCategory.color,
+                      }}
+                    >
+                      <strong>{subcategory.label}</strong>
+                      <ChevronRight size={18} />
+                    </button>
+                  )
+                )}
+              </div>
+            </>
+          )}
+
+          {selectedTemplate && (
+            <>
+              <div style={formTop}>
+                <button
+                  onClick={hasSubcategories ? backToSubcategories : resetForm}
+                  style={backButton}
+                >
+                  <ArrowLeft size={17} />
+                  {hasSubcategories ? p.chooseSubcategory : p.backToGoals}
+                </button>
+
+                <span style={{ ...miniIcon, color: selectedTemplate.color }}>
+                  {selectedTemplate.icon}
+                </span>
+              </div>
+
+              <div style={header}>
+                <span style={{ color: selectedTemplate.color }}>
+                  {selectedTemplate.icon}
+                </span>
+                <h1>
+                  {p.configure} : {selectedTemplate.label}
+                </h1>
+              </div>
+
+              {selectedTemplate.categoryLabel && (
+                <p style={mutedSmall}>{selectedTemplate.categoryLabel}</p>
+              )}
+
+              <label>Nom de l’objectif</label>
+              <input
+                value={form.title}
+                onChange={(event) =>
+                  setForm({ ...form, title: event.target.value })
+                }
+                style={input}
+              />
+
+              {selectedTemplate.fields.map(([key, label]) => (
+                <div key={key}>
+                  <label>{label}</label>
+                  <input
+                    value={form.values[key] || ""}
+                    onChange={(event) => updateValue(key, event.target.value)}
+                    placeholder="0"
+                    inputMode="decimal"
+                    style={input}
+                  />
+                </div>
+              ))}
+
+              <label>{p.currentAmount}</label>
+              <input
+                value={form.currentAmount}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    currentAmount: cleanMoneyInput(event.target.value),
+                  })
+                }
+                placeholder="0"
+                inputMode="decimal"
+                style={input}
+              />
+
+              <label>{p.targetDate}</label>
+              <input
+                type="date"
+                value={form.targetDate}
+                onChange={(event) =>
+                  setForm({ ...form, targetDate: event.target.value })
+                }
+                style={input}
+              />
+
+              <button
+                onClick={() =>
+                  setForm({ ...form, highlighted: !form.highlighted })
+                }
+                style={{
+                  ...highlightBtn,
+                  borderColor: form.highlighted ? "var(--gold)" : "var(--border)",
+                  background: form.highlighted
+                    ? "rgba(212,175,55,.14)"
+                    : "var(--bg-panel)",
+                }}
+              >
+                <Star size={17} />
+                {form.highlighted ? p.mainGoal : p.setMain}
+              </button>
+
+              <Preview
+                targetAmount={targetAmount}
+                currentAmount={form.currentAmount}
+                currency={currency}
+                text={p}
+              />
+
+              <button onClick={addGoal} style={addButton}>
+                <Plus size={18} />
+                {p.createGoal}
+              </button>
+
+              <p style={mutedSmall}>{p.simulateLater}</p>
+            </>
+          )}
+        </div>
       </section>
 
       <section style={card}>
@@ -561,9 +822,7 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings }) {
         {selectedGoals.length === 0 && <p style={muted}>{p.noGoal}</p>}
 
         {selectedGoals.map((goal) => {
-          const category =
-            categories.find((item) => item.id === goal.category) ||
-            categories[0];
+          const category = goalTemplates[goal.category] || goalTemplates.securite;
 
           const progress =
             goal.targetAmount > 0
@@ -579,22 +838,34 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings }) {
           );
 
           const isFlipped = flippedId === goal.id;
+          const isCelebrating = celebratingGoalId === goal.id;
+          const isAchieved = progress >= 100;
+          const isAlmostThere = progress >= 80 && progress < 100;
 
           return (
             <div
               key={goal.id}
               style={{
                 ...goalCard,
-                borderColor: category.color,
+                ...(isCelebrating ? celebrationCard : {}),
+                borderColor: isAchieved ? "var(--gold)" : category.color,
                 background: isFlipped
                   ? "linear-gradient(135deg, rgba(212,175,55,.10), var(--bg-panel))"
-                  : "var(--bg-panel)",
+                  : isAchieved
+                    ? "linear-gradient(135deg, rgba(212,175,55,.13), var(--bg-panel))"
+                    : "var(--bg-panel)",
               }}
             >
               {!isFlipped ? (
                 <>
                   <div style={goalHeader}>
-                    <span style={{ color: category.color }}>{category.icon}</span>
+                    <span
+                      style={{
+                        color: isAchieved ? "var(--gold)" : category.color,
+                      }}
+                    >
+                      {isAchieved ? <Trophy /> : category.icon}
+                    </span>
 
                     <div>
                       <strong>
@@ -602,7 +873,8 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings }) {
                         {goal.title}
                       </strong>
                       <p style={mutedSmall}>
-                        {category.label} • {goal.option || p.project}
+                        {goal.categoryLabel || category.label}
+                        {goal.option ? ` • ${goal.option}` : ""}
                       </p>
                     </div>
 
@@ -615,6 +887,25 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings }) {
                     </button>
                   </div>
 
+                  <div style={badgeRow}>
+                    <span style={disciplineBadge}>
+                      {getStartedLabel(goal.createdAt, p)}
+                    </span>
+                    {isAlmostThere && (
+                      <span style={almostBadge}>{p.almostThere}</span>
+                    )}
+                    {isAchieved && (
+                      <span style={victoryBadge}>🏆 {p.achieved}</span>
+                    )}
+                  </div>
+
+                  {isCelebrating && (
+                    <div style={celebrationBox}>
+                      <Sparkles size={18} />
+                      <strong>{p.congratulations}</strong>
+                    </div>
+                  )}
+
                   <div style={amountRow}>
                     <span>{formatMoney(goal.currentAmount, currency)}</span>
                     <strong>{formatMoney(goal.targetAmount, currency)}</strong>
@@ -625,7 +916,7 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings }) {
                       style={{
                         ...barFill,
                         width: `${progress}%`,
-                        background: category.color,
+                        background: isAchieved ? "var(--gold)" : category.color,
                       }}
                     />
                   </div>
@@ -634,9 +925,10 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings }) {
                     {p.progress} : {progress}%
                   </p>
 
-                  {progress >= 100 && (
-                    <p style={{ ...mutedSmall, color: "var(--green)", fontWeight: "bold" }}>
-                      🏆 Objectif atteint
+                  {goal.lastDeposit && (
+                    <p style={mutedSmall}>
+                      {p.lastDeposit} : +
+                      {formatMoney(goal.lastDeposit.amount, currency)}
                     </p>
                   )}
                 </>
@@ -661,21 +953,39 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings }) {
                     </button>
                   </div>
 
-                  <InfoLine label={p.targetAmount} value={formatMoney(goal.targetAmount, currency)} />
-                  <InfoLine label={p.currentAmount} value={formatMoney(goal.currentAmount, currency)} />
-                  <InfoLine label={p.remainingToGet} value={formatMoney(remaining, currency)} />
+                  <InfoLine
+                    label="Catégorie"
+                    value={`${goal.categoryLabel || category.label}${
+                      goal.option ? ` • ${goal.option}` : ""
+                    }`}
+                  />
+                  <InfoLine
+                    label="Discipline"
+                    value={getStartedLabel(goal.createdAt, p)}
+                  />
+                  <InfoLine
+                    label={p.targetAmount}
+                    value={formatMoney(goal.targetAmount, currency)}
+                  />
+                  <InfoLine
+                    label={p.currentAmount}
+                    value={formatMoney(goal.currentAmount, currency)}
+                  />
+                  <InfoLine
+                    label={p.remainingToGet}
+                    value={formatMoney(remaining, currency)}
+                  />
                   <InfoLine label={p.progress} value={`${progress}%`} />
 
-                  {goal.source === "simulateur" && (
-                    <InfoLine label={p.source} value={p.fromSimulator} />
-                  )}
-
-                  {goal.targetDate && (
-                    <InfoLine label={p.targetDate} value={goal.targetDate} />
+                  {goal.lastDeposit && (
+                    <InfoLine
+                      label={p.lastDeposit}
+                      value={`+${formatMoney(goal.lastDeposit.amount, currency)}`}
+                    />
                   )}
 
                   <div style={quickDepositRow}>
-                    {[50, 100, 250].map((amount) => (
+                    {[50, 100, 250, 500].map((amount) => (
                       <button
                         key={amount}
                         onClick={() => addDeposit(goal.id, amount)}
@@ -697,7 +1007,7 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings }) {
 
                   <button onClick={() => removeGoal(goal.id)} style={deleteBtn}>
                     <Trash2 size={16} />
-                    Supprimer
+                    {p.delete}
                   </button>
                 </>
               )}
@@ -718,18 +1028,22 @@ function InfoLine({ label, value }) {
   );
 }
 
-function Preview({ goal, currency, text }) {
-  const target = Number(goal.targetAmount || 0);
-  const current = Number(goal.currentAmount || 0);
-  const remaining = Math.max(0, target - current);
+function Preview({ targetAmount, currentAmount, currency, text }) {
+  const current = Number(currentAmount || 0);
+  const remaining = Math.max(0, targetAmount - current);
   const progress =
-    target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+    targetAmount > 0
+      ? Math.min(100, Math.round((current / targetAmount) * 100))
+      : 0;
 
   return (
     <div style={preview}>
       <HeartHandshake color="var(--gold)" />
       <div>
         <strong>{text.quickAnalysis}</strong>
+        <p style={mutedSmall}>
+          {text.targetAmount} : {formatMoney(targetAmount, currency)}
+        </p>
         <p style={mutedSmall}>
           {text.progress} : {progress}%
         </p>
@@ -740,6 +1054,50 @@ function Preview({ goal, currency, text }) {
     </div>
   );
 }
+
+const page = {
+  paddingTop: "0",
+};
+
+const heroCard = {
+  background: "var(--bg-card)",
+  border: "1px solid var(--border)",
+  borderRadius: "22px",
+  padding: "20px",
+  overflow: "hidden",
+};
+
+const animatedPanel = {
+  animation: "fadeIn .22s ease",
+};
+
+const formTop = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: "14px",
+};
+
+const backButton = {
+  border: "1px solid var(--gold)",
+  background: "rgba(212,175,55,.12)",
+  color: "var(--gold)",
+  borderRadius: "999px",
+  padding: "9px 12px",
+  display: "flex",
+  alignItems: "center",
+  gap: "7px",
+  fontWeight: "bold",
+};
+
+const miniIcon = {
+  width: "38px",
+  height: "38px",
+  borderRadius: "14px",
+  background: "var(--bg-panel)",
+  display: "grid",
+  placeItems: "center",
+};
 
 const card = {
   background: "var(--bg-card)",
@@ -758,35 +1116,45 @@ const header = {
 
 const categoryGrid = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
-  gap: "10px",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: "14px",
+  marginTop: "22px",
 };
 
 const categoryTile = {
+  minHeight: "128px",
   background: "var(--bg-panel)",
   border: "1px solid var(--border)",
-  borderRadius: "16px",
-  padding: "14px",
+  borderRadius: "20px",
+  padding: "20px",
   color: "var(--text-main)",
   display: "flex",
   flexDirection: "column",
-  gap: "8px",
+  justifyContent: "space-between",
+  gap: "12px",
   alignItems: "flex-start",
+  textAlign: "left",
+  fontSize: "18px",
 };
 
-const optionGrid = {
+const subcategoryGrid = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-  gap: "10px",
+  gap: "12px",
+  marginTop: "18px",
 };
 
-const optionTile = {
+const subcategoryTile = {
+  width: "100%",
   background: "var(--bg-panel)",
   border: "1px solid var(--border)",
-  borderRadius: "14px",
-  padding: "13px",
+  borderRadius: "16px",
+  padding: "16px",
   color: "var(--text-main)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
   textAlign: "left",
+  fontSize: "16px",
 };
 
 const input = {
@@ -833,6 +1201,10 @@ const addButton = {
   background: "var(--green)",
   color: "white",
   fontWeight: "bold",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
 };
 
 const goalCard = {
@@ -840,6 +1212,12 @@ const goalCard = {
   borderRadius: "18px",
   padding: "16px",
   marginTop: "12px",
+  transition: "transform .22s ease, box-shadow .22s ease, border-color .22s ease",
+};
+
+const celebrationCard = {
+  transform: "scale(1.015)",
+  boxShadow: "0 0 0 1px rgba(212,175,55,.35), 0 0 28px rgba(212,175,55,.25)",
 };
 
 const goalHeader = {
@@ -847,6 +1225,55 @@ const goalHeader = {
   gridTemplateColumns: "32px 1fr auto",
   gap: "10px",
   alignItems: "center",
+};
+
+const badgeRow = {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: "8px",
+  marginTop: "12px",
+};
+
+const disciplineBadge = {
+  border: "1px solid var(--border)",
+  background: "var(--bg-main)",
+  color: "var(--text-muted)",
+  borderRadius: "999px",
+  padding: "6px 9px",
+  fontSize: "12px",
+  fontWeight: "700",
+};
+
+const almostBadge = {
+  border: "1px solid var(--gold)",
+  background: "rgba(212,175,55,.12)",
+  color: "var(--gold)",
+  borderRadius: "999px",
+  padding: "6px 9px",
+  fontSize: "12px",
+  fontWeight: "800",
+};
+
+const victoryBadge = {
+  border: "1px solid var(--green)",
+  background: "rgba(34,197,94,.12)",
+  color: "var(--green)",
+  borderRadius: "999px",
+  padding: "6px 9px",
+  fontSize: "12px",
+  fontWeight: "800",
+};
+
+const celebrationBox = {
+  marginTop: "12px",
+  border: "1px solid var(--gold)",
+  background: "rgba(212,175,55,.14)",
+  color: "var(--gold)",
+  borderRadius: "14px",
+  padding: "11px",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
 };
 
 const amountRow = {
@@ -887,7 +1314,7 @@ const infoLine = {
 
 const quickDepositRow = {
   display: "grid",
-  gridTemplateColumns: "repeat(3, 1fr)",
+  gridTemplateColumns: "repeat(4, 1fr)",
   gap: "8px",
   marginTop: "12px",
 };

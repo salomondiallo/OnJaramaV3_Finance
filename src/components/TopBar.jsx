@@ -1,31 +1,46 @@
 import {
   ArrowLeft,
   Bell,
+  Clock3,
   Globe2,
   Menu,
   Settings,
+  ShieldCheck,
   UserCircle,
   X,
 } from "lucide-react";
 import { useState } from "react";
 
-function TopBar({ currentPage, goBack, canGoBack, setCurrentPage }) {
+function TopBar({
+  currentPage,
+  goBack,
+  canGoBack,
+  setCurrentPage,
+  notifications,
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const unreadCount = Array.isArray(notifications)
+    ? notifications.filter((item) => !item.read).length
+    : 0;
 
   const mainPages = [
     "accueil",
     "situation",
     "objectifs",
     "parcours",
-    "profil",
+    "monplan",
     "simulateur",
   ];
 
   const isMainPage = mainPages.includes(currentPage);
 
-  function openPage(page) {
+  function openPage(page, keepOpen = false) {
     setCurrentPage(page);
-    setMenuOpen(false);
+
+    if (!keepOpen) {
+      setMenuOpen(false);
+    }
   }
 
   return (
@@ -63,6 +78,11 @@ function TopBar({ currentPage, goBack, canGoBack, setCurrentPage }) {
           />
 
           <div className="topbar-menu-panel">
+            <div className="topbar-menu-head">
+              <strong>OnJarama Path</strong>
+              <span>Menu personnel</span>
+            </div>
+
             <button onClick={() => openPage("profil")}>
               <UserCircle size={18} />
               Profil
@@ -73,26 +93,63 @@ function TopBar({ currentPage, goBack, canGoBack, setCurrentPage }) {
               Réglages
             </button>
 
-            <button onClick={() => openPage("reglages")}>
+            <button onClick={() => openPage("reglages", true)}>
               <Globe2 size={18} />
               Langue
             </button>
 
-            <button onClick={() => openPage("profil")}>
+            <button onClick={() => openPage("notifications")}>
               <Bell size={18} />
               Notifications
+              {unreadCount > 0 && (
+                <span style={notificationBadge}>{unreadCount}</span>
+              )}
+            </button>
+
+            <button onClick={() => openPage("historique")}>
+              <Clock3 size={18} />
+              Historique
+            </button>
+
+            <button onClick={() => openPage("reglages")}>
+              <ShieldCheck size={18} />
+              Confidentialité
             </button>
 
             <div className="topbar-credit">
               <strong>Thierno Diallo</strong>
               <span>Fondateur de l’écosystème OnJarama</span>
+              <small>Guinée 🇬🇳 • Québec ⚜️ • Canada 🇨🇦</small>
               <small>Fièrement développé au Québec ⚜️</small>
             </div>
+
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="topbar-close-btn"
+            >
+              <X size={17} />
+              Fermer le menu
+            </button>
           </div>
         </>
       )}
     </div>
   );
 }
+
+const notificationBadge = {
+  marginLeft: "auto",
+  minWidth: "22px",
+  height: "22px",
+  borderRadius: "999px",
+  background: "var(--red)",
+  color: "white",
+  fontSize: "12px",
+  fontWeight: "bold",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "0 6px",
+};
 
 export default TopBar;

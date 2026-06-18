@@ -1,7 +1,7 @@
 import {
   Route,
   Target,
-  UserCircle,
+  Brain,
   Calculator,
   ChevronDown,
   ChevronUp,
@@ -38,10 +38,17 @@ function BottomNav({ currentPage, setCurrentPage, navHidden, setNavHidden }) {
         </button>
 
         <NavButton
-          active={currentPage === "parcours" || currentPage === "monplan"}
+          active={currentPage === "parcours"}
           icon={<Route size={20} />}
           label="Parcours"
           onClick={() => go("parcours")}
+        />
+
+        <NavButton
+          active={currentPage === "monplan"}
+          icon={<Brain size={20} />}
+          label="Mon Plan"
+          onClick={() => go("monplan")}
         />
 
         <NavButton
@@ -56,13 +63,6 @@ function BottomNav({ currentPage, setCurrentPage, navHidden, setNavHidden }) {
           icon={<Calculator size={20} />}
           label="Simuler"
           onClick={() => go("simulateur")}
-        />
-
-        <NavButton
-          active={currentPage === "profil" || currentPage === "reglages"}
-          icon={<UserCircle size={20} />}
-          label="Profil"
-          onClick={() => go("profil")}
         />
       </nav>
     </>

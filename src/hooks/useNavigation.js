@@ -1,6 +1,13 @@
 import { useState } from "react";
 
-const SWIPE_PAGES = ["accueil", "parcours", "objectifs", "simulateur", "profil"];
+const SWIPE_PAGES = [
+  "accueil",
+  "parcours",
+  "monplan",
+  "objectifs",
+  "simulateur",
+  "profil",
+];
 
 function useNavigation() {
   const [currentPage, setCurrentPageState] = useState(() => {

@@ -25,12 +25,15 @@ import Horizon from "./pages/Horizon";
 import MonPlan from "./pages/MonPlan";
 import Paiements from "./pages/Paiements";
 import Transactions from "./pages/Transactions";
+import Notifications from "./pages/Notifications";
+import Historique from "./pages/Historique";
 
 function App() {
   const appState = useAppState();
 
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
+  const swipeAllowed = useRef(false);
 
   const [navHidden, setNavHidden] = useState(false);
 
@@ -93,6 +96,8 @@ function App() {
     monplan: <MonPlan {...pageProps} />,
     profil: <Profil {...pageProps} />,
     reglages: <Reglages {...pageProps} />,
+    notifications: <Notifications {...pageProps} />,
+    historique: <Historique {...pageProps} />,
   };
 
   function handleTouchStart(event) {
@@ -100,10 +105,19 @@ function App() {
 
     touchStartX.current = touch.clientX;
     touchStartY.current = touch.clientY;
+
+    swipeAllowed.current = navHidden;
   }
 
   function handleTouchEnd(event) {
-    if (touchStartX.current === null || touchStartY.current === null) {
+    if (
+      touchStartX.current === null ||
+      touchStartY.current === null ||
+      !swipeAllowed.current
+    ) {
+      touchStartX.current = null;
+      touchStartY.current = null;
+      swipeAllowed.current = false;
       return;
     }
 
@@ -114,13 +128,12 @@ function App() {
 
     touchStartX.current = null;
     touchStartY.current = null;
+    swipeAllowed.current = false;
 
     const isMostlyHorizontal = Math.abs(deltaX) > Math.abs(deltaY);
-    const isRealSwipe = Math.abs(deltaX) >= 80;
+    const isRealSwipe = Math.abs(deltaX) >= 90;
 
-    if (!isMostlyHorizontal || !isRealSwipe) {
-      return;
-    }
+    if (!isMostlyHorizontal || !isRealSwipe) return;
 
     if (deltaX < 0) {
       goForwardBySwipe();
@@ -148,6 +161,7 @@ function App() {
           goBack={goBack}
           canGoBack={canGoBack}
           setCurrentPage={setCurrentPage}
+          notifications={appState.notifications}
         />
 
         <div className="page-stage">
