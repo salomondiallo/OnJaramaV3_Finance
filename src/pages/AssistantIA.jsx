@@ -33,10 +33,12 @@ const pageText = {
     activeGoals: "Objectifs actifs",
     globalProgress: "Progression globale",
     totalTarget: "Montant cible total",
+    nextGoal: "Prochain objectif",
     advice: "Conseils OnJarama",
     quickActions: "Actions rapides",
     update: "Mettre à jour",
     viewPath: "Voir le parcours",
+    openSimulator: "Ouvrir le simulateur",
     startNumbers: "Commencer par vos chiffres",
     startText:
       "Entrez vos revenus, dépenses, dettes et épargne pour recevoir une analyse personnalisée.",
@@ -44,13 +46,17 @@ const pageText = {
     pressureText:
       "Vos sorties dépassent votre capacité actuelle. Réduisez une dépense ou ajustez l’épargne prévue.",
     highDebt: "Dette à fort intérêt détectée",
-    highDebtText: "La priorité devrait être cette dette. Son taux peut ralentir vos autres projets.",
+    highDebtText:
+      "La priorité devrait être cette dette. Son taux peut ralentir vos autres projets.",
     debtReduction: "Réduction progressive des dettes",
     debtReductionText:
       "Continuez les paiements réguliers et dirigez les montants supplémentaires vers la dette la plus coûteuse.",
     goalsBuilding: "Objectifs en construction",
     goalsBuildingText:
       "Vos objectifs sont actifs. Gardez un rythme régulier et ajustez les dates selon votre capacité réelle.",
+    simulatorGoal: "Objectif créé depuis le simulateur",
+    simulatorGoalText:
+      "Vous avez transformé une simulation en objectif. C’est exactement le bon réflexe : prévoir, nommer, suivre.",
     goodBase: "Bonne base financière",
     goodBaseText:
       "Votre situation semble prête pour créer ou accélérer vos objectifs concrets.",
@@ -78,10 +84,12 @@ const pageText = {
     activeGoals: "Active goals",
     globalProgress: "Global progress",
     totalTarget: "Total target amount",
+    nextGoal: "Next goal",
     advice: "OnJarama tips",
     quickActions: "Quick actions",
     update: "Update",
     viewPath: "View path",
+    openSimulator: "Open simulator",
     startNumbers: "Start with your numbers",
     startText:
       "Enter your income, expenses, debts and savings to receive a personalized analysis.",
@@ -89,13 +97,17 @@ const pageText = {
     pressureText:
       "Your outgoing money is above your current capacity. Reduce an expense or adjust planned savings.",
     highDebt: "High-interest debt detected",
-    highDebtText: "This debt should be the priority. Its rate can slow down your other projects.",
+    highDebtText:
+      "This debt should be the priority. Its rate can slow down your other projects.",
     debtReduction: "Progressive debt reduction",
     debtReductionText:
       "Keep regular payments and direct extra money toward the most expensive debt.",
     goalsBuilding: "Goals in progress",
     goalsBuildingText:
       "Your goals are active. Keep a steady rhythm and adjust dates based on real capacity.",
+    simulatorGoal: "Goal created from simulator",
+    simulatorGoalText:
+      "You turned a simulation into a goal. That is the right reflex: plan, name, track.",
     goodBase: "Good financial base",
     goodBaseText:
       "Your situation seems ready to create or accelerate concrete goals.",
@@ -123,10 +135,12 @@ const pageText = {
     activeGoals: "Objetivos activos",
     globalProgress: "Progreso global",
     totalTarget: "Monto objetivo total",
+    nextGoal: "Próximo objetivo",
     advice: "Consejos OnJarama",
     quickActions: "Acciones rápidas",
     update: "Actualizar",
     viewPath: "Ver camino",
+    openSimulator: "Abrir simulador",
     startNumbers: "Comenzar con tus cifras",
     startText:
       "Ingresa tus ingresos, gastos, deudas y ahorro para recibir un análisis personalizado.",
@@ -134,13 +148,17 @@ const pageText = {
     pressureText:
       "Tus salidas superan tu capacidad actual. Reduce un gasto o ajusta el ahorro previsto.",
     highDebt: "Deuda con alto interés detectada",
-    highDebtText: "Esta deuda debería ser la prioridad. Su tasa puede frenar tus otros proyectos.",
+    highDebtText:
+      "Esta deuda debería ser la prioridad. Su tasa puede frenar tus otros proyectos.",
     debtReduction: "Reducción progresiva de deudas",
     debtReductionText:
       "Mantén pagos regulares y dirige el dinero extra hacia la deuda más costosa.",
     goalsBuilding: "Objetivos en construcción",
     goalsBuildingText:
       "Tus objetivos están activos. Mantén un ritmo regular y ajusta las fechas según tu capacidad real.",
+    simulatorGoal: "Objetivo creado desde el simulador",
+    simulatorGoalText:
+      "Convertiste una simulación en objetivo. Es el reflejo correcto: planificar, nombrar, seguir.",
     goodBase: "Buena base financiera",
     goodBaseText:
       "Tu situación parece lista para crear o acelerar objetivos concretos.",
@@ -171,11 +189,15 @@ function AssistantIA({ financeData, selectedGoals, settings, setCurrentPage }) {
 
   const available = income - expenses - savings;
 
-  const priorityDebt = [...financeData.debts].sort(
-    (a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0)
-  )[0];
+  const priorityDebt = [...financeData.debts]
+    .filter((debt) => Number(debt.balance || 0) > 0)
+    .sort((a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0))[0];
 
-  const activeGoals = Array.isArray(selectedGoals) ? selectedGoals : [];
+  const activeGoals = Array.isArray(selectedGoals)
+    ? selectedGoals.filter((goal) => !goal.archived)
+    : [];
+
+  const simulatorGoal = activeGoals.find((goal) => goal.source === "simulateur");
 
   const totalGoalTarget = activeGoals.reduce(
     (sum, goal) => sum + Number(goal.targetAmount || 0),
@@ -191,6 +213,9 @@ function AssistantIA({ financeData, selectedGoals, settings, setCurrentPage }) {
     totalGoalTarget > 0
       ? Math.min(100, Math.round((totalGoalCurrent / totalGoalTarget) * 100))
       : 0;
+
+  const highlightedGoal =
+    activeGoals.find((goal) => goal.highlighted) || activeGoals[0];
 
   const activePayments = payments.filter((payment) => payment.active);
 
@@ -226,12 +251,13 @@ function AssistantIA({ financeData, selectedGoals, settings, setCurrentPage }) {
     totalDebt,
     priorityDebt,
     activeGoals,
+    simulatorGoal,
     monthlyPayments,
     p,
   });
 
   return (
-    <div>
+    <div className="native-page">
       <h1>{t.assistant}</h1>
       <p style={muted}>{p.subtitle}</p>
 
@@ -278,6 +304,21 @@ function AssistantIA({ financeData, selectedGoals, settings, setCurrentPage }) {
 
       <section style={card}>
         <div style={header}>
+          <Target color="var(--gold)" />
+          <h2>{p.goals}</h2>
+        </div>
+
+        <Info label={p.activeGoals} value={activeGoals.length} />
+        <Info label={p.globalProgress} value={`${goalProgress}%`} />
+        <Info label={p.totalTarget} value={formatMoney(totalGoalTarget, currency)} />
+
+        {highlightedGoal && (
+          <Info label={p.nextGoal} value={highlightedGoal.title} />
+        )}
+      </section>
+
+      <section style={card}>
+        <div style={header}>
           <Calendar color="var(--gold)" />
           <h2>{p.scheduledPayments}</h2>
         </div>
@@ -306,21 +347,12 @@ function AssistantIA({ financeData, selectedGoals, settings, setCurrentPage }) {
         <Info
           label={p.expenses}
           value={formatMoney(
-            transactionTotals.expenses + transactionTotals.savings + transactionTotals.debt,
+            transactionTotals.expenses +
+              transactionTotals.savings +
+              transactionTotals.debt,
             currency
           )}
         />
-      </section>
-
-      <section style={card}>
-        <div style={header}>
-          <Target color="var(--gold)" />
-          <h2>{p.goals}</h2>
-        </div>
-
-        <Info label={p.activeGoals} value={activeGoals.length} />
-        <Info label={p.globalProgress} value={`${goalProgress}%`} />
-        <Info label={p.totalTarget} value={formatMoney(totalGoalTarget, currency)} />
       </section>
 
       <section style={card}>
@@ -345,6 +377,10 @@ function AssistantIA({ financeData, selectedGoals, settings, setCurrentPage }) {
           <button onClick={() => setCurrentPage("parcours")} style={purpleBtn}>
             {p.viewPath}
           </button>
+
+          <button onClick={() => setCurrentPage("simulateur")} style={blueBtn}>
+            {p.openSimulator}
+          </button>
         </div>
       </section>
     </div>
@@ -366,6 +402,7 @@ function getMainAdvice({
   totalDebt,
   priorityDebt,
   activeGoals,
+  simulatorGoal,
   monthlyPayments,
   p,
 }) {
@@ -394,6 +431,13 @@ function getMainAdvice({
     return {
       title: p.debtReduction,
       text: p.debtReductionText,
+    };
+  }
+
+  if (simulatorGoal) {
+    return {
+      title: p.simulatorGoal,
+      text: p.simulatorGoalText,
     };
   }
 
@@ -480,7 +524,7 @@ const advice = {
 
 const actions = {
   display: "grid",
-  gridTemplateColumns: "1fr 1fr",
+  gridTemplateColumns: "1fr",
   gap: "10px",
   marginTop: "14px",
 };
@@ -500,6 +544,15 @@ const purpleBtn = {
   border: "none",
   background: "linear-gradient(90deg,var(--purple),var(--blue))",
   color: "white",
+  fontWeight: "bold",
+};
+
+const blueBtn = {
+  padding: "14px",
+  borderRadius: "14px",
+  border: "none",
+  background: "rgba(56,189,248,.16)",
+  color: "var(--blue)",
   fontWeight: "bold",
 };
 

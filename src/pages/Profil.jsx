@@ -38,15 +38,16 @@ const pageText = {
     ojctDesc: "Technologies et innovation",
     creator: "Créateur",
     founder: "Fondateur de l’écosystème OnJarama",
+    proud: "Fièrement développé au Québec ⚜️",
     visionTitle: "Vision",
     vision:
       "Développer des solutions numériques simples, accessibles et utiles pour accompagner les utilisateurs dans leurs projets financiers, professionnels et personnels.",
     achievements: "Réalisations",
     achievementText: "Victoires financières bientôt disponibles.",
     security: "Sécurité",
-    securityText: "PIN et biométrie prévus plus tard.",
+    securityText: "PIN, biométrie et connexion sécurisée prévus plus tard.",
     tips: "Conseils & astuces",
-    tipsText: "Touchez une tuile pour l’ouvrir. Appui long pour sélectionner.",
+    tipsText: "Touchez une tuile pour l’ouvrir. Retournez les objectifs pour voir les détails.",
     about: "À propos",
     aboutText: "OnJarama Path accompagne vos objectifs financiers.",
     share: "Partager / Copier le lien",
@@ -88,15 +89,16 @@ const pageText = {
     ojctDesc: "Technology and innovation",
     creator: "Creator",
     founder: "Founder of the OnJarama ecosystem",
+    proud: "Proudly developed in Quebec ⚜️",
     visionTitle: "Vision",
     vision:
       "Develop simple, accessible and useful digital solutions to support users in their financial, professional and personal projects.",
     achievements: "Achievements",
     achievementText: "Financial victories coming soon.",
     security: "Security",
-    securityText: "PIN and biometrics planned later.",
+    securityText: "PIN, biometrics and secure login planned later.",
     tips: "Tips & tricks",
-    tipsText: "Tap a tile to open it. Long press to select.",
+    tipsText: "Tap a tile to open it. Flip goals to see details.",
     about: "About",
     aboutText: "OnJarama Path supports your financial goals.",
     share: "Share / Copy link",
@@ -138,15 +140,16 @@ const pageText = {
     ojctDesc: "Tecnología e innovación",
     creator: "Creador",
     founder: "Fundador del ecosistema OnJarama",
+    proud: "Desarrollado con orgullo en Quebec ⚜️",
     visionTitle: "Visión",
     vision:
       "Desarrollar soluciones digitales simples, accesibles y útiles para acompañar a los usuarios en sus proyectos financieros, profesionales y personales.",
     achievements: "Logros",
     achievementText: "Victorias financieras próximamente.",
     security: "Seguridad",
-    securityText: "PIN y biometría previstos más adelante.",
+    securityText: "PIN, biometría e inicio seguro previstos más adelante.",
     tips: "Consejos y trucos",
-    tipsText: "Toca una tarjeta para abrirla. Mantén pulsado para seleccionar.",
+    tipsText: "Toca una tarjeta para abrirla. Gira objetivos para ver detalles.",
     about: "Acerca de",
     aboutText: "OnJarama Path acompaña tus objetivos financieros.",
     share: "Compartir / Copiar enlace",
@@ -189,7 +192,7 @@ function Profil({ settings, setCurrentPage }) {
   }
 
   return (
-    <div>
+    <div className="native-page">
       <h1>{t.profil}</h1>
       <p style={muted}>{p.subtitle}</p>
 
@@ -201,6 +204,7 @@ function Profil({ settings, setCurrentPage }) {
         <div>
           <h2>{p.user}</h2>
           <p style={muted}>{p.beta}</p>
+          <p style={proud}>{p.proud}</p>
         </div>
 
         <button style={photoBtn}>
@@ -215,7 +219,7 @@ function Profil({ settings, setCurrentPage }) {
       </Section>
 
       <Section icon={<CheckCircle />} title={p.app} color="var(--green)">
-        <InfoRow label={p.version} value="3.1 Beta" />
+        <InfoRow label={p.version} value="4.5 Beta" />
         <InfoRow label={p.testerMode} value="ON" />
         <InfoRow label={p.pwa} value="ON" />
         <InfoRow label={p.localBackup} value="ON" />
@@ -232,6 +236,7 @@ function Profil({ settings, setCurrentPage }) {
           <strong>Thierno Diallo</strong>
         </p>
         <p style={muted}>{p.founder}</p>
+        <p style={proud}>{p.proud}</p>
 
         <h3>{p.visionTitle}</h3>
         <p style={muted}>{p.vision}</p>
@@ -387,6 +392,7 @@ const avatar = {
   height: "72px",
   borderRadius: "22px",
   background: "var(--bg-panel)",
+  color: "var(--gold)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -482,6 +488,12 @@ const social = {
   display: "flex",
   gap: "10px",
   alignItems: "center",
+};
+
+const proud = {
+  color: "var(--gold)",
+  fontWeight: "bold",
+  marginTop: "8px",
 };
 
 const muted = {

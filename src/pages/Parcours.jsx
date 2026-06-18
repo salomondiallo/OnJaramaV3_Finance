@@ -47,6 +47,7 @@ const pageText = {
     aiReading: "Lecture IA",
     updateSituation: "Mettre à jour ma situation",
     manageGoals: "Gérer mes objectifs",
+    openSimulator: "Ouvrir le simulateur",
     addDebtGoal: "Ajoutez une dette ou un objectif pour créer votre parcours.",
     debtAdvice:
       "Votre priorité actuelle est la dette au taux le plus élevé. Une fois réduite, vos objectifs avanceront plus vite.",
@@ -54,6 +55,8 @@ const pageText = {
       "Votre objectif principal est actif. Continuez à l’alimenter régulièrement.",
     startAdvice:
       "Commencez par ajouter votre situation financière et un objectif principal.",
+    simulatorAdvice:
+      "Un objectif créé depuis le simulateur peut maintenant être suivi ici.",
     step1: "Étape 1",
     step2: "Étape 2",
     step3: "Étape 3",
@@ -96,6 +99,7 @@ const pageText = {
     aiReading: "AI reading",
     updateSituation: "Update my situation",
     manageGoals: "Manage my goals",
+    openSimulator: "Open simulator",
     addDebtGoal: "Add a debt or goal to create your path.",
     debtAdvice:
       "Your current priority is the debt with the highest rate. Once reduced, your goals will move faster.",
@@ -103,6 +107,8 @@ const pageText = {
       "Your main goal is active. Keep funding it regularly.",
     startAdvice:
       "Start by adding your financial situation and one main goal.",
+    simulatorAdvice:
+      "A goal created from the simulator can now be tracked here.",
     step1: "Step 1",
     step2: "Step 2",
     step3: "Step 3",
@@ -145,6 +151,7 @@ const pageText = {
     aiReading: "Lectura IA",
     updateSituation: "Actualizar mi situación",
     manageGoals: "Gestionar mis objetivos",
+    openSimulator: "Abrir simulador",
     addDebtGoal: "Agrega una deuda u objetivo para crear tu camino.",
     debtAdvice:
       "Tu prioridad actual es la deuda con la tasa más alta. Una vez reducida, tus objetivos avanzarán más rápido.",
@@ -152,6 +159,8 @@ const pageText = {
       "Tu objetivo principal está activo. Sigue financiándolo regularmente.",
     startAdvice:
       "Empieza agregando tu situación financiera y un objetivo principal.",
+    simulatorAdvice:
+      "Un objetivo creado desde el simulador ahora puede seguirse aquí.",
     step1: "Paso 1",
     step2: "Paso 2",
     step3: "Paso 3",
@@ -189,6 +198,8 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
   const highlightedGoal =
     goals.find((goal) => goal.highlighted) || goals[0];
 
+  const simulatorGoal = goals.find((goal) => goal.source === "simulateur");
+
   const totalGoalTarget = goals.reduce(
     (sum, goal) => sum + Number(goal.targetAmount || 0),
     0
@@ -203,6 +214,8 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
     totalGoalTarget > 0
       ? Math.min(100, Math.round((totalGoalCurrent / totalGoalTarget) * 100))
       : 0;
+
+  const nextVictory = priorityDebt || highlightedGoal || simulatorGoal;
 
   return (
     <div className="native-page">
@@ -220,22 +233,24 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
           {priorityDebt
             ? formatMoney(priorityDebt.balance, currency)
             : highlightedGoal
-            ? formatMoney(
-                getRemaining(
-                  highlightedGoal.currentAmount,
-                  highlightedGoal.targetAmount
-                ),
-                currency
-              )
-            : formatMoney(0, currency)}
+              ? formatMoney(
+                  getRemaining(
+                    highlightedGoal.currentAmount,
+                    highlightedGoal.targetAmount
+                  ),
+                  currency
+                )
+              : formatMoney(0, currency)}
         </h1>
 
         <p style={muted}>
           {priorityDebt
             ? p.debtAdvice
             : highlightedGoal
-            ? p.goalAdvice
-            : p.addDebtGoal}
+              ? highlightedGoal.source === "simulateur"
+                ? p.simulatorAdvice
+                : p.goalAdvice
+              : p.addDebtGoal}
         </p>
       </section>
 
@@ -372,16 +387,14 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
           p={p}
         />
 
-        {highlightedGoal &&
-          !["voyage", "maison", "liberte"].includes(
-            highlightedGoal.category
-          ) && (
+        {nextVictory &&
+          !["voyage", "maison", "liberte"].includes(nextVictory.category) && (
             <GoalStep
-              goals={[highlightedGoal]}
-              category={highlightedGoal.category}
+              goals={[nextVictory]}
+              category={nextVictory.category}
               stepLabel={p.buildGoals}
-              fallbackTitle={highlightedGoal.title}
-              fallbackSubtitle={highlightedGoal.option || p.recommendedAction}
+              fallbackTitle={nextVictory.title}
+              fallbackSubtitle={nextVictory.option || p.recommendedAction}
               icon={<Star />}
               color="var(--gold)"
               currency={currency}
@@ -398,8 +411,10 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
             {priorityDebt
               ? p.debtAdvice
               : goals.length > 0
-              ? p.goalAdvice
-              : p.startAdvice}
+                ? simulatorGoal
+                  ? p.simulatorAdvice
+                  : p.goalAdvice
+                : p.startAdvice}
           </p>
         </div>
       </section>
@@ -414,6 +429,10 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
 
           <button onClick={() => setCurrentPage("objectifs")} style={goldBtn}>
             {p.manageGoals}
+          </button>
+
+          <button onClick={() => setCurrentPage("simulateur")} style={blueBtn}>
+            {p.openSimulator}
           </button>
         </div>
       </section>
@@ -454,7 +473,9 @@ function GoalStep({
       action={
         goal?.targetDate
           ? `${p.targetDate} : ${goal.targetDate}`
-          : fallbackSubtitle
+          : goal?.source === "simulateur"
+            ? p.simulatorAdvice
+            : fallbackSubtitle
       }
       color={color}
       p={p}
@@ -508,6 +529,10 @@ function TimelineStep({
         </div>
 
         <p style={actionText}>{action}</p>
+
+        {safeProgress >= 100 && (
+          <p style={victoryText}>🏆 Objectif atteint</p>
+        )}
       </div>
     </div>
   );
@@ -671,9 +696,16 @@ const actionText = {
   marginTop: "8px",
 };
 
+const victoryText = {
+  color: "var(--green)",
+  fontWeight: "bold",
+  fontSize: "13px",
+  marginTop: "8px",
+};
+
 const actions = {
   display: "grid",
-  gridTemplateColumns: "1fr 1fr",
+  gridTemplateColumns: "1fr",
   gap: "10px",
   marginTop: "14px",
 };
@@ -693,6 +725,15 @@ const goldBtn = {
   border: "none",
   background: "var(--gold)",
   color: "#07111f",
+  fontWeight: "bold",
+};
+
+const blueBtn = {
+  padding: "14px",
+  borderRadius: "14px",
+  border: "none",
+  background: "linear-gradient(90deg,var(--purple),var(--blue))",
+  color: "white",
   fontWeight: "bold",
 };
 

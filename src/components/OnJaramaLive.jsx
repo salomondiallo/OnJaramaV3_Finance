@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { Calendar, CreditCard, Lightbulb, Target } from "lucide-react";
+import {
+  Bell,
+  Calendar,
+  CheckCircle,
+  CreditCard,
+  Lightbulb,
+  Target,
+  Trophy,
+} from "lucide-react";
 import { formatMoney } from "../utils/formatters";
 
 const pageText = {
@@ -11,7 +19,10 @@ const pageText = {
     noGoal: "Créez un objectif pour construire votre parcours.",
     payment: "Paiement prévu",
     noPayment: "Ajoutez un paiement programmé pour mieux prévoir votre semaine.",
+    victory: "Objectif atteint",
+    simulator: "Simulation transformée en objectif",
   },
+
   EN: {
     adviceDebt: "Prioritize the debt with the highest rate.",
     adviceStart: "Add your numbers to generate your priority.",
@@ -20,7 +31,10 @@ const pageText = {
     noGoal: "Create a goal to build your path.",
     payment: "Scheduled payment",
     noPayment: "Add a scheduled payment to plan your week.",
+    victory: "Goal reached",
+    simulator: "Simulation turned into a goal",
   },
+
   ES: {
     adviceDebt: "Prioriza la deuda con la tasa más alta.",
     adviceStart: "Agrega tus datos para generar tu prioridad.",
@@ -29,6 +43,8 @@ const pageText = {
     noGoal: "Crea un objetivo para construir tu camino.",
     payment: "Pago programado",
     noPayment: "Agrega un pago programado para planificar tu semana.",
+    victory: "Objetivo alcanzado",
+    simulator: "Simulación convertida en objetivo",
   },
 };
 
@@ -47,12 +63,17 @@ function OnJaramaLive({ financeData, selectedGoals, settings }) {
   }, []);
 
   const debts = Array.isArray(financeData?.debts) ? financeData.debts : [];
-  const activeGoals = Array.isArray(selectedGoals) ? selectedGoals : [];
+  const activeGoals = Array.isArray(selectedGoals)
+    ? selectedGoals.filter((goal) => !goal.archived)
+    : [];
+
   const activePayment = scheduledPayments.find((payment) => payment.active);
 
-  const priorityDebt = [...debts].sort(
-    (a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0)
-  )[0];
+  const priorityDebt = [...debts]
+    .filter((debt) => Number(debt.balance || 0) > 0)
+    .sort(
+      (a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0)
+    )[0];
 
   const totalDebt = debts.reduce(
     (sum, debt) => sum + Number(debt.balance || 0),
@@ -60,31 +81,58 @@ function OnJaramaLive({ financeData, selectedGoals, settings }) {
   );
 
   const firstGoal =
-    activeGoals.find((goal) => goal.highlighted && !goal.archived) ||
-    activeGoals.find((goal) => !goal.archived);
+    activeGoals.find((goal) => goal.highlighted) || activeGoals[0];
+
+  const reachedGoal = activeGoals.find(
+    (goal) =>
+      Number(goal.targetAmount || 0) > 0 &&
+      Number(goal.currentAmount || 0) >= Number(goal.targetAmount || 0)
+  );
+
+  const simulatorGoal = activeGoals.find((goal) => goal.source === "simulateur");
 
   const messages = [
     {
       icon: <Lightbulb size={16} />,
+      color: "var(--gold)",
       text: priorityDebt
         ? `${p.adviceDebt} ${priorityDebt.name}.`
         : p.adviceStart,
     },
     {
       icon: <CreditCard size={16} />,
+      color: totalDebt > 0 ? "var(--red)" : "var(--green)",
       text: `${p.totalDebt} : ${formatMoney(totalDebt, currency)}.`,
     },
     {
       icon: <Target size={16} />,
+      color: "var(--gold)",
       text: firstGoal ? `${p.goal} : ${firstGoal.title}.` : p.noGoal,
     },
     {
       icon: <Calendar size={16} />,
+      color: "var(--blue)",
       text: activePayment
         ? `${p.payment} : ${activePayment.name}.`
         : p.noPayment,
     },
   ];
+
+  if (simulatorGoal) {
+    messages.unshift({
+      icon: <Bell size={16} />,
+      color: "var(--blue)",
+      text: `${p.simulator} : ${simulatorGoal.title}.`,
+    });
+  }
+
+  if (reachedGoal) {
+    messages.unshift({
+      icon: <Trophy size={16} />,
+      color: "var(--green)",
+      text: `${p.victory} : ${reachedGoal.title}.`,
+    });
+  }
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -94,12 +142,16 @@ function OnJaramaLive({ financeData, selectedGoals, settings }) {
     return () => clearInterval(timer);
   }, [messages.length]);
 
+  const currentMessage = messages[index] || messages[0];
+
   return (
     <div style={banner}>
-      <span style={iconBox}>{messages[index].icon}</span>
+      <span style={{ ...iconBox, color: currentMessage.color }}>
+        {currentMessage.icon}
+      </span>
 
-      <span style={messageText} title={messages[index].text}>
-        {messages[index].text}
+      <span style={messageText} title={currentMessage.text}>
+        {currentMessage.text}
       </span>
 
       <span style={dots}>
@@ -137,7 +189,6 @@ const banner = {
 };
 
 const iconBox = {
-  color: "var(--gold)",
   display: "flex",
   alignItems: "center",
 };

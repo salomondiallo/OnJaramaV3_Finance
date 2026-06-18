@@ -3,15 +3,18 @@ import {
   Briefcase,
   Calendar,
   Car,
+  ChevronRight,
   Hammer,
   HeartHandshake,
   Home,
   PiggyBank,
   Plane,
   Plus,
+  RotateCcw,
   Star,
   Target,
   Trash2,
+  Trophy,
   Users,
 } from "lucide-react";
 import { cleanMoneyInput, formatMoney } from "../utils/formatters";
@@ -37,6 +40,10 @@ const pageText = {
     mainGoal: "Objectif principal",
     setMain: "Mettre en avant",
     project: "Projet",
+    source: "Source",
+    fromSimulator: "Créé depuis le simulateur",
+    flip: "Retourner",
+    details: "Détails",
     auto: "Auto",
     house: "Maison",
     travel: "Voyage",
@@ -64,6 +71,10 @@ const pageText = {
     mainGoal: "Main goal",
     setMain: "Highlight",
     project: "Project",
+    source: "Source",
+    fromSimulator: "Created from simulator",
+    flip: "Flip",
+    details: "Details",
     auto: "Car",
     house: "Home",
     travel: "Travel",
@@ -91,6 +102,10 @@ const pageText = {
     mainGoal: "Objetivo principal",
     setMain: "Destacar",
     project: "Proyecto",
+    source: "Fuente",
+    fromSimulator: "Creado desde el simulador",
+    flip: "Girar",
+    details: "Detalles",
     auto: "Auto",
     house: "Casa",
     travel: "Viaje",
@@ -108,6 +123,7 @@ const categoryLabels = {
     famille: "Famille",
     liberte: "Liberté financière",
     business: "Projet / business",
+    securite: "Épargne",
   },
   EN: {
     auto: "Car",
@@ -116,6 +132,7 @@ const categoryLabels = {
     famille: "Family",
     liberte: "Financial freedom",
     business: "Project / business",
+    securite: "Savings",
   },
   ES: {
     auto: "Auto",
@@ -124,6 +141,7 @@ const categoryLabels = {
     famille: "Familia",
     liberte: "Libertad financiera",
     business: "Proyecto / negocio",
+    securite: "Ahorro",
   },
 };
 
@@ -160,6 +178,7 @@ const optionLabels = {
       "Revenus passifs",
     ],
     business: ["Commerce", "Formation", "Matériel", "Lancement", "Croissance"],
+    securite: ["Épargne libre", "Coussin", "Projet futur", "Objectif personnel"],
   },
 
   EN: {
@@ -194,6 +213,7 @@ const optionLabels = {
       "Passive income",
     ],
     business: ["Business", "Training", "Equipment", "Launch", "Growth"],
+    securite: ["Free savings", "Safety cushion", "Future project", "Personal goal"],
   },
 
   ES: {
@@ -228,6 +248,7 @@ const optionLabels = {
       "Ingresos pasivos",
     ],
     business: ["Comercio", "Formación", "Material", "Lanzamiento", "Crecimiento"],
+    securite: ["Ahorro libre", "Colchón", "Proyecto futuro", "Objetivo personal"],
   },
 };
 
@@ -278,6 +299,13 @@ function getCategories(language) {
       color: "var(--blue)",
       options: options.business,
     },
+    {
+      id: "securite",
+      label: labels.securite,
+      icon: <Trophy />,
+      color: "var(--green)",
+      options: options.securite,
+    },
   ];
 }
 
@@ -287,6 +315,7 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings }) {
   const p = pageText[language] || pageText.FR;
   const currency = settings?.currency || "CAD";
   const categories = getCategories(language);
+  const [flippedId, setFlippedId] = useState(null);
 
   const [newGoal, setNewGoal] = useState({
     title: "",
@@ -342,6 +371,7 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings }) {
         targetDate: newGoal.targetDate,
         highlighted: shouldHighlight,
         archived: false,
+        createdAt: new Date().toISOString(),
       },
     ]);
 
@@ -366,6 +396,25 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings }) {
         ...goal,
         highlighted: goal.id === id,
       }))
+    );
+  }
+
+  function addDeposit(goalId, amount) {
+    const cleanAmount = Number(cleanMoneyInput(String(amount || "")) || 0);
+    if (cleanAmount <= 0) return;
+
+    setSelectedGoals(
+      selectedGoals.map((goal) => {
+        if (goal.id !== goalId) return goal;
+
+        return {
+          ...goal,
+          currentAmount: Math.min(
+            Number(goal.targetAmount || 0),
+            Number(goal.currentAmount || 0) + cleanAmount
+          ),
+        };
+      })
     );
   }
 
@@ -437,7 +486,7 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings }) {
         <label>{p.goalName}</label>
         <input
           value={newGoal.title}
-          onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })}
+          onChange={(event) => setNewGoal({ ...newGoal, title: event.target.value })}
           placeholder={selectedCategory.options[0]}
           style={input}
         />
@@ -445,10 +494,10 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings }) {
         <label>{p.targetAmount}</label>
         <input
           value={newGoal.targetAmount}
-          onChange={(e) =>
+          onChange={(event) =>
             setNewGoal({
               ...newGoal,
-              targetAmount: cleanMoneyInput(e.target.value),
+              targetAmount: cleanMoneyInput(event.target.value),
             })
           }
           placeholder="10000"
@@ -459,10 +508,10 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings }) {
         <label>{p.currentAmount}</label>
         <input
           value={newGoal.currentAmount}
-          onChange={(e) =>
+          onChange={(event) =>
             setNewGoal({
               ...newGoal,
-              currentAmount: cleanMoneyInput(e.target.value),
+              currentAmount: cleanMoneyInput(event.target.value),
             })
           }
           placeholder="1500"
@@ -474,8 +523,8 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings }) {
         <input
           type="date"
           value={newGoal.targetDate}
-          onChange={(e) =>
-            setNewGoal({ ...newGoal, targetDate: e.target.value })
+          onChange={(event) =>
+            setNewGoal({ ...newGoal, targetDate: event.target.value })
           }
           style={input}
         />
@@ -529,70 +578,142 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings }) {
             Number(goal.targetAmount || 0) - Number(goal.currentAmount || 0)
           );
 
+          const isFlipped = flippedId === goal.id;
+
           return (
             <div
               key={goal.id}
-              style={{ ...goalCard, borderColor: category.color }}
+              style={{
+                ...goalCard,
+                borderColor: category.color,
+                background: isFlipped
+                  ? "linear-gradient(135deg, rgba(212,175,55,.10), var(--bg-panel))"
+                  : "var(--bg-panel)",
+              }}
             >
-              <div style={goalHeader}>
-                <span style={{ color: category.color }}>{category.icon}</span>
+              {!isFlipped ? (
+                <>
+                  <div style={goalHeader}>
+                    <span style={{ color: category.color }}>{category.icon}</span>
 
-                <div>
-                  <strong>
-                    {goal.highlighted ? "⭐ " : ""}
-                    {goal.title}
-                  </strong>
+                    <div>
+                      <strong>
+                        {goal.highlighted ? "⭐ " : ""}
+                        {goal.title}
+                      </strong>
+                      <p style={mutedSmall}>
+                        {category.label} • {goal.option || p.project}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => setFlippedId(goal.id)}
+                      style={ghostButton}
+                      aria-label={p.flip}
+                    >
+                      <ChevronRight size={18} />
+                    </button>
+                  </div>
+
+                  <div style={amountRow}>
+                    <span>{formatMoney(goal.currentAmount, currency)}</span>
+                    <strong>{formatMoney(goal.targetAmount, currency)}</strong>
+                  </div>
+
+                  <div style={barBg}>
+                    <div
+                      style={{
+                        ...barFill,
+                        width: `${progress}%`,
+                        background: category.color,
+                      }}
+                    />
+                  </div>
+
                   <p style={mutedSmall}>
-                    {category.label} • {goal.option || p.project}
+                    {p.progress} : {progress}%
                   </p>
-                </div>
 
-                <button onClick={() => removeGoal(goal.id)} style={trashButton}>
-                  <Trash2 size={16} />
-                </button>
-              </div>
+                  {progress >= 100 && (
+                    <p style={{ ...mutedSmall, color: "var(--green)", fontWeight: "bold" }}>
+                      🏆 Objectif atteint
+                    </p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div style={goalHeader}>
+                    <span style={{ color: category.color }}>
+                      <RotateCcw />
+                    </span>
 
-              <div style={amountRow}>
-                <span>{formatMoney(goal.currentAmount, currency)}</span>
-                <strong>{formatMoney(goal.targetAmount, currency)}</strong>
-              </div>
+                    <div>
+                      <strong>{p.details}</strong>
+                      <p style={mutedSmall}>{goal.title}</p>
+                    </div>
 
-              <div style={barBg}>
-                <div
-                  style={{
-                    ...barFill,
-                    width: `${progress}%`,
-                    background: category.color,
-                  }}
-                />
-              </div>
+                    <button
+                      onClick={() => setFlippedId(null)}
+                      style={ghostButton}
+                      aria-label={p.flip}
+                    >
+                      <RotateCcw size={17} />
+                    </button>
+                  </div>
 
-              <p style={mutedSmall}>
-                {p.progress} : {progress}%
-              </p>
+                  <InfoLine label={p.targetAmount} value={formatMoney(goal.targetAmount, currency)} />
+                  <InfoLine label={p.currentAmount} value={formatMoney(goal.currentAmount, currency)} />
+                  <InfoLine label={p.remainingToGet} value={formatMoney(remaining, currency)} />
+                  <InfoLine label={p.progress} value={`${progress}%`} />
 
-              <p style={mutedSmall}>
-                {p.remainingToGet} : {formatMoney(remaining, currency)}
-              </p>
+                  {goal.source === "simulateur" && (
+                    <InfoLine label={p.source} value={p.fromSimulator} />
+                  )}
 
-              {goal.targetDate && (
-                <p style={mutedSmall}>
-                  {p.targetDate} : {goal.targetDate}
-                </p>
-              )}
+                  {goal.targetDate && (
+                    <InfoLine label={p.targetDate} value={goal.targetDate} />
+                  )}
 
-              {!goal.highlighted && (
-                <button
-                  onClick={() => highlightGoal(goal.id)}
-                  style={smallGoldBtn}
-                >
-                  {p.setMain}
-                </button>
+                  <div style={quickDepositRow}>
+                    {[50, 100, 250].map((amount) => (
+                      <button
+                        key={amount}
+                        onClick={() => addDeposit(goal.id, amount)}
+                        style={smallGreenBtn}
+                      >
+                        +{amount} $
+                      </button>
+                    ))}
+                  </div>
+
+                  {!goal.highlighted && (
+                    <button
+                      onClick={() => highlightGoal(goal.id)}
+                      style={smallGoldBtn}
+                    >
+                      {p.setMain}
+                    </button>
+                  )}
+
+                  <button onClick={() => removeGoal(goal.id)} style={deleteBtn}>
+                    <Trash2 size={16} />
+                    Supprimer
+                  </button>
+                </>
               )}
             </div>
           );
         })}
       </section>
+    </div>
+  );
+}
+
+function InfoLine({ label, value }) {
+  return (
+    <div style={infoLine}>
+      <span style={mutedSmall}>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }
@@ -715,7 +836,6 @@ const addButton = {
 };
 
 const goalCard = {
-  background: "var(--bg-panel)",
   border: "1px solid var(--border)",
   borderRadius: "18px",
   padding: "16px",
@@ -747,12 +867,38 @@ const barFill = {
   borderRadius: "999px",
 };
 
-const trashButton = {
-  border: "1px solid var(--red)",
+const ghostButton = {
+  border: "1px solid var(--border)",
   background: "transparent",
-  color: "var(--red)",
+  color: "var(--text-main)",
   borderRadius: "10px",
-  padding: "6px",
+  padding: "7px",
+};
+
+const infoLine = {
+  background: "var(--bg-main)",
+  border: "1px solid var(--border)",
+  borderRadius: "12px",
+  padding: "10px",
+  marginTop: "8px",
+  display: "grid",
+  gap: "4px",
+};
+
+const quickDepositRow = {
+  display: "grid",
+  gridTemplateColumns: "repeat(3, 1fr)",
+  gap: "8px",
+  marginTop: "12px",
+};
+
+const smallGreenBtn = {
+  padding: "10px",
+  borderRadius: "12px",
+  border: "1px solid var(--green)",
+  background: "rgba(34,197,94,.12)",
+  color: "var(--green)",
+  fontWeight: "bold",
 };
 
 const smallGoldBtn = {
@@ -764,6 +910,21 @@ const smallGoldBtn = {
   background: "rgba(212,175,55,.12)",
   color: "var(--gold)",
   fontWeight: "bold",
+};
+
+const deleteBtn = {
+  width: "100%",
+  marginTop: "10px",
+  padding: "11px",
+  borderRadius: "12px",
+  border: "1px solid var(--red)",
+  background: "rgba(239,68,68,.12)",
+  color: "var(--red)",
+  fontWeight: "bold",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
 };
 
 const muted = {

@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   Bell,
   Cloud,
-  CreditCard,
   Globe,
   Info,
   Languages,
@@ -28,32 +27,29 @@ const pageText = {
     credits: "Crédits",
     privacy: "Confidentialité",
     account: "Compte",
-
+    banking: "Connexion bancaire",
+    google: "Connexion Google",
+    comingSoon: "Bientôt disponible",
+    readOnly: "Lecture seule, aucune transaction.",
     french: "Français",
     english: "English",
     spanish: "Español",
-
     dark: "Mode sombre",
     light: "Mode clair",
-
     on: "ON",
     off: "OFF",
-
-    syncSoon: "Bientôt disponible.",
     syncText: "Connexion cloud prévue plus tard. Aucune transaction bancaire.",
     backupText: "Sauvegarde locale automatique activée sur cet appareil.",
     privacyText:
       "Aucune transaction bancaire n’est possible dans cette version. Les données restent locales tant que la synchronisation n’est pas activée.",
     accountText: "Profil utilisateur, pays, langue et devise sont visibles dans Profil.",
-
     resetGoals: "Réinitialiser les objectifs",
     resetFinance: "Réinitialiser les finances",
     resetSettings: "Réinitialiser les réglages",
     resetAll: "Réinitialiser tout",
-
     creator: "Créateur",
     founder: "Fondateur de l’écosystème OnJarama",
-    appVersion: "OnJarama Path • Version 3.1 Beta",
+    appVersion: "OnJarama Path • Version 4.5 Beta",
     ecosystem: "OnJarama • OJCS • OJCT",
   },
 
@@ -69,32 +65,29 @@ const pageText = {
     credits: "Credits",
     privacy: "Privacy",
     account: "Account",
-
+    banking: "Bank connection",
+    google: "Google sign-in",
+    comingSoon: "Coming soon",
+    readOnly: "Read-only, no transaction.",
     french: "Français",
     english: "English",
     spanish: "Español",
-
     dark: "Dark mode",
     light: "Light mode",
-
     on: "ON",
     off: "OFF",
-
-    syncSoon: "Coming soon.",
     syncText: "Cloud connection planned later. No banking transaction.",
     backupText: "Automatic local backup enabled on this device.",
     privacyText:
       "No banking transaction is possible in this version. Data stays local until synchronization is enabled.",
     accountText: "User profile, country, language and currency are visible in Profile.",
-
     resetGoals: "Reset goals",
     resetFinance: "Reset finances",
     resetSettings: "Reset settings",
     resetAll: "Reset everything",
-
     creator: "Creator",
     founder: "Founder of the OnJarama ecosystem",
-    appVersion: "OnJarama Path • Version 3.1 Beta",
+    appVersion: "OnJarama Path • Version 4.5 Beta",
     ecosystem: "OnJarama • OJCS • OJCT",
   },
 
@@ -110,32 +103,29 @@ const pageText = {
     credits: "Créditos",
     privacy: "Privacidad",
     account: "Cuenta",
-
+    banking: "Conexión bancaria",
+    google: "Conexión Google",
+    comingSoon: "Próximamente",
+    readOnly: "Solo lectura, ninguna transacción.",
     french: "Français",
     english: "English",
     spanish: "Español",
-
     dark: "Modo oscuro",
     light: "Modo claro",
-
     on: "ON",
     off: "OFF",
-
-    syncSoon: "Próximamente.",
     syncText: "Conexión cloud prevista más adelante. Ninguna transacción bancaria.",
     backupText: "Copia local automática activada en este dispositivo.",
     privacyText:
       "No es posible realizar transacciones bancarias en esta versión. Los datos permanecen locales hasta activar la sincronización.",
     accountText: "Perfil, país, idioma y moneda están visibles en Perfil.",
-
     resetGoals: "Restablecer objetivos",
     resetFinance: "Restablecer finanzas",
     resetSettings: "Restablecer ajustes",
     resetAll: "Restablecer todo",
-
     creator: "Creador",
     founder: "Fundador del ecosistema OnJarama",
-    appVersion: "OnJarama Path • Versión 3.1 Beta",
+    appVersion: "OnJarama Path • Versión 4.5 Beta",
     ecosystem: "OnJarama • OJCS • OJCT",
   },
 };
@@ -162,7 +152,7 @@ function Reglages({
   }
 
   return (
-    <div>
+    <div className="native-page">
       <h1>{t.reglages}</h1>
       <p style={muted}>{p.subtitle}</p>
 
@@ -193,33 +183,15 @@ function Reglages({
         title={p.currency}
         color="var(--gold)"
       >
-        <Option active={settings.currency === "CAD"} onClick={() => updateSetting("currency", "CAD")}>
-          🇨🇦 CAD
-        </Option>
-        <Option active={settings.currency === "USD"} onClick={() => updateSetting("currency", "USD")}>
-          🇺🇸 USD
-        </Option>
-        <Option active={settings.currency === "EUR"} onClick={() => updateSetting("currency", "EUR")}>
-          🇪🇺 EUR
-        </Option>
-        <Option active={settings.currency === "GBP"} onClick={() => updateSetting("currency", "GBP")}>
-          🇬🇧 GBP
-        </Option>
-        <Option active={settings.currency === "GNF"} onClick={() => updateSetting("currency", "GNF")}>
-          🇬🇳 GNF
-        </Option>
-        <Option active={settings.currency === "XOF"} onClick={() => updateSetting("currency", "XOF")}>
-          🌍 XOF — CFA BCEAO
-        </Option>
-        <Option active={settings.currency === "XAF"} onClick={() => updateSetting("currency", "XAF")}>
-          🌍 XAF — CFA BEAC
-        </Option>
-        <Option active={settings.currency === "CHF"} onClick={() => updateSetting("currency", "CHF")}>
-          🇨🇭 CHF
-        </Option>
-        <Option active={settings.currency === "MAD"} onClick={() => updateSetting("currency", "MAD")}>
-          🇲🇦 MAD
-        </Option>
+        {["CAD", "USD", "EUR", "GBP", "GNF", "XOF", "XAF", "CHF", "MAD"].map((currency) => (
+          <Option
+            key={currency}
+            active={settings.currency === currency}
+            onClick={() => updateSetting("currency", currency)}
+          >
+            {currency}
+          </Option>
+        ))}
       </Tile>
 
       <Tile
@@ -261,7 +233,8 @@ function Reglages({
         title={p.synchronization}
         color="var(--blue)"
       >
-        <p>{p.syncSoon}</p>
+        <StatusLine title={p.google} text={p.comingSoon} color="var(--blue)" />
+        <StatusLine title={p.banking} text={`${p.comingSoon} • ${p.readOnly}`} color="var(--gold)" />
         <p style={muted}>{p.syncText}</p>
       </Tile>
 
@@ -369,6 +342,15 @@ function Option({ active, children, onClick }) {
   );
 }
 
+function StatusLine({ title, text, color }) {
+  return (
+    <div style={{ ...statusLine, borderColor: color }}>
+      <strong>{title}</strong>
+      <span>{text}</span>
+    </div>
+  );
+}
+
 function InfoRow({ label, value }) {
   return (
     <div style={infoRow}>
@@ -431,6 +413,16 @@ const option = {
   gap: "10px",
   alignItems: "center",
   textAlign: "left",
+};
+
+const statusLine = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "14px",
+  padding: "12px",
+  marginTop: "8px",
+  display: "grid",
+  gap: "4px",
 };
 
 const dangerBtn = {

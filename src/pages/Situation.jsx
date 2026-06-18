@@ -28,6 +28,7 @@ const pageText = {
     minimumPayment: "Paiement minimum",
     nextAction: "Prochaine action recommandée",
     viewPath: "Voir mon parcours",
+    openSimulator: "Ouvrir le simulateur",
     priority: "Priorité actuelle",
     becauseRate: "car son taux est de",
     addPriority: "Ajoutez une dette ou un objectif pour générer une priorité.",
@@ -40,6 +41,7 @@ const pageText = {
     fragile: "Situation fragile",
     control: "Priorité : reprendre le contrôle",
   },
+
   EN: {
     subtitle: "Understand where your money comes from and where it goes.",
     health: "Financial health",
@@ -55,6 +57,7 @@ const pageText = {
     minimumPayment: "Minimum payment",
     nextAction: "Recommended next action",
     viewPath: "View my path",
+    openSimulator: "Open simulator",
     priority: "Current priority",
     becauseRate: "because its rate is",
     addPriority: "Add a debt or goal to generate a priority.",
@@ -67,6 +70,7 @@ const pageText = {
     fragile: "Fragile situation",
     control: "Priority: regain control",
   },
+
   ES: {
     subtitle: "Comprender de dónde viene tu dinero y hacia dónde va.",
     health: "Salud financiera",
@@ -82,6 +86,7 @@ const pageText = {
     minimumPayment: "Pago mínimo",
     nextAction: "Próxima acción recomendada",
     viewPath: "Ver mi camino",
+    openSimulator: "Abrir simulador",
     priority: "Prioridad actual",
     becauseRate: "porque su tasa es de",
     addPriority: "Agrega una deuda u objetivo para generar una prioridad.",
@@ -137,9 +142,11 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
   const totalOutgoing = expensesTotal + savingsTotal + minimumDebtPayments;
   const available = incomeTotal - totalOutgoing;
 
-  const priorityDebt = [...financeData.debts].sort(
-    (a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0)
-  )[0];
+  const priorityDebt = [...financeData.debts]
+    .filter((debt) => Number(debt.balance || 0) > 0)
+    .sort(
+      (a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0)
+    )[0];
 
   const score = useMemo(
     () =>
@@ -236,15 +243,18 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
   }
 
   return (
-    <div>
+    <div className="native-page">
       <h1>{t.situation}</h1>
       <p style={muted}>{p.subtitle}</p>
 
       <section style={scoreCard}>
         <ShieldCheck color={score.color} size={34} />
         <p style={muted}>{p.health}</p>
+
         <h1 style={{ color: score.color }}>{score.value}/100</h1>
+
         <p style={muted}>{score.label}</p>
+
         <div style={barBg}>
           <div
             style={{
@@ -257,17 +267,58 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
       </section>
 
       <div className="grid-2" style={grid}>
-        <InfoCard title={p.income} value={formatMoney(incomeTotal, currency)} icon={<Wallet />} color="var(--green)" />
-        <InfoCard title={p.totalOut} value={formatMoney(totalOutgoing, currency)} icon={<Home />} color="var(--red)" />
-        <InfoCard title={p.totalDebts} value={formatMoney(totalDebt, currency)} icon={<CreditCard />} color="var(--red)" />
-        <InfoCard title={p.available} value={formatMoney(available, currency)} icon={<PiggyBank />} color={available >= 0 ? "var(--green)" : "var(--red)"} />
+        <InfoCard
+          title={p.income}
+          value={formatMoney(incomeTotal, currency)}
+          icon={<Wallet />}
+          color="var(--green)"
+        />
+
+        <InfoCard
+          title={p.totalOut}
+          value={formatMoney(totalOutgoing, currency)}
+          icon={<Home />}
+          color="var(--red)"
+        />
+
+        <InfoCard
+          title={p.totalDebts}
+          value={formatMoney(totalDebt, currency)}
+          icon={<CreditCard />}
+          color="var(--red)"
+        />
+
+        <InfoCard
+          title={p.available}
+          value={formatMoney(available, currency)}
+          icon={<PiggyBank />}
+          color={available >= 0 ? "var(--green)" : "var(--red)"}
+        />
       </div>
 
-      <CategorySection title={p.incomeOrigin} icon={<Wallet color="var(--green)" />} items={details.incomes} currency={currency} onChange={(id, value) => updateCategory("incomes", id, value)} />
+      <CategorySection
+        title={p.incomeOrigin}
+        icon={<Wallet color="var(--green)" />}
+        items={details.incomes}
+        currency={currency}
+        onChange={(id, value) => updateCategory("incomes", id, value)}
+      />
 
-      <CategorySection title={p.moneyDestination} icon={<Home color="var(--gold)" />} items={details.expenses} currency={currency} onChange={(id, value) => updateCategory("expenses", id, value)} />
+      <CategorySection
+        title={p.moneyDestination}
+        icon={<Home color="var(--gold)" />}
+        items={details.expenses}
+        currency={currency}
+        onChange={(id, value) => updateCategory("expenses", id, value)}
+      />
 
-      <CategorySection title={p.savingsProjects} icon={<PiggyBank color="var(--green)" />} items={details.savings} currency={currency} onChange={(id, value) => updateCategory("savings", id, value)} />
+      <CategorySection
+        title={p.savingsProjects}
+        icon={<PiggyBank color="var(--green)" />}
+        items={details.savings}
+        currency={currency}
+        onChange={(id, value) => updateCategory("savings", id, value)}
+      />
 
       <section style={card}>
         <div style={header}>
@@ -279,9 +330,18 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
 
         {financeData.debts.map((debt, index) => (
           <div key={`${debt.name}-${index}`} style={debtCard}>
-            <input value={debt.name} onChange={(e) => updateDebt(index, "name", e.target.value)} style={input} placeholder={p.debtName} />
+            <input
+              value={debt.name}
+              onChange={(event) => updateDebt(index, "name", event.target.value)}
+              style={input}
+              placeholder={p.debtName}
+            />
 
-            <select value={debt.type || "Autre"} onChange={(e) => updateDebt(index, "type", e.target.value)} style={input}>
+            <select
+              value={debt.type || "Autre"}
+              onChange={(event) => updateDebt(index, "type", event.target.value)}
+              style={input}
+            >
               <option>Carte de crédit</option>
               <option>Marge de crédit</option>
               <option>Prêt personnel</option>
@@ -291,14 +351,39 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
               <option>Autre</option>
             </select>
 
-            <input value={debt.balance || ""} onChange={(e) => updateDebt(index, "balance", e.target.value)} style={input} inputMode="decimal" placeholder={p.balance} />
+            <input
+              value={debt.balance || ""}
+              onChange={(event) =>
+                updateDebt(index, "balance", event.target.value)
+              }
+              style={input}
+              inputMode="decimal"
+              placeholder={p.balance}
+            />
 
-            <input value={debt.interestRate || ""} onChange={(e) => updateDebt(index, "interestRate", e.target.value)} style={input} inputMode="decimal" placeholder={p.rate} />
+            <input
+              value={debt.interestRate || ""}
+              onChange={(event) =>
+                updateDebt(index, "interestRate", event.target.value)
+              }
+              style={input}
+              inputMode="decimal"
+              placeholder={p.rate}
+            />
 
-            <input value={debt.minimumPayment || ""} onChange={(e) => updateDebt(index, "minimumPayment", e.target.value)} style={input} inputMode="decimal" placeholder={p.minimumPayment} />
+            <input
+              value={debt.minimumPayment || ""}
+              onChange={(event) =>
+                updateDebt(index, "minimumPayment", event.target.value)
+              }
+              style={input}
+              inputMode="decimal"
+              placeholder={p.minimumPayment}
+            />
 
             <div style={debtBottom}>
               <strong>{formatMoney(debt.balance, currency)}</strong>
+
               <button onClick={() => removeDebt(index)} style={trashButton}>
                 <Trash2 size={16} />
               </button>
@@ -313,9 +398,22 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
           <h2>{p.addDebt}</h2>
         </div>
 
-        <input value={newDebt.name} onChange={(e) => setNewDebt({ ...newDebt, name: e.target.value })} style={input} placeholder="Fairstone, Modulo, Visa" />
+        <input
+          value={newDebt.name}
+          onChange={(event) =>
+            setNewDebt({ ...newDebt, name: event.target.value })
+          }
+          style={input}
+          placeholder="Fairstone, Modulo, Visa"
+        />
 
-        <select value={newDebt.type} onChange={(e) => setNewDebt({ ...newDebt, type: e.target.value })} style={input}>
+        <select
+          value={newDebt.type}
+          onChange={(event) =>
+            setNewDebt({ ...newDebt, type: event.target.value })
+          }
+          style={input}
+        >
           <option>Carte de crédit</option>
           <option>Marge de crédit</option>
           <option>Prêt personnel</option>
@@ -325,11 +423,44 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
           <option>Autre</option>
         </select>
 
-        <input value={newDebt.balance} onChange={(e) => setNewDebt({ ...newDebt, balance: cleanMoneyInput(e.target.value) })} style={input} inputMode="decimal" placeholder={p.balance} />
+        <input
+          value={newDebt.balance}
+          onChange={(event) =>
+            setNewDebt({
+              ...newDebt,
+              balance: cleanMoneyInput(event.target.value),
+            })
+          }
+          style={input}
+          inputMode="decimal"
+          placeholder={p.balance}
+        />
 
-        <input value={newDebt.interestRate} onChange={(e) => setNewDebt({ ...newDebt, interestRate: cleanMoneyInput(e.target.value) })} style={input} inputMode="decimal" placeholder={p.rate} />
+        <input
+          value={newDebt.interestRate}
+          onChange={(event) =>
+            setNewDebt({
+              ...newDebt,
+              interestRate: cleanMoneyInput(event.target.value),
+            })
+          }
+          style={input}
+          inputMode="decimal"
+          placeholder={p.rate}
+        />
 
-        <input value={newDebt.minimumPayment} onChange={(e) => setNewDebt({ ...newDebt, minimumPayment: cleanMoneyInput(e.target.value) })} style={input} inputMode="decimal" placeholder={p.minimumPayment} />
+        <input
+          value={newDebt.minimumPayment}
+          onChange={(event) =>
+            setNewDebt({
+              ...newDebt,
+              minimumPayment: cleanMoneyInput(event.target.value),
+            })
+          }
+          style={input}
+          inputMode="decimal"
+          placeholder={p.minimumPayment}
+        />
 
         <button onClick={addDebt} style={addButton}>
           {p.addDebt}
@@ -339,14 +470,25 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
       <section style={priorityCard}>
         <Flame color="var(--gold)" />
         <h2>{p.nextAction}</h2>
+
         <p style={muted}>
           {priorityDebt
             ? `${p.priority} : ${priorityDebt.name}, ${p.becauseRate} ${priorityDebt.interestRate} %.`
             : p.addPriority}
         </p>
-        <button onClick={() => setCurrentPage("parcours")} style={aiButton}>
-          {p.viewPath}
-        </button>
+
+        <div style={actions}>
+          <button onClick={() => setCurrentPage("parcours")} style={aiButton}>
+            {p.viewPath}
+          </button>
+
+          <button
+            onClick={() => setCurrentPage("simulateur")}
+            style={simulatorButton}
+          >
+            {p.openSimulator}
+          </button>
+        </div>
       </section>
     </div>
   );
@@ -433,11 +575,22 @@ function getDefaultDetails(language) {
 function CategorySection({ title, icon, items, currency, onChange }) {
   return (
     <section style={card}>
-      <div style={header}>{icon}<h2>{title}</h2></div>
+      <div style={header}>
+        {icon}
+        <h2>{title}</h2>
+      </div>
+
       {items.map((item) => (
         <div key={item.id} style={categoryRow}>
           <label>{item.label}</label>
-          <input value={item.amount || ""} onChange={(e) => onChange(item.id, e.target.value)} inputMode="decimal" placeholder={`0 ${currency}`} style={input} />
+
+          <input
+            value={item.amount || ""}
+            onChange={(event) => onChange(item.id, event.target.value)}
+            inputMode="decimal"
+            placeholder={`0 ${currency}`}
+            style={input}
+          />
         </div>
       ))}
     </section>
@@ -460,6 +613,7 @@ function sum(items) {
 
 function calculateScore({ income, expenses, savings, totalDebt, available, p }) {
   let score = 50;
+
   if (income > 0) score += 10;
   if (available > 0) score += 15;
   if (savings > 0) score += 10;
@@ -473,25 +627,150 @@ function calculateScore({ income, expenses, savings, totalDebt, available, p }) 
   if (value >= 80) return { value, label: p.good, color: "var(--green)" };
   if (value >= 60) return { value, label: p.stable, color: "var(--gold)" };
   if (value >= 40) return { value, label: p.fragile, color: "var(--red)" };
+
   return { value, label: p.control, color: "var(--red)" };
 }
 
-const card = { background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "22px", padding: "20px", marginTop: "20px" };
-const scoreCard = { background: "linear-gradient(135deg, rgba(34,197,94,.16), var(--bg-card))", border: "1px solid var(--green)", borderRadius: "24px", padding: "22px", marginTop: "20px" };
-const priorityCard = { background: "linear-gradient(135deg,#2a210b,var(--bg-card))", border: "1px solid var(--gold)", borderRadius: "22px", padding: "20px", marginTop: "20px" };
-const grid = { gap: "12px", marginTop: "18px" };
-const infoCard = { background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "18px", padding: "16px" };
-const header = { display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" };
-const categoryRow = { marginTop: "12px" };
-const input = { display: "block", width: "100%", marginTop: "8px", padding: "14px", borderRadius: "12px", border: "1px solid var(--border)", background: "var(--bg-panel)", color: "var(--text-main)" };
-const debtCard = { background: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "18px", padding: "14px", marginTop: "12px" };
-const debtBottom = { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" };
-const trashButton = { border: "1px solid var(--red)", background: "transparent", color: "var(--red)", borderRadius: "10px", padding: "7px" };
-const addButton = { width: "100%", marginTop: "16px", padding: "14px", borderRadius: "14px", border: "none", background: "var(--green)", color: "white", fontWeight: "bold" };
-const aiButton = { width: "100%", marginTop: "14px", padding: "14px", borderRadius: "14px", border: "none", background: "linear-gradient(90deg,var(--purple),var(--blue))", color: "white", fontWeight: "bold" };
-const barBg = { height: "10px", background: "var(--bg-panel)", borderRadius: "999px", marginTop: "14px" };
-const barFill = { height: "100%", borderRadius: "999px" };
-const muted = { color: "var(--text-muted)", marginTop: "8px" };
-const mutedSmall = { color: "var(--text-muted)", fontSize: "13px", marginTop: "5px" };
+const card = {
+  background: "var(--bg-card)",
+  border: "1px solid var(--border)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const scoreCard = {
+  background: "linear-gradient(135deg, rgba(34,197,94,.16), var(--bg-card))",
+  border: "1px solid var(--green)",
+  borderRadius: "24px",
+  padding: "22px",
+  marginTop: "20px",
+};
+
+const priorityCard = {
+  background: "linear-gradient(135deg,#2a210b,var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const grid = {
+  gap: "12px",
+  marginTop: "18px",
+};
+
+const infoCard = {
+  background: "var(--bg-card)",
+  border: "1px solid var(--border)",
+  borderRadius: "18px",
+  padding: "16px",
+};
+
+const header = {
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
+  marginBottom: "14px",
+};
+
+const categoryRow = {
+  marginTop: "12px",
+};
+
+const input = {
+  display: "block",
+  width: "100%",
+  marginTop: "8px",
+  padding: "14px",
+  borderRadius: "12px",
+  border: "1px solid var(--border)",
+  background: "var(--bg-panel)",
+  color: "var(--text-main)",
+};
+
+const debtCard = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "18px",
+  padding: "14px",
+  marginTop: "12px",
+};
+
+const debtBottom = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginTop: "10px",
+};
+
+const trashButton = {
+  border: "1px solid var(--red)",
+  background: "transparent",
+  color: "var(--red)",
+  borderRadius: "10px",
+  padding: "7px",
+};
+
+const addButton = {
+  width: "100%",
+  marginTop: "16px",
+  padding: "14px",
+  borderRadius: "14px",
+  border: "none",
+  background: "var(--green)",
+  color: "white",
+  fontWeight: "bold",
+};
+
+const actions = {
+  display: "grid",
+  gridTemplateColumns: "1fr",
+  gap: "10px",
+  marginTop: "14px",
+};
+
+const aiButton = {
+  width: "100%",
+  padding: "14px",
+  borderRadius: "14px",
+  border: "none",
+  background: "linear-gradient(90deg,var(--purple),var(--blue))",
+  color: "white",
+  fontWeight: "bold",
+};
+
+const simulatorButton = {
+  width: "100%",
+  padding: "14px",
+  borderRadius: "14px",
+  border: "1px solid var(--gold)",
+  background: "rgba(212,175,55,.12)",
+  color: "var(--gold)",
+  fontWeight: "bold",
+};
+
+const barBg = {
+  height: "10px",
+  background: "var(--bg-panel)",
+  borderRadius: "999px",
+  marginTop: "14px",
+};
+
+const barFill = {
+  height: "100%",
+  borderRadius: "999px",
+};
+
+const muted = {
+  color: "var(--text-muted)",
+  marginTop: "8px",
+};
+
+const mutedSmall = {
+  color: "var(--text-muted)",
+  fontSize: "13px",
+  marginTop: "5px",
+};
 
 export default Situation;
