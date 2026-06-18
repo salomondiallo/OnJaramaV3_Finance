@@ -1,320 +1,697 @@
 import {
-  CheckCircle,
-  Clock3,
-  CreditCard,
+  Bot,
+  Eye,
+  EyeOff,
   Flag,
+  Flame,
+  Gauge,
+  Lightbulb,
   PiggyBank,
-  Settings,
+  ShieldCheck,
   Target,
-  Trash2,
+  TrendingUp,
+  Landmark,
+  Sparkles,
   Trophy,
 } from "lucide-react";
 
-function Historique({ activityHistory, clearActivityHistory }) {
-  const items = Array.isArray(activityHistory) ? activityHistory : [];
+import { useState } from "react";
+import { getText } from "../data/translations";
+
+function Accueil({
+  financeData,
+  selectedGoals,
+  setCurrentPage,
+  settings,
+  activityHistory,
+  disciplineScore,
+}) {
+  const t = getText(settings);
+  const [showAmounts, setShowAmounts] = useState(false);
+
+  const debts = Array.isArray(financeData?.debts) ? financeData.debts : [];
+  const goals = Array.isArray(selectedGoals) ? selectedGoals : [];
+  const history = Array.isArray(activityHistory) ? activityHistory : [];
+
+  const discipline = disciplineScore || {
+    score: 0,
+    label: "Départ",
+    hasActiveGoal: false,
+    hasRecentActivity: false,
+    hasRecentDeposit: false,
+    hasOverduePayment: false,
+  };
+
+  const totalDebt = debts.reduce(
+    (sum, debt) => sum + Number(debt.balance || 0),
+    0
+  );
+
+  const activeGoals = goals.filter((goal) => !goal.archived);
+
+  const mainGoal =
+    activeGoals.find((goal) => goal.highlighted) || activeGoals[0];
+
+  const firstGoal = [...activeGoals].sort(
+    (a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0)
+  )[0];
+
+  const closestGoal = [...activeGoals]
+    .filter((goal) => Number(goal.targetAmount || 0) > 0)
+    .map((goal) => ({
+      ...goal,
+      progress: Math.min(
+        100,
+        Math.round(
+          (Number(goal.currentAmount || 0) / Number(goal.targetAmount || 0)) *
+            100
+        )
+      ),
+    }))
+    .sort((a, b) => b.progress - a.progress)[0];
+
+  const achievedGoals = activeGoals.filter(
+    (goal) =>
+      Number(goal.targetAmount || 0) > 0 &&
+      Number(goal.currentAmount || 0) >= Number(goal.targetAmount || 0)
+  );
+
+  const lastActivity = history[0];
+  const lastDeposit = history.find((item) => item.type === "depot");
+  const lastVictory =
+    history.find((item) => item.type === "victoire") || achievedGoals[0];
+
+  const smartAlerts = buildSmartAlerts({ activeGoals, debts });
+
+  const nextAction = getNextAction({
+    totalDebt,
+    mainGoal,
+    closestGoal,
+  });
+
+  function money(value) {
+    if (!showAmounts) return "Chiffres masqués";
+
+    return `${Number(value || 0).toLocaleString("fr-CA", {
+      maximumFractionDigits: 2,
+    })} $`;
+  }
 
   return (
-    <div className="native-page">
-      <h1>Historique</h1>
+    <div className="native-page accueil-page">
+      <section className="accueil-hero" />
 
-      <p style={muted}>
-        Votre timeline OnJarama Path : chaque action devient une étape de votre
-        parcours financier.
-      </p>
+      <section className="accueil-headline">
+        <p className="accueil-eyebrow">OnJarama Path V8</p>
 
-      <section style={summaryCard}>
-        <div style={header}>
-          <Clock3 color="var(--gold)" />
-          <h2>{items.length} étape{items.length > 1 ? "s" : ""}</h2>
-        </div>
+        <h1 className="accueil-title">
+          {t.heroTitle}
+          <br />
+          <span>{t.heroAccent}</span>
+        </h1>
 
-        <p style={muted}>
-          Du départ aux victoires, OnJarama garde une trace claire de vos
-          progrès.
+        <p className="accueil-subtitle">
+          Transformez vos objectifs en un plan concret, réaliste et motivant.
         </p>
+      </section>
 
-        <button onClick={clearActivityHistory} style={redButton}>
-          <Trash2 size={17} />
-          Vider l’historique
+      <div className="accueil-actions">
+        <button
+          onClick={() => setCurrentPage("situation")}
+          className="primary-action"
+        >
+          Commencer ma situation
+        </button>
+
+        <button onClick={() => setCurrentPage("assistant")} className="ai-action">
+          <Bot size={18} />
+          IA OnJarama
+        </button>
+      </div>
+
+      <section className="accueil-safe-row">
+        <span className="accueil-badge">🔒 Privé</span>
+
+        <span className="accueil-badge">🌍 Démo</span>
+
+        <button
+          onClick={() => setShowAmounts(!showAmounts)}
+          className="eye-action"
+        >
+          {showAmounts ? <EyeOff size={16} /> : <Eye size={16} />}
+          {showAmounts ? "Masquer" : "Afficher"}
         </button>
       </section>
 
-      {items.length === 0 && (
-        <section style={card}>
-          <p style={muted}>Aucune action enregistrée pour le moment.</p>
+      <section className="accueil-headline" style={companionCard}>
+        <div style={sectionHead}>
+          <Sparkles size={20} color="var(--gold)" />
+          <strong>Compagnon financier</strong>
+        </div>
+
+        <div style={companionGrid}>
+          <CompanionLine
+            icon="🚩"
+            label="Parcours"
+            value={
+              firstGoal
+                ? `Commencé ${getStartedLabel(firstGoal.createdAt)}`
+                : "Pas encore commencé"
+            }
+          />
+
+          <CompanionLine
+            icon="🎯"
+            label="Objectifs actifs"
+            value={`${activeGoals.length}`}
+          />
+
+          <CompanionLine
+            icon="💰"
+            label="Dernier dépôt"
+            value={lastDeposit ? lastDeposit.message : "Aucun dépôt enregistré"}
+          />
+
+          <CompanionLine
+            icon="🏆"
+            label="Dernière victoire"
+            value={
+              lastVictory?.message ||
+              lastVictory?.title ||
+              "Aucune victoire enregistrée"
+            }
+          />
+
+          <CompanionLine
+            icon="➡️"
+            label="Action recommandée"
+            value={nextAction.title}
+          />
+        </div>
+
+        <button
+          onClick={() => setCurrentPage(nextAction.page)}
+          className="primary-action"
+          style={{ marginTop: 14 }}
+        >
+          {nextAction.button}
+        </button>
+      </section>
+
+      <section className="accueil-headline" style={disciplineGaugeCard}>
+        <div style={sectionHead}>
+          <Gauge size={20} color="var(--gold)" />
+          <strong>Discipline OnJarama</strong>
+        </div>
+
+        <div style={scoreRow}>
+          <strong style={scoreValue}>{discipline.score}%</strong>
+          <span style={scoreLabel}>{discipline.label}</span>
+        </div>
+
+        <div style={scoreBarBg}>
+          <div
+            style={{
+              ...scoreBarFill,
+              width: `${discipline.score}%`,
+              background: getDisciplineColor(discipline.score),
+            }}
+          />
+        </div>
+
+        <div style={disciplineChecklist}>
+          <DisciplineCheck ok={discipline.hasActiveGoal} text="Objectif actif" />
+          <DisciplineCheck
+            ok={discipline.hasRecentActivity}
+            text="Activité récente"
+          />
+          <DisciplineCheck
+            ok={!discipline.hasOverduePayment}
+            text="Aucun paiement en retard"
+          />
+          <DisciplineCheck
+            ok={discipline.hasRecentDeposit}
+            text="Dépôt récent"
+          />
+        </div>
+      </section>
+
+      {smartAlerts.length > 0 && (
+        <section className="accueil-headline" style={alertCard}>
+          <div style={sectionHead}>
+            <Flame size={20} color="var(--gold)" />
+            <strong>Alertes du jour</strong>
+          </div>
+
+          {smartAlerts.slice(0, 3).map((alert) => (
+            <p key={alert.id} style={alertLine}>
+              • {alert.message}
+            </p>
+          ))}
+
+          <button
+            onClick={() => setCurrentPage("notifications")}
+            className="ai-action"
+            style={{ marginTop: 12 }}
+          >
+            Voir les notifications
+          </button>
         </section>
       )}
 
-      {items.length > 0 && (
-        <section style={timelineWrap}>
-          <div style={timelineStart}>
-            <Flag size={18} color="var(--gold)" />
-            <strong>Départ</strong>
+      {firstGoal && (
+        <section className="accueil-headline" style={disciplineCard}>
+          <div style={sectionHead}>
+            <Flag size={20} color="var(--gold)" />
+            <strong>Parcours commencé</strong>
           </div>
 
-          <div style={timelineLine} />
+          <p style={softText}>
+            🚩 Vous avez commencé votre parcours{" "}
+            {getStartedLabel(firstGoal.createdAt)}.
+          </p>
 
-          {items.map((item, index) => {
-            const meta = getTypeMeta(item.type);
-            const isLast = index === items.length - 1;
-
-            return (
-              <div key={item.id} style={timelineItem}>
-                <div style={timelineMarkerWrap}>
-                  <span
-                    style={{
-                      ...timelineMarker,
-                      borderColor: meta.color,
-                      color: meta.color,
-                    }}
-                  >
-                    {meta.icon}
-                  </span>
-
-                  {!isLast && <span style={timelineConnector} />}
-                </div>
-
-                <section
-                  style={{
-                    ...historyCard,
-                    borderColor: meta.color,
-                  }}
-                >
-                  <div style={eventHeader}>
-                    <span
-                      style={{
-                        ...typeBadge,
-                        borderColor: meta.color,
-                        background: meta.background,
-                        color: meta.color,
-                      }}
-                    >
-                      {meta.label}
-                    </span>
-
-                    <small style={mutedSmall}>{formatDate(item.createdAt)}</small>
-                  </div>
-
-                  <strong>{item.title}</strong>
-                  <p style={muted}>{item.message}</p>
-                </section>
-              </div>
-            );
-          })}
-
-          <div style={timelineEnd}>
-            <CheckCircle size={18} color="var(--green)" />
-            <strong>Prochaine étape</strong>
-          </div>
+          <p style={softText}>Chaque petit dépôt compte.</p>
         </section>
       )}
+
+      <section className="accueil-headline" style={nextActionCard}>
+        <div style={sectionHead}>
+          <Target size={20} color="var(--green)" />
+          <strong>Prochaine action recommandée</strong>
+        </div>
+
+        <p style={softText}>
+          <strong>{nextAction.title}</strong>
+        </p>
+
+        <p style={softText}>{nextAction.text}</p>
+
+        <button
+          onClick={() => setCurrentPage(nextAction.page)}
+          className="primary-action"
+          style={{ marginTop: 12 }}
+        >
+          {nextAction.button}
+        </button>
+      </section>
+
+      {lastActivity && (
+        <section className="accueil-headline">
+          <div style={sectionHead}>
+            <Sparkles size={20} color="var(--blue)" />
+            <strong>Dernière activité</strong>
+          </div>
+
+          <p style={softText}>
+            <strong>{lastActivity.title}</strong>
+          </p>
+
+          <p style={softText}>{lastActivity.message}</p>
+        </section>
+      )}
+
+      <section className="accueil-grid">
+        <QuickTile
+          icon={<TrendingUp />}
+          title="Vue rapide"
+          text={money(totalDebt)}
+          color="var(--gold)"
+          onClick={() => setCurrentPage("situation")}
+        />
+
+        <QuickTile
+          icon={<Target />}
+          title="Objectif"
+          text={mainGoal ? mainGoal.title : "Créer un objectif"}
+          color="var(--green)"
+          onClick={() => setCurrentPage("objectifs")}
+        />
+
+        <QuickTile
+          icon={<Trophy />}
+          title="Victoire"
+          text={
+            achievedGoals.length > 0
+              ? `${achievedGoals.length} atteinte${
+                  achievedGoals.length > 1 ? "s" : ""
+                }`
+              : totalDebt > 0
+                ? "Réduire la dette"
+                : "Bâtir le plan"
+          }
+          color="var(--blue)"
+          onClick={() => setCurrentPage("parcours")}
+        />
+
+        <QuickTile
+          icon={<ShieldCheck />}
+          title="Sécurité"
+          text="Données locales"
+          color="var(--purple)"
+          onClick={() => setCurrentPage("profil")}
+        />
+      </section>
+
+      <section className="accueil-headline">
+        <div style={sectionHead}>
+          <Landmark size={20} color="var(--gold)" />
+          <strong>Connexion bancaire</strong>
+        </div>
+
+        <p style={softText}>
+          Bientôt disponible. Synchronisation lecture seule sécurisée de vos
+          comptes, dépenses, épargne et progression financière.
+        </p>
+      </section>
+
+      <section className="accueil-headline">
+        <div style={sectionHead}>
+          <Sparkles size={20} color="var(--blue)" />
+          <strong>Ce que peut faire OnJarama Path</strong>
+        </div>
+
+        <p style={softText}>
+          • Prioriser vos dettes automatiquement.
+          <br />
+          • Construire un plan financier personnalisé.
+          <br />
+          • Simuler plusieurs objectifs.
+          <br />
+          • Suivre votre progression dans une timeline claire.
+          <br />
+          • Recevoir des recommandations intelligentes.
+        </p>
+      </section>
+
+      <section className="accueil-hint">
+        <Lightbulb size={16} color="var(--gold)" />
+
+        <p>
+          V8 consolide les cartes interactives, la discipline, les alertes et le
+          compagnon financier.
+        </p>
+      </section>
     </div>
   );
 }
 
-function getTypeMeta(type) {
-  const metas = {
-    objectif: {
-      label: "Objectif",
-      color: "var(--gold)",
-      background: "rgba(212,175,55,.12)",
-      icon: <Target size={17} />,
-    },
-    depot: {
-      label: "Dépôt",
-      color: "var(--green)",
-      background: "rgba(34,197,94,.12)",
-      icon: <PiggyBank size={17} />,
-    },
-    victoire: {
-      label: "Victoire",
-      color: "var(--gold)",
-      background: "rgba(212,175,55,.16)",
-      icon: <Trophy size={17} />,
-    },
-    finance: {
-      label: "Finance",
-      color: "var(--blue)",
-      background: "rgba(56,189,248,.12)",
-      icon: <CreditCard size={17} />,
-    },
-    reglages: {
-      label: "Réglages",
-      color: "var(--purple)",
-      background: "rgba(168,85,247,.12)",
-      icon: <Settings size={17} />,
-    },
-  };
+function getNextAction({ totalDebt, mainGoal, closestGoal }) {
+  if (totalDebt > 0) {
+    return {
+      title: "Réduire la dette prioritaire",
+      text: "Votre plan gagne en force quand les dettes ralentissent moins vos projets.",
+      button: "Voir ma situation",
+      page: "situation",
+    };
+  }
 
-  return (
-    metas[type] || {
-      label: "Action",
-      color: "var(--blue)",
-      background: "rgba(56,189,248,.12)",
-      icon: <Clock3 size={17} />,
+  if (closestGoal && closestGoal.progress >= 80 && closestGoal.progress < 100) {
+    return {
+      title: `Finaliser ${closestGoal.title}`,
+      text: `Progression : ${closestGoal.progress} %. Vous êtes proche d’une victoire.`,
+      button: "Voir mes objectifs",
+      page: "objectifs",
+    };
+  }
+
+  if (mainGoal) {
+    return {
+      title: `Avancer ${mainGoal.title}`,
+      text: "Gardez le cap sur votre objectif principal.",
+      button: "Continuer",
+      page: "objectifs",
+    };
+  }
+
+  return {
+    title: "Créer votre premier objectif",
+    text: "Ajoutez un objectif pour que OnJarama Path construise votre parcours.",
+    button: "Créer un objectif",
+    page: "objectifs",
+  };
+}
+
+function buildSmartAlerts({ activeGoals, debts }) {
+  const alerts = [];
+
+  const priorityDebt = [...debts]
+    .filter((debt) => Number(debt.balance || 0) > 0)
+    .sort((a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0))[0];
+
+  if (priorityDebt) {
+    alerts.push({
+      id: "debt-priority",
+      message: `Dette prioritaire : ${priorityDebt.name || "dette"} à ${
+        priorityDebt.interestRate || 0
+      } %.`,
+    });
+  }
+
+  activeGoals.forEach((goal) => {
+    const target = Number(goal.targetAmount || 0);
+    const current = Number(goal.currentAmount || 0);
+
+    if (target <= 0) return;
+
+    const progress = Math.min(100, Math.round((current / target) * 100));
+
+    if (progress >= 100) {
+      alerts.push({
+        id: `goal-win-${goal.id}`,
+        message: `${goal.title} est atteint à 100 %.`,
+      });
+      return;
     }
+
+    if (progress >= 90) {
+      alerts.push({
+        id: `goal-90-${goal.id}`,
+        message: `${goal.title} est atteint à ${progress} %.`,
+      });
+      return;
+    }
+
+    if (progress >= 80) {
+      alerts.push({
+        id: `goal-80-${goal.id}`,
+        message: `${goal.title} est presque atteint (${progress} %).`,
+      });
+    }
+
+    if (goal.lastDeposit?.date) {
+      const lastDate = new Date(goal.lastDeposit.date);
+      const now = new Date();
+
+      if (!Number.isNaN(lastDate.getTime())) {
+        const days = Math.floor(
+          (now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+
+        if (days >= 14 && progress < 100) {
+          alerts.push({
+            id: `deposit-${goal.id}`,
+            message: `Aucun dépôt sur ${goal.title} depuis ${days} jours.`,
+          });
+        }
+      }
+    }
+  });
+
+  return alerts.slice(0, 5);
+}
+
+function getStartedLabel(createdAt) {
+  if (!createdAt) return "aujourd’hui";
+
+  const start = new Date(createdAt);
+  const now = new Date();
+
+  if (Number.isNaN(start.getTime())) return "aujourd’hui";
+
+  const days = Math.max(
+    0,
+    Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+  );
+
+  if (days === 0) return "aujourd’hui";
+  if (days === 1) return "il y a 1 jour";
+
+  return `il y a ${days} jours`;
+}
+
+function getDisciplineColor(score) {
+  if (score <= 25) return "var(--red)";
+  if (score <= 50) return "var(--gold)";
+  if (score <= 75) return "var(--blue)";
+  return "var(--green)";
+}
+
+function CompanionLine({ icon, label, value }) {
+  return (
+    <div style={companionLine}>
+      <span>{icon}</span>
+      <div>
+        <small style={companionLabel}>{label}</small>
+        <strong style={companionValue}>{value}</strong>
+      </div>
+    </div>
   );
 }
 
-function formatDate(value) {
-  if (!value) return "Date inconnue";
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) return "Date inconnue";
-
-  return date.toLocaleString("fr-CA", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+function DisciplineCheck({ ok, text }) {
+  return (
+    <div
+      style={{
+        ...disciplineCheck,
+        borderColor: ok ? "var(--green)" : "var(--border)",
+      }}
+    >
+      <span>{ok ? "✅" : "○"}</span>
+      <small>{text}</small>
+    </div>
+  );
 }
 
-const summaryCard = {
-  background: "linear-gradient(135deg, rgba(212,175,55,.14), var(--bg-card))",
-  border: "1px solid var(--gold)",
-  borderRadius: "22px",
-  padding: "20px",
-  marginTop: "20px",
-};
+function QuickTile({ icon, title, text, color, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="accueil-tile"
+      style={{ borderColor: color }}
+    >
+      <span className="accueil-tile-icon" style={{ color }}>
+        {icon}
+      </span>
 
-const card = {
-  background: "var(--bg-card)",
-  border: "1px solid var(--border)",
-  borderRadius: "22px",
-  padding: "20px",
-  marginTop: "20px",
-};
+      <strong>{title}</strong>
 
-const header = {
+      <small>{text}</small>
+    </button>
+  );
+}
+
+const sectionHead = {
   display: "flex",
+  gap: 10,
   alignItems: "center",
-  gap: "10px",
+  marginBottom: 8,
 };
 
-const timelineWrap = {
-  position: "relative",
-  marginTop: "22px",
-  paddingLeft: "2px",
+const softText = {
+  margin: 0,
+  color: "var(--text-muted)",
+  lineHeight: 1.4,
 };
 
-const timelineStart = {
-  background: "var(--bg-card)",
+const companionCard = {
   border: "1px solid var(--gold)",
-  borderRadius: "999px",
-  padding: "10px 13px",
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "8px",
-  color: "var(--text-main)",
-  marginBottom: "14px",
+  background: "linear-gradient(135deg, rgba(212,175,55,.16), var(--bg-card))",
 };
 
-const timelineLine = {
-  position: "absolute",
-  left: "19px",
-  top: "52px",
-  bottom: "42px",
-  width: "2px",
-  background:
-    "linear-gradient(180deg, var(--gold), rgba(212,175,55,.22), var(--green))",
-  borderRadius: "999px",
+const disciplineGaugeCard = {
+  border: "1px solid var(--gold)",
+  background: "linear-gradient(135deg, rgba(212,175,55,.12), var(--bg-card))",
 };
 
-const timelineItem = {
-  position: "relative",
+const companionGrid = {
   display: "grid",
-  gridTemplateColumns: "40px 1fr",
   gap: "10px",
   marginTop: "12px",
 };
 
-const timelineMarkerWrap = {
-  position: "relative",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "flex-start",
-};
-
-const timelineMarker = {
-  width: "36px",
-  height: "36px",
-  borderRadius: "999px",
+const companionLine = {
+  background: "var(--bg-panel)",
   border: "1px solid var(--border)",
-  background: "var(--bg-card)",
+  borderRadius: "14px",
+  padding: "11px",
   display: "grid",
-  placeItems: "center",
-  zIndex: 2,
+  gridTemplateColumns: "28px 1fr",
+  gap: "8px",
+  alignItems: "center",
 };
 
-const timelineConnector = {
-  position: "absolute",
-  top: "36px",
-  width: "2px",
-  height: "calc(100% + 12px)",
-  background: "rgba(212,175,55,.22)",
+const companionLabel = {
+  color: "var(--text-muted)",
+  fontSize: "12px",
+  display: "block",
 };
 
-const historyCard = {
-  background: "var(--bg-card)",
-  border: "1px solid var(--border)",
-  borderRadius: "18px",
-  padding: "16px",
+const companionValue = {
+  color: "var(--text-main)",
+  display: "block",
+  marginTop: "2px",
 };
 
-const eventHeader = {
+const scoreRow = {
   display: "flex",
   justifyContent: "space-between",
-  gap: "10px",
-  alignItems: "center",
-  marginBottom: "10px",
-};
-
-const typeBadge = {
-  display: "inline-block",
-  border: "1px solid var(--gold)",
-  borderRadius: "999px",
-  padding: "5px 9px",
-  fontSize: "12px",
-  fontWeight: "bold",
-};
-
-const timelineEnd = {
-  background: "linear-gradient(135deg, rgba(34,197,94,.14), var(--bg-card))",
-  border: "1px solid var(--green)",
-  borderRadius: "999px",
-  padding: "10px 13px",
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "8px",
-  color: "var(--text-main)",
-  marginTop: "16px",
-};
-
-const redButton = {
-  width: "100%",
-  marginTop: "14px",
-  padding: "12px",
-  borderRadius: "14px",
-  border: "1px solid var(--red)",
-  background: "rgba(239,68,68,.12)",
-  color: "var(--red)",
-  fontWeight: "bold",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "7px",
-};
-
-const muted = {
-  color: "var(--text-muted)",
+  alignItems: "baseline",
   marginTop: "8px",
 };
 
-const mutedSmall = {
-  color: "var(--text-muted)",
-  fontSize: "12px",
-  marginTop: "0",
-  whiteSpace: "nowrap",
+const scoreValue = {
+  fontSize: "34px",
+  color: "var(--text-main)",
 };
 
-export default Historique;
+const scoreLabel = {
+  color: "var(--gold)",
+  fontWeight: "bold",
+};
+
+const scoreBarBg = {
+  height: "12px",
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "999px",
+  marginTop: "12px",
+  overflow: "hidden",
+};
+
+const scoreBarFill = {
+  height: "100%",
+  borderRadius: "999px",
+  transition: "width .35s ease",
+};
+
+const disciplineChecklist = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "8px",
+  marginTop: "12px",
+};
+
+const disciplineCheck = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "12px",
+  padding: "9px",
+  display: "flex",
+  gap: "6px",
+  alignItems: "center",
+  color: "var(--text-muted)",
+};
+
+const alertCard = {
+  border: "1px solid var(--gold)",
+  background: "linear-gradient(135deg, rgba(212,175,55,.12), var(--bg-card))",
+};
+
+const alertLine = {
+  margin: "6px 0 0",
+  color: "var(--text-muted)",
+  lineHeight: 1.4,
+};
+
+const disciplineCard = {
+  border: "1px solid var(--gold)",
+  background: "linear-gradient(135deg, rgba(212,175,55,.14), var(--bg-card))",
+};
+
+const nextActionCard = {
+  border: "1px solid var(--green)",
+  background: "linear-gradient(135deg, rgba(34,197,94,.12), var(--bg-card))",
+};
+
+export default Accueil;

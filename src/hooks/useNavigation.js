@@ -19,7 +19,7 @@ function useNavigation() {
   function setCurrentPage(page) {
     if (!page || page === currentPage) return;
 
-    setHistory((previous) => [...previous, currentPage]);
+    setHistory((previous) => [...previous, currentPage].slice(-30));
     setCurrentPageState(page);
     localStorage.setItem("onjaramaCurrentPage", page);
   }
@@ -33,6 +33,7 @@ function useNavigation() {
       }
 
       const lastPage = previous[previous.length - 1];
+
       setCurrentPageState(lastPage);
       localStorage.setItem("onjaramaCurrentPage", lastPage);
 

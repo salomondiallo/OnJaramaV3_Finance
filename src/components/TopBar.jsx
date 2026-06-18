@@ -86,7 +86,7 @@ function TopBar({
 
           <div className="topbar-menu-panel">
             <div className="topbar-menu-head">
-              <strong>OnJarama Path</strong>
+              <strong>OnJarama Path V8</strong>
               <span>Menu personnel</span>
             </div>
 

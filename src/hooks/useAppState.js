@@ -317,6 +317,7 @@ function useAppState() {
     setScheduledPayments(defaultScheduledPayments);
 
     localStorage.setItem(PRIVACY_CLEAN_VERSION, "done");
+    localStorage.setItem("onjaramaCurrentPage", "accueil");
   }
 
   return {

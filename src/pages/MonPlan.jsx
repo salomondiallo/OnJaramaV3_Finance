@@ -93,7 +93,7 @@ function MonPlan({
 
   return (
     <div className="native-page">
-      <h1>Mon Plan</h1>
+      <h1>Mon Plan V8</h1>
 
       <p style={muted}>
         Votre feuille de route intelligente pour avancer sans vous disperser.
@@ -118,6 +118,23 @@ function MonPlan({
           {nextAction.button}
         </button>
       </section>
+
+      {firstGoal && (
+        <section style={disciplineCard}>
+          <Flag color="var(--gold)" />
+
+          <div>
+            <h2>Discipline OnJarama</h2>
+            <p style={muted}>
+              Vous avez commencé votre parcours {getStartedLabel(firstGoal.createdAt)}.
+            </p>
+            <p style={muted}>
+              Le but n’est pas de mettre de la pression, mais de rappeler que le
+              chemin est déjà commencé.
+            </p>
+          </div>
+        </section>
+      )}
 
       {lastActivity && (
         <section style={card}>
@@ -155,22 +172,6 @@ function MonPlan({
               <strong>{lastVictory.title}</strong>
             </p>
             <p style={muted}>{lastVictory.message}</p>
-          </div>
-        </section>
-      )}
-
-      {firstGoal && (
-        <section style={disciplineCard}>
-          <Flag color="var(--gold)" />
-
-          <div>
-            <h2>Discipline OnJarama</h2>
-            <p style={muted}>
-              Vous avez commencé votre parcours {getStartedLabel(firstGoal.createdAt)}.
-            </p>
-            <p style={muted}>
-              Chaque dépôt vous rapproche d’une vie plus stable et mieux organisée.
-            </p>
           </div>
         </section>
       )}

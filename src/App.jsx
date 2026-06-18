@@ -59,16 +59,14 @@ function App() {
   }, [appState.settings.theme]);
 
   useEffect(() => {
-    const preventPageBounce = (event) => {
-      if (event.touches.length > 1) return;
-    };
-
-    document.addEventListener("touchmove", preventPageBounce, {
-      passive: true,
-    });
+    document.documentElement.style.overscrollBehavior = "none";
+    document.body.style.overscrollBehavior = "none";
+    document.body.style.overflow = "hidden";
 
     return () => {
-      document.removeEventListener("touchmove", preventPageBounce);
+      document.documentElement.style.overscrollBehavior = "";
+      document.body.style.overscrollBehavior = "";
+      document.body.style.overflow = "";
     };
   }, []);
 
@@ -266,7 +264,7 @@ const victoryModal = {
   padding: "28px 20px",
   textAlign: "center",
   boxShadow: "0 0 36px rgba(212,175,55,.32)",
-  animation: "fadeIn .24s ease",
+  animation: "victoryPop .28s ease",
 };
 
 const victoryClose = {
