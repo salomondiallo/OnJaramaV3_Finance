@@ -65,8 +65,15 @@ function TopBar({
         onClick={() => setMenuOpen(!menuOpen)}
         className="topbar-menu-btn"
         aria-label="Menu"
+        style={menuButtonWithBadge}
       >
         {menuOpen ? <X size={20} /> : <Menu size={20} />}
+
+        {!menuOpen && unreadCount > 0 && (
+          <span style={hamburgerBadge}>
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>
+        )}
       </button>
 
       {menuOpen && (
@@ -136,6 +143,28 @@ function TopBar({
     </div>
   );
 }
+
+const menuButtonWithBadge = {
+  position: "relative",
+};
+
+const hamburgerBadge = {
+  position: "absolute",
+  top: "-6px",
+  right: "-6px",
+  minWidth: "18px",
+  height: "18px",
+  borderRadius: "999px",
+  background: "var(--red)",
+  color: "white",
+  fontSize: "10px",
+  fontWeight: "bold",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "0 5px",
+  border: "1px solid var(--bg-card)",
+};
 
 const notificationBadge = {
   marginLeft: "auto",
