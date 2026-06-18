@@ -3,6 +3,7 @@ import {
   Eye,
   EyeOff,
   Flag,
+  Flame,
   Lightbulb,
   PiggyBank,
   ShieldCheck,
@@ -10,6 +11,7 @@ import {
   TrendingUp,
   Landmark,
   Sparkles,
+  Trophy,
 } from "lucide-react";
 
 import { useState } from "react";
@@ -57,7 +59,18 @@ function Accueil({
     }))
     .sort((a, b) => b.progress - a.progress)[0];
 
+  const achievedGoals = activeGoals.filter(
+    (goal) =>
+      Number(goal.targetAmount || 0) > 0 &&
+      Number(goal.currentAmount || 0) >= Number(goal.targetAmount || 0)
+  );
+
   const lastActivity = history[0];
+  const lastDeposit = history.find((item) => item.type === "depot");
+  const lastVictory =
+    history.find((item) => item.type === "victoire") || achievedGoals[0];
+
+  const smartAlerts = buildSmartAlerts({ activeGoals, debts });
 
   const nextAction = getNextAction({
     totalDebt,
@@ -78,7 +91,7 @@ function Accueil({
       <section className="accueil-hero" />
 
       <section className="accueil-headline">
-        <p className="accueil-eyebrow">OnJarama Path V7.1</p>
+        <p className="accueil-eyebrow">OnJarama Path V7.5</p>
 
         <h1 className="accueil-title">
           {t.heroTitle}
@@ -91,6 +104,84 @@ function Accueil({
         </p>
       </section>
 
+      <section className="accueil-headline" style={companionCard}>
+        <div style={sectionHead}>
+          <Sparkles size={20} color="var(--gold)" />
+          <strong>Compagnon financier</strong>
+        </div>
+
+        <div style={companionGrid}>
+          <CompanionLine
+            icon="🚩"
+            label="Parcours"
+            value={
+              firstGoal
+                ? `Commencé ${getStartedLabel(firstGoal.createdAt)}`
+                : "Pas encore commencé"
+            }
+          />
+
+          <CompanionLine
+            icon="🎯"
+            label="Objectifs actifs"
+            value={`${activeGoals.length}`}
+          />
+
+          <CompanionLine
+            icon="💰"
+            label="Dernier dépôt"
+            value={lastDeposit ? lastDeposit.message : "Aucun dépôt enregistré"}
+          />
+
+          <CompanionLine
+            icon="🏆"
+            label="Dernière victoire"
+            value={
+              lastVictory?.message ||
+              lastVictory?.title ||
+              "Aucune victoire enregistrée"
+            }
+          />
+
+          <CompanionLine
+            icon="➡️"
+            label="Action recommandée"
+            value={nextAction.title}
+          />
+        </div>
+
+        <button
+          onClick={() => setCurrentPage(nextAction.page)}
+          className="primary-action"
+          style={{ marginTop: 14 }}
+        >
+          {nextAction.button}
+        </button>
+      </section>
+
+      {smartAlerts.length > 0 && (
+        <section className="accueil-headline" style={alertCard}>
+          <div style={sectionHead}>
+            <Flame size={20} color="var(--gold)" />
+            <strong>Alertes du jour</strong>
+          </div>
+
+          {smartAlerts.slice(0, 3).map((alert) => (
+            <p key={alert.id} style={alertLine}>
+              • {alert.message}
+            </p>
+          ))}
+
+          <button
+            onClick={() => setCurrentPage("notifications")}
+            className="ai-action"
+            style={{ marginTop: 12 }}
+          >
+            Voir les notifications
+          </button>
+        </section>
+      )}
+
       {firstGoal && (
         <section className="accueil-headline" style={disciplineCard}>
           <div style={sectionHead}>
@@ -99,7 +190,8 @@ function Accueil({
           </div>
 
           <p style={softText}>
-            🚩 Vous avez commencé votre parcours {getStartedLabel(firstGoal.createdAt)}.
+            🚩 Vous avez commencé votre parcours{" "}
+            {getStartedLabel(firstGoal.createdAt)}.
           </p>
 
           <p style={softText}>Chaque petit dépôt compte.</p>
@@ -188,9 +280,17 @@ function Accueil({
         />
 
         <QuickTile
-          icon={<PiggyBank />}
+          icon={<Trophy />}
           title="Victoire"
-          text={totalDebt > 0 ? "Réduire la dette" : "Bâtir le plan"}
+          text={
+            achievedGoals.length > 0
+              ? `${achievedGoals.length} atteinte${
+                  achievedGoals.length > 1 ? "s" : ""
+                }`
+              : totalDebt > 0
+                ? "Réduire la dette"
+                : "Bâtir le plan"
+          }
           color="var(--blue)"
           onClick={() => setCurrentPage("parcours")}
         />
@@ -283,6 +383,75 @@ function getNextAction({ totalDebt, mainGoal, closestGoal }) {
   };
 }
 
+function buildSmartAlerts({ activeGoals, debts }) {
+  const alerts = [];
+
+  const priorityDebt = [...debts]
+    .filter((debt) => Number(debt.balance || 0) > 0)
+    .sort((a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0))[0];
+
+  if (priorityDebt) {
+    alerts.push({
+      id: "debt-priority",
+      message: `Dette prioritaire : ${priorityDebt.name || "dette"} à ${
+        priorityDebt.interestRate || 0
+      } %.`,
+    });
+  }
+
+  activeGoals.forEach((goal) => {
+    const target = Number(goal.targetAmount || 0);
+    const current = Number(goal.currentAmount || 0);
+
+    if (target <= 0) return;
+
+    const progress = Math.min(100, Math.round((current / target) * 100));
+
+    if (progress >= 100) {
+      alerts.push({
+        id: `goal-win-${goal.id}`,
+        message: `${goal.title} est atteint à 100 %.`,
+      });
+      return;
+    }
+
+    if (progress >= 90) {
+      alerts.push({
+        id: `goal-90-${goal.id}`,
+        message: `${goal.title} est atteint à ${progress} %.`,
+      });
+      return;
+    }
+
+    if (progress >= 80) {
+      alerts.push({
+        id: `goal-80-${goal.id}`,
+        message: `${goal.title} est presque atteint (${progress} %).`,
+      });
+    }
+
+    if (goal.lastDeposit?.date) {
+      const lastDate = new Date(goal.lastDeposit.date);
+      const now = new Date();
+
+      if (!Number.isNaN(lastDate.getTime())) {
+        const days = Math.floor(
+          (now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+
+        if (days >= 14 && progress < 100) {
+          alerts.push({
+            id: `deposit-${goal.id}`,
+            message: `Aucun dépôt sur ${goal.title} depuis ${days} jours.`,
+          });
+        }
+      }
+    }
+  });
+
+  return alerts.slice(0, 5);
+}
+
 function getStartedLabel(createdAt) {
   if (!createdAt) return "aujourd’hui";
 
@@ -300,6 +469,18 @@ function getStartedLabel(createdAt) {
   if (days === 1) return "il y a 1 jour";
 
   return `il y a ${days} jours`;
+}
+
+function CompanionLine({ icon, label, value }) {
+  return (
+    <div style={companionLine}>
+      <span>{icon}</span>
+      <div>
+        <small style={companionLabel}>{label}</small>
+        <strong style={companionValue}>{value}</strong>
+      </div>
+    </div>
+  );
 }
 
 function QuickTile({ icon, title, text, color, onClick }) {
@@ -329,6 +510,51 @@ const sectionHead = {
 
 const softText = {
   margin: 0,
+  color: "var(--text-muted)",
+  lineHeight: 1.4,
+};
+
+const companionCard = {
+  border: "1px solid var(--gold)",
+  background: "linear-gradient(135deg, rgba(212,175,55,.16), var(--bg-card))",
+};
+
+const companionGrid = {
+  display: "grid",
+  gap: "10px",
+  marginTop: "12px",
+};
+
+const companionLine = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "14px",
+  padding: "11px",
+  display: "grid",
+  gridTemplateColumns: "28px 1fr",
+  gap: "8px",
+  alignItems: "center",
+};
+
+const companionLabel = {
+  color: "var(--text-muted)",
+  fontSize: "12px",
+  display: "block",
+};
+
+const companionValue = {
+  color: "var(--text-main)",
+  display: "block",
+  marginTop: "2px",
+};
+
+const alertCard = {
+  border: "1px solid var(--gold)",
+  background: "linear-gradient(135deg, rgba(212,175,55,.12), var(--bg-card))",
+};
+
+const alertLine = {
+  margin: "6px 0 0",
   color: "var(--text-muted)",
   lineHeight: 1.4,
 };
