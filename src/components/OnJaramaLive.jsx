@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  AlertTriangle,
   Bell,
   Calendar,
   CheckCircle,
   CreditCard,
   Lightbulb,
+  ShieldCheck,
   Target,
   Trophy,
 } from "lucide-react";
@@ -12,7 +14,7 @@ import { formatMoney } from "../utils/formatters";
 
 const pageText = {
   FR: {
-    adviceDebt: "Priorisez la dette au taux le plus élevé.",
+    adviceDebt: "Priorisez la dette au taux le plus élevé",
     adviceStart: "Ajoutez vos chiffres pour générer votre priorité.",
     totalDebt: "Dette totale",
     goal: "Objectif actif",
@@ -20,11 +22,14 @@ const pageText = {
     payment: "Paiement prévu",
     noPayment: "Ajoutez un paiement programmé pour mieux prévoir votre semaine.",
     victory: "Objectif atteint",
+    nearGoal: "Objectif presque atteint",
     simulator: "Simulation transformée en objectif",
+    privacy: "Confidentialité active : données locales, lecture seule.",
+    discipline: "Discipline OnJarama : une action claire à la fois.",
   },
 
   EN: {
-    adviceDebt: "Prioritize the debt with the highest rate.",
+    adviceDebt: "Prioritize the debt with the highest rate",
     adviceStart: "Add your numbers to generate your priority.",
     totalDebt: "Total debt",
     goal: "Active goal",
@@ -32,11 +37,14 @@ const pageText = {
     payment: "Scheduled payment",
     noPayment: "Add a scheduled payment to plan your week.",
     victory: "Goal reached",
+    nearGoal: "Goal almost reached",
     simulator: "Simulation turned into a goal",
+    privacy: "Privacy active: local data, read-only.",
+    discipline: "OnJarama discipline: one clear action at a time.",
   },
 
   ES: {
-    adviceDebt: "Prioriza la deuda con la tasa más alta.",
+    adviceDebt: "Prioriza la deuda con la tasa más alta",
     adviceStart: "Agrega tus datos para generar tu prioridad.",
     totalDebt: "Deuda total",
     goal: "Objetivo activo",
@@ -44,7 +52,10 @@ const pageText = {
     payment: "Pago programado",
     noPayment: "Agrega un pago programado para planificar tu semana.",
     victory: "Objetivo alcanzado",
+    nearGoal: "Objetivo casi alcanzado",
     simulator: "Simulación convertida en objetivo",
+    privacy: "Privacidad activa: datos locales, solo lectura.",
+    discipline: "Disciplina OnJarama: una acción clara a la vez.",
   },
 };
 
@@ -89,6 +100,16 @@ function OnJaramaLive({ financeData, selectedGoals, settings }) {
       Number(goal.currentAmount || 0) >= Number(goal.targetAmount || 0)
   );
 
+  const nearGoal = activeGoals.find((goal) => {
+    const target = Number(goal.targetAmount || 0);
+    const current = Number(goal.currentAmount || 0);
+
+    if (target <= 0) return false;
+
+    const progress = (current / target) * 100;
+    return progress >= 90 && progress < 100;
+  });
+
   const simulatorGoal = activeGoals.find((goal) => goal.source === "simulateur");
 
   const messages = [
@@ -96,7 +117,7 @@ function OnJaramaLive({ financeData, selectedGoals, settings }) {
       icon: <Lightbulb size={16} />,
       color: "var(--gold)",
       text: priorityDebt
-        ? `${p.adviceDebt} ${priorityDebt.name}.`
+        ? `${p.adviceDebt} : ${priorityDebt.name}.`
         : p.adviceStart,
     },
     {
@@ -116,6 +137,16 @@ function OnJaramaLive({ financeData, selectedGoals, settings }) {
         ? `${p.payment} : ${activePayment.name}.`
         : p.noPayment,
     },
+    {
+      icon: <ShieldCheck size={16} />,
+      color: "var(--green)",
+      text: p.privacy,
+    },
+    {
+      icon: <CheckCircle size={16} />,
+      color: "var(--gold)",
+      text: p.discipline,
+    },
   ];
 
   if (simulatorGoal) {
@@ -123,6 +154,14 @@ function OnJaramaLive({ financeData, selectedGoals, settings }) {
       icon: <Bell size={16} />,
       color: "var(--blue)",
       text: `${p.simulator} : ${simulatorGoal.title}.`,
+    });
+  }
+
+  if (nearGoal) {
+    messages.unshift({
+      icon: <AlertTriangle size={16} />,
+      color: "var(--gold)",
+      text: `${p.nearGoal} : ${nearGoal.title}.`,
     });
   }
 

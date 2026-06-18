@@ -53,6 +53,20 @@ function App() {
     }
   }, [appState.settings.theme]);
 
+  useEffect(() => {
+    const preventPageBounce = (event) => {
+      if (event.touches.length > 1) return;
+    };
+
+    document.addEventListener("touchmove", preventPageBounce, {
+      passive: true,
+    });
+
+    return () => {
+      document.removeEventListener("touchmove", preventPageBounce);
+    };
+  }, []);
+
   const pageProps = useMemo(
     () => ({
       ...appState,
@@ -89,10 +103,7 @@ function App() {
   }
 
   function handleTouchEnd(event) {
-    if (
-      touchStartX.current === null ||
-      touchStartY.current === null
-    ) {
+    if (touchStartX.current === null || touchStartY.current === null) {
       return;
     }
 
@@ -104,9 +115,7 @@ function App() {
     touchStartX.current = null;
     touchStartY.current = null;
 
-    const isMostlyHorizontal =
-      Math.abs(deltaX) > Math.abs(deltaY);
-
+    const isMostlyHorizontal = Math.abs(deltaX) > Math.abs(deltaY);
     const isRealSwipe = Math.abs(deltaX) >= 80;
 
     if (!isMostlyHorizontal || !isRealSwipe) {
@@ -122,11 +131,7 @@ function App() {
   }
 
   return (
-    <div
-      className={`app-shell ${
-        navHidden ? "nav-is-hidden" : ""
-      }`}
-    >
+    <div className={`app-shell ${navHidden ? "nav-is-hidden" : ""}`}>
       <main
         className="page-container"
         onTouchStart={handleTouchStart}

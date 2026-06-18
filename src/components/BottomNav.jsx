@@ -7,12 +7,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 
-function BottomNav({
-  currentPage,
-  setCurrentPage,
-  navHidden,
-  setNavHidden,
-}) {
+function BottomNav({ currentPage, setCurrentPage, navHidden, setNavHidden }) {
   function go(page) {
     setCurrentPage(page);
   }
@@ -22,24 +17,12 @@ function BottomNav({
       <button
         onClick={() => setNavHidden(!navHidden)}
         className="bottom-nav-handle"
-        aria-label={
-          navHidden
-            ? "Afficher la navigation"
-            : "Masquer la navigation"
-        }
+        aria-label={navHidden ? "Afficher la navigation" : "Masquer la navigation"}
       >
-        {navHidden ? (
-          <ChevronUp size={16} />
-        ) : (
-          <ChevronDown size={16} />
-        )}
+        {navHidden ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
       </button>
 
-      <nav
-        className={`bottom-nav ${
-          navHidden ? "bottom-nav-hidden" : ""
-        }`}
-      >
+      <nav className={`bottom-nav ${navHidden ? "bottom-nav-hidden" : ""}`}>
         <button
           onClick={() => go("accueil")}
           className={`bottom-logo-btn ${
@@ -55,7 +38,7 @@ function BottomNav({
         </button>
 
         <NavButton
-          active={currentPage === "parcours"}
+          active={currentPage === "parcours" || currentPage === "monplan"}
           icon={<Route size={20} />}
           label="Parcours"
           onClick={() => go("parcours")}
@@ -71,15 +54,12 @@ function BottomNav({
         <NavButton
           active={currentPage === "simulateur"}
           icon={<Calculator size={20} />}
-          label="Simulateur"
+          label="Simuler"
           onClick={() => go("simulateur")}
         />
 
         <NavButton
-          active={
-            currentPage === "profil" ||
-            currentPage === "reglages"
-          }
+          active={currentPage === "profil" || currentPage === "reglages"}
           icon={<UserCircle size={20} />}
           label="Profil"
           onClick={() => go("profil")}
@@ -89,20 +69,14 @@ function BottomNav({
   );
 }
 
-function NavButton({
-  icon,
-  label,
-  active,
-  onClick,
-}) {
+function NavButton({ icon, label, active, onClick }) {
   return (
     <button
       onClick={onClick}
       className={`bottom-nav-btn ${active ? "active" : ""}`}
+      aria-label={label}
     >
-      <span className="bottom-nav-icon">
-        {icon}
-      </span>
+      <span className="bottom-nav-icon">{icon}</span>
       <span>{label}</span>
     </button>
   );
