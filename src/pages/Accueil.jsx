@@ -4,6 +4,7 @@ import {
   EyeOff,
   Flag,
   Flame,
+  Gauge,
   Lightbulb,
   PiggyBank,
   ShieldCheck,
@@ -23,6 +24,7 @@ function Accueil({
   setCurrentPage,
   settings,
   activityHistory,
+  disciplineScore,
 }) {
   const t = getText(settings);
   const [showAmounts, setShowAmounts] = useState(false);
@@ -30,6 +32,15 @@ function Accueil({
   const debts = Array.isArray(financeData?.debts) ? financeData.debts : [];
   const goals = Array.isArray(selectedGoals) ? selectedGoals : [];
   const history = Array.isArray(activityHistory) ? activityHistory : [];
+
+  const discipline = disciplineScore || {
+    score: 0,
+    label: "Départ",
+    hasActiveGoal: false,
+    hasRecentActivity: false,
+    hasRecentDeposit: false,
+    hasOverduePayment: false,
+  };
 
   const totalDebt = debts.reduce(
     (sum, debt) => sum + Number(debt.balance || 0),
@@ -91,7 +102,7 @@ function Accueil({
       <section className="accueil-hero" />
 
       <section className="accueil-headline">
-        <p className="accueil-eyebrow">OnJarama Path V7.5</p>
+        <p className="accueil-eyebrow">OnJarama Path V7.7</p>
 
         <h1 className="accueil-title">
           {t.heroTitle}
@@ -159,6 +170,44 @@ function Accueil({
         </button>
       </section>
 
+      <section className="accueil-headline" style={disciplineGaugeCard}>
+        <div style={sectionHead}>
+          <Gauge size={20} color="var(--gold)" />
+          <strong>Discipline OnJarama</strong>
+        </div>
+
+        <div style={scoreRow}>
+          <strong style={scoreValue}>{discipline.score}%</strong>
+          <span style={scoreLabel}>{discipline.label}</span>
+        </div>
+
+        <div style={scoreBarBg}>
+          <div
+            style={{
+              ...scoreBarFill,
+              width: `${discipline.score}%`,
+              background: getDisciplineColor(discipline.score),
+            }}
+          />
+        </div>
+
+        <div style={disciplineChecklist}>
+          <DisciplineCheck ok={discipline.hasActiveGoal} text="Objectif actif" />
+          <DisciplineCheck
+            ok={discipline.hasRecentActivity}
+            text="Activité récente"
+          />
+          <DisciplineCheck
+            ok={!discipline.hasOverduePayment}
+            text="Aucun paiement en retard"
+          />
+          <DisciplineCheck
+            ok={discipline.hasRecentDeposit}
+            text="Dépôt récent"
+          />
+        </div>
+      </section>
+
       {smartAlerts.length > 0 && (
         <section className="accueil-headline" style={alertCard}>
           <div style={sectionHead}>
@@ -186,7 +235,7 @@ function Accueil({
         <section className="accueil-headline" style={disciplineCard}>
           <div style={sectionHead}>
             <Flag size={20} color="var(--gold)" />
-            <strong>Discipline OnJarama</strong>
+            <strong>Parcours commencé</strong>
           </div>
 
           <p style={softText}>
@@ -471,6 +520,13 @@ function getStartedLabel(createdAt) {
   return `il y a ${days} jours`;
 }
 
+function getDisciplineColor(score) {
+  if (score <= 25) return "var(--red)";
+  if (score <= 50) return "var(--gold)";
+  if (score <= 75) return "var(--blue)";
+  return "var(--green)";
+}
+
 function CompanionLine({ icon, label, value }) {
   return (
     <div style={companionLine}>
@@ -479,6 +535,20 @@ function CompanionLine({ icon, label, value }) {
         <small style={companionLabel}>{label}</small>
         <strong style={companionValue}>{value}</strong>
       </div>
+    </div>
+  );
+}
+
+function DisciplineCheck({ ok, text }) {
+  return (
+    <div
+      style={{
+        ...disciplineCheck,
+        borderColor: ok ? "var(--green)" : "var(--border)",
+      }}
+    >
+      <span>{ok ? "✅" : "○"}</span>
+      <small>{text}</small>
     </div>
   );
 }
@@ -519,6 +589,11 @@ const companionCard = {
   background: "linear-gradient(135deg, rgba(212,175,55,.16), var(--bg-card))",
 };
 
+const disciplineGaugeCard = {
+  border: "1px solid var(--gold)",
+  background: "linear-gradient(135deg, rgba(212,175,55,.12), var(--bg-card))",
+};
+
 const companionGrid = {
   display: "grid",
   gap: "10px",
@@ -546,6 +621,56 @@ const companionValue = {
   color: "var(--text-main)",
   display: "block",
   marginTop: "2px",
+};
+
+const scoreRow = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "baseline",
+  marginTop: "8px",
+};
+
+const scoreValue = {
+  fontSize: "34px",
+  color: "var(--text-main)",
+};
+
+const scoreLabel = {
+  color: "var(--gold)",
+  fontWeight: "bold",
+};
+
+const scoreBarBg = {
+  height: "12px",
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "999px",
+  marginTop: "12px",
+  overflow: "hidden",
+};
+
+const scoreBarFill = {
+  height: "100%",
+  borderRadius: "999px",
+  transition: "width .35s ease",
+};
+
+const disciplineChecklist = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "8px",
+  marginTop: "12px",
+};
+
+const disciplineCheck = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "12px",
+  padding: "9px",
+  display: "flex",
+  gap: "6px",
+  alignItems: "center",
+  color: "var(--text-muted)",
 };
 
 const alertCard = {

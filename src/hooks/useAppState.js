@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const PRIVACY_CLEAN_VERSION = "OJ_PATH_PRIVACY_CLEAN_V1_1";
 
@@ -80,6 +80,34 @@ function createLog(type, title, message) {
   };
 }
 
+function hasRecentDate(value, maxDays) {
+  if (!value) return false;
+
+  const date = new Date(value);
+  const now = new Date();
+
+  if (Number.isNaN(date.getTime())) return false;
+
+  const diffDays = Math.floor(
+    (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  return diffDays >= 0 && diffDays <= maxDays;
+}
+
+function isPaymentOverdue(payment) {
+  if (!payment?.active || !payment?.nextDate) return false;
+
+  const today = new Date();
+  const dueDate = new Date(`${payment.nextDate}T12:00:00`);
+
+  today.setHours(12, 0, 0, 0);
+
+  if (Number.isNaN(dueDate.getTime())) return false;
+
+  return dueDate.getTime() < today.getTime();
+}
+
 function useAppState() {
   const [financeData, setFinanceData] = useState(() =>
     readStorage("onjaramaFinanceData", defaultFinanceData)
@@ -121,6 +149,51 @@ function useAppState() {
   const unseenVictories = achievedGoals.filter(
     (goal) => !victorySeenIds.includes(goal.id)
   );
+
+  const disciplineScore = useMemo(() => {
+    const activeGoals = Array.isArray(selectedGoals)
+      ? selectedGoals.filter((goal) => !goal.archived)
+      : [];
+
+    const hasActiveGoal = activeGoals.length > 0;
+
+    const hasRecentActivity =
+      Array.isArray(activityHistory) &&
+      activityHistory.some((item) => hasRecentDate(item.createdAt, 7));
+
+    const hasRecentDeposit =
+      Array.isArray(activityHistory) &&
+      activityHistory.some(
+        (item) => item.type === "depot" && hasRecentDate(item.createdAt, 14)
+      );
+
+    const hasOverduePayment =
+      Array.isArray(scheduledPayments) &&
+      scheduledPayments.some((payment) => isPaymentOverdue(payment));
+
+    let score = 0;
+
+    if (hasActiveGoal) score += 25;
+    if (hasRecentActivity) score += 25;
+    if (!hasOverduePayment) score += 25;
+    if (hasRecentDeposit) score += 25;
+
+    return {
+      score,
+      hasActiveGoal,
+      hasRecentActivity,
+      hasRecentDeposit,
+      hasOverduePayment,
+      label:
+        score <= 25
+          ? "Départ"
+          : score <= 50
+            ? "En progression"
+            : score <= 75
+              ? "Bon rythme"
+              : "Excellent rythme",
+    };
+  }, [selectedGoals, activityHistory, scheduledPayments]);
 
   useEffect(() => {
     localStorage.setItem("onjaramaFinanceData", JSON.stringify(financeData));
@@ -263,6 +336,7 @@ function useAppState() {
     setScheduledPayments,
     achievedGoals,
     unseenVictories,
+    disciplineScore,
     addActivity,
     markNotificationsRead,
     clearNotifications,
