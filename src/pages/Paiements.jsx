@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
+  AlertTriangle,
   Calendar,
   CheckCircle,
+  Clock3,
   CreditCard,
   Edit3,
   Plus,
@@ -16,6 +18,7 @@ const pageText = {
   FR: {
     title: "Paiements",
     subtitle: "Suivez vos paiements programmés et vos prélèvements prévus.",
+    smartPayments: "Paiements intelligents",
     scheduledPayments: "Paiements programmés",
     addPayment: "Ajouter un paiement",
     name: "Nom",
@@ -41,64 +44,11 @@ const pageText = {
     saving: "Épargne",
     project: "Projet",
     other: "Autre",
-  },
-  EN: {
-    title: "Payments",
-    subtitle: "Track scheduled payments and expected withdrawals.",
-    scheduledPayments: "Scheduled payments",
-    addPayment: "Add payment",
-    name: "Name",
-    type: "Type",
-    amount: "Amount",
-    frequency: "Frequency",
-    nextDate: "Next date",
-    linkedDebt: "Linked debt",
-    active: "Active",
-    inactive: "Inactive",
-    afterPayment: "Estimated balance after payment",
-    totalThisMonth: "Total expected this month",
-    totalActive: "Active payments",
-    noPayment: "No scheduled payment.",
-    save: "Add",
-    resetForm: "Reset form",
-    weekly: "Weekly",
-    biweekly: "Every 2 weeks",
-    monthly: "Monthly",
-    custom: "Custom",
-    debt: "Debt",
-    bill: "Bill",
-    saving: "Savings",
-    project: "Project",
-    other: "Other",
-  },
-  ES: {
-    title: "Pagos",
-    subtitle: "Sigue tus pagos programados y retiros previstos.",
-    scheduledPayments: "Pagos programados",
-    addPayment: "Agregar pago",
-    name: "Nombre",
-    type: "Tipo",
-    amount: "Monto",
-    frequency: "Frecuencia",
-    nextDate: "Próxima fecha",
-    linkedDebt: "Deuda vinculada",
-    active: "Activo",
-    inactive: "Inactivo",
-    afterPayment: "Saldo estimado después del pago",
-    totalThisMonth: "Total previsto este mes",
-    totalActive: "Pagos activos",
-    noPayment: "No hay pago programado.",
-    save: "Agregar",
-    resetForm: "Restablecer formulario",
-    weekly: "Semanal",
-    biweekly: "Cada 2 semanas",
-    monthly: "Mensual",
-    custom: "Personalizado",
-    debt: "Deuda",
-    bill: "Factura",
-    saving: "Ahorro",
-    project: "Proyecto",
-    other: "Otro",
+    overdue: "En retard",
+    dueSoon: "Bientôt dû",
+    upToDate: "À jour",
+    paid: "Effectué",
+    apply: "Appliquer",
   },
 };
 
@@ -112,12 +62,19 @@ const emptyPayment = {
   active: true,
 };
 
-function Paiements({ financeData, setFinanceData, settings }) {
+function Paiements({
+  financeData,
+  setFinanceData,
+  settings,
+  scheduledPayments,
+  setScheduledPayments,
+  addActivity,
+}) {
   const t = getText(settings);
   const p = pageText[settings?.language || "FR"] || pageText.FR;
   const currency = settings?.currency || "CAD";
 
-  const [payments, setPayments] = useState(() => {
+  const [localPayments, setLocalPayments] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("onjaramaScheduledPayments")) || [];
     } catch {
@@ -125,13 +82,42 @@ function Paiements({ financeData, setFinanceData, settings }) {
     }
   });
 
+  const payments = Array.isArray(scheduledPayments)
+    ? scheduledPayments
+    : localPayments;
+
   const [form, setForm] = useState(emptyPayment);
 
-  useEffect(() => {
-    localStorage.setItem("onjaramaScheduledPayments", JSON.stringify(payments));
-  }, [payments]);
+  function updatePayments(nextPayments) {
+    if (typeof setScheduledPayments === "function") {
+      setScheduledPayments(nextPayments);
+      return;
+    }
+
+    setLocalPayments(nextPayments);
+    localStorage.setItem("onjaramaScheduledPayments", JSON.stringify(nextPayments));
+  }
 
   const activePayments = payments.filter((payment) => payment.active);
+
+  const paymentStats = useMemo(() => {
+    return activePayments.reduce(
+      (stats, payment) => {
+        const status = getPaymentStatus(payment);
+
+        if (status.key === "overdue") stats.overdue += 1;
+        if (status.key === "dueSoon") stats.dueSoon += 1;
+        if (status.key === "upToDate") stats.upToDate += 1;
+
+        return stats;
+      },
+      {
+        overdue: 0,
+        dueSoon: 0,
+        upToDate: 0,
+      }
+    );
+  }, [activePayments]);
 
   const monthlyEstimate = useMemo(() => {
     return activePayments.reduce((total, payment) => {
@@ -148,51 +134,86 @@ function Paiements({ financeData, setFinanceData, settings }) {
   function addPayment() {
     if (!form.name || !form.amount) return;
 
-    setPayments([
-      ...payments,
-      {
-        ...form,
-        id: Date.now(),
-        amount: Number(form.amount || 0),
-      },
-    ]);
+    const newPayment = {
+      ...form,
+      id: Date.now(),
+      amount: Number(form.amount || 0),
+      createdAt: new Date().toISOString(),
+      lastPaidAt: null,
+    };
+
+    updatePayments([...payments, newPayment]);
+
+    addActivity?.(
+      "paiement",
+      "Paiement programmé",
+      `${newPayment.name} a été ajouté aux paiements.`
+    );
 
     setForm(emptyPayment);
   }
 
   function removePayment(id) {
-    setPayments(payments.filter((payment) => payment.id !== id));
-  }
+    const payment = payments.find((item) => item.id === id);
 
-  function togglePayment(id) {
-    setPayments(
-      payments.map((payment) =>
-        payment.id === id
-          ? { ...payment, active: !payment.active }
-          : payment
-      )
+    updatePayments(payments.filter((item) => item.id !== id));
+
+    addActivity?.(
+      "paiement",
+      "Paiement supprimé",
+      `${payment?.name || "Un paiement"} a été supprimé.`
     );
   }
 
+  function togglePayment(id) {
+    const updatedPayments = payments.map((payment) =>
+      payment.id === id ? { ...payment, active: !payment.active } : payment
+    );
+
+    updatePayments(updatedPayments);
+  }
+
   function applyPayment(payment) {
-    if (!payment.linkedDebtName) return;
+    let updatedDebts = financeData.debts;
 
-    const updatedDebts = financeData.debts.map((debt) => {
-      if (debt.name !== payment.linkedDebtName) return debt;
+    if (payment.linkedDebtName) {
+      updatedDebts = financeData.debts.map((debt) => {
+        if (debt.name !== payment.linkedDebtName) return debt;
 
-      return {
-        ...debt,
-        balance: Math.max(
-          0,
-          Number(debt.balance || 0) - Number(payment.amount || 0)
-        ),
-      };
-    });
+        return {
+          ...debt,
+          balance: Math.max(
+            0,
+            Number(debt.balance || 0) - Number(payment.amount || 0)
+          ),
+        };
+      });
 
-    setFinanceData({
-      ...financeData,
-      debts: updatedDebts,
-    });
+      setFinanceData({
+        ...financeData,
+        debts: updatedDebts,
+      });
+    }
+
+    const nextDate = getNextPaymentDate(payment.nextDate, payment.frequency);
+
+    const updatedPayments = payments.map((item) =>
+      item.id === payment.id
+        ? {
+            ...item,
+            nextDate,
+            lastPaidAt: new Date().toISOString(),
+          }
+        : item
+    );
+
+    updatePayments(updatedPayments);
+
+    addActivity?.(
+      "paiement",
+      "Paiement effectué",
+      `${formatMoney(payment.amount, currency)} appliqué à ${payment.name}.`
+    );
   }
 
   function getEstimatedDebtBalance(payment) {
@@ -206,9 +227,39 @@ function Paiements({ financeData, setFinanceData, settings }) {
   }
 
   return (
-    <div>
+    <div className="native-page">
       <h1>{p.title}</h1>
       <p style={muted}>{p.subtitle}</p>
+
+      <section style={smartCard}>
+        <div style={header}>
+          <Clock3 color="var(--gold)" />
+          <h2>{p.smartPayments}</h2>
+        </div>
+
+        <div style={smartGrid}>
+          <SmartStat
+            icon={<AlertTriangle />}
+            label={p.overdue}
+            value={paymentStats.overdue}
+            color="var(--red)"
+          />
+
+          <SmartStat
+            icon={<Calendar />}
+            label={p.dueSoon}
+            value={paymentStats.dueSoon}
+            color="var(--gold)"
+          />
+
+          <SmartStat
+            icon={<CheckCircle />}
+            label={p.upToDate}
+            value={paymentStats.upToDate}
+            color="var(--green)"
+          />
+        </div>
+      </section>
 
       <div className="grid-2" style={grid}>
         <InfoCard
@@ -321,9 +372,16 @@ function Paiements({ financeData, setFinanceData, settings }) {
 
         {payments.map((payment) => {
           const estimatedBalance = getEstimatedDebtBalance(payment);
+          const status = getPaymentStatus(payment);
 
           return (
-            <div key={payment.id} style={paymentCard}>
+            <div
+              key={payment.id}
+              style={{
+                ...paymentCard,
+                borderColor: status.color,
+              }}
+            >
               <div style={paymentHeader}>
                 <div>
                   <strong>{payment.name}</strong>
@@ -337,19 +395,23 @@ function Paiements({ financeData, setFinanceData, settings }) {
                   onClick={() => togglePayment(payment.id)}
                   style={{
                     ...statusBtn,
-                    borderColor: payment.active
-                      ? "var(--green)"
-                      : "var(--red)",
-                    color: payment.active ? "var(--green)" : "var(--red)",
+                    borderColor: payment.active ? status.color : "var(--red)",
+                    color: payment.active ? status.color : "var(--red)",
                   }}
                 >
-                  {payment.active ? p.active : p.inactive}
+                  {payment.active ? status.label : p.inactive}
                 </button>
               </div>
 
               <p style={mutedSmall}>
                 {p.nextDate} : {payment.nextDate || "—"}
               </p>
+
+              {status.message && (
+                <p style={{ ...mutedSmall, color: status.color, fontWeight: "bold" }}>
+                  {status.message}
+                </p>
+              )}
 
               {payment.linkedDebtName && (
                 <p style={mutedSmall}>
@@ -364,9 +426,15 @@ function Paiements({ financeData, setFinanceData, settings }) {
                 </p>
               )}
 
+              {payment.lastPaidAt && (
+                <p style={mutedSmall}>
+                  {p.paid} : {formatDate(payment.lastPaidAt)}
+                </p>
+              )}
+
               <div style={paymentActions}>
                 <button onClick={() => applyPayment(payment)} style={applyBtn}>
-                  <Edit3 size={16} /> Appliquer
+                  <Edit3 size={16} /> {p.apply}
                 </button>
 
                 <button
@@ -384,11 +452,103 @@ function Paiements({ financeData, setFinanceData, settings }) {
   );
 }
 
+function getPaymentStatus(payment) {
+  if (!payment.active) {
+    return {
+      key: "inactive",
+      label: "Inactif",
+      color: "var(--red)",
+      message: "",
+    };
+  }
+
+  if (!payment.nextDate) {
+    return {
+      key: "upToDate",
+      label: "À jour",
+      color: "var(--green)",
+      message: "Aucune échéance urgente.",
+    };
+  }
+
+  const today = new Date();
+  const dueDate = new Date(`${payment.nextDate}T12:00:00`);
+
+  today.setHours(12, 0, 0, 0);
+
+  const diffDays = Math.ceil(
+    (dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  if (diffDays < 0) {
+    const lateDays = Math.abs(diffDays);
+
+    return {
+      key: "overdue",
+      label: "En retard",
+      color: "var(--red)",
+      message: `En retard de ${lateDays} jour${lateDays > 1 ? "s" : ""}.`,
+    };
+  }
+
+  if (diffDays === 0) {
+    return {
+      key: "dueSoon",
+      label: "Aujourd’hui",
+      color: "var(--gold)",
+      message: "Paiement prévu aujourd’hui.",
+    };
+  }
+
+  if (diffDays <= 3) {
+    return {
+      key: "dueSoon",
+      label: "Bientôt dû",
+      color: "var(--gold)",
+      message: `Paiement dans ${diffDays} jour${diffDays > 1 ? "s" : ""}.`,
+    };
+  }
+
+  return {
+    key: "upToDate",
+    label: "À jour",
+    color: "var(--green)",
+    message: `Paiement dans ${diffDays} jours.`,
+  };
+}
+
+function getNextPaymentDate(dateValue, frequency) {
+  if (!dateValue || frequency === "custom") return dateValue;
+
+  const date = new Date(`${dateValue}T12:00:00`);
+
+  if (Number.isNaN(date.getTime())) return dateValue;
+
+  if (frequency === "weekly") date.setDate(date.getDate() + 7);
+  if (frequency === "biweekly") date.setDate(date.getDate() + 14);
+  if (frequency === "monthly") date.setMonth(date.getMonth() + 1);
+
+  return date.toISOString().slice(0, 10);
+}
+
 function getFrequencyLabel(frequency, p) {
   if (frequency === "weekly") return p.weekly;
   if (frequency === "biweekly") return p.biweekly;
   if (frequency === "monthly") return p.monthly;
   return p.custom;
+}
+
+function formatDate(value) {
+  if (!value) return "—";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "—";
+
+  return date.toLocaleString("fr-CA", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 }
 
 function InfoCard({ icon, title, value, color }) {
@@ -401,9 +561,44 @@ function InfoCard({ icon, title, value, color }) {
   );
 }
 
+function SmartStat({ icon, label, value, color }) {
+  return (
+    <div style={{ ...smartStat, borderColor: color }}>
+      <span style={{ color }}>{icon}</span>
+      <strong>{value}</strong>
+      <small style={mutedSmall}>{label}</small>
+    </div>
+  );
+}
+
 const grid = {
   gap: "12px",
   marginTop: "18px",
+};
+
+const smartCard = {
+  background: "linear-gradient(135deg, rgba(212,175,55,.14), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const smartGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(3, 1fr)",
+  gap: "10px",
+  marginTop: "14px",
+};
+
+const smartStat = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "12px",
+  display: "grid",
+  gap: "5px",
+  textAlign: "center",
 };
 
 const card = {

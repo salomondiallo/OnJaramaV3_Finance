@@ -45,6 +45,10 @@ const defaultFinanceData = {
 };
 
 const defaultGoals = [];
+const defaultActivityHistory = [];
+const defaultNotifications = [];
+const defaultVictorySeenIds = [];
+const defaultScheduledPayments = [];
 
 const defaultSettings = {
   language: "FR",
@@ -55,12 +59,6 @@ const defaultSettings = {
   demoMode: false,
   showAmounts: false,
 };
-
-const defaultActivityHistory = [];
-
-const defaultNotifications = [];
-
-const defaultVictorySeenIds = [];
 
 function readStorage(key, fallback) {
   try {
@@ -107,6 +105,10 @@ function useAppState() {
     readStorage("onjaramaVictorySeenIds", defaultVictorySeenIds)
   );
 
+  const [scheduledPayments, setScheduledPayments] = useState(() =>
+    readStorage("onjaramaScheduledPayments", defaultScheduledPayments)
+  );
+
   const achievedGoals = Array.isArray(selectedGoals)
     ? selectedGoals.filter(
         (goal) =>
@@ -140,26 +142,27 @@ function useAppState() {
   }, [activityHistory]);
 
   useEffect(() => {
-    localStorage.setItem(
-      "onjaramaNotifications",
-      JSON.stringify(notifications)
-    );
+    localStorage.setItem("onjaramaNotifications", JSON.stringify(notifications));
   }, [notifications]);
 
   useEffect(() => {
-    localStorage.setItem(
-      "onjaramaVictorySeenIds",
-      JSON.stringify(victorySeenIds)
-    );
+    localStorage.setItem("onjaramaVictorySeenIds", JSON.stringify(victorySeenIds));
   }, [victorySeenIds]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "onjaramaScheduledPayments",
+      JSON.stringify(scheduledPayments)
+    );
+  }, [scheduledPayments]);
 
   function addActivity(type, title, message) {
     const log = createLog(type, title, message);
 
-    setActivityHistory((current) => [log, ...current].slice(0, 60));
+    setActivityHistory((current) => [log, ...current].slice(0, 80));
 
     if (settings.notifications) {
-      setNotifications((current) => [log, ...current].slice(0, 30));
+      setNotifications((current) => [log, ...current].slice(0, 40));
     }
 
     return log;
@@ -193,6 +196,8 @@ function useAppState() {
 
   function resetFinanceOnly() {
     setFinanceData(defaultFinanceData);
+    setScheduledPayments(defaultScheduledPayments);
+
     localStorage.removeItem("onjaramaSituationDetails");
     localStorage.removeItem("onjaramaScheduledPayments");
     localStorage.removeItem("onjaramaTransactions");
@@ -200,7 +205,7 @@ function useAppState() {
     addActivity(
       "finance",
       "Données financières réinitialisées",
-      "La situation financière a été remise à zéro."
+      "La situation financière et les paiements programmés ont été remis à zéro."
     );
   }
 
@@ -236,6 +241,7 @@ function useAppState() {
     setActivityHistory(defaultActivityHistory);
     setNotifications(defaultNotifications);
     setVictorySeenIds(defaultVictorySeenIds);
+    setScheduledPayments(defaultScheduledPayments);
 
     localStorage.setItem(PRIVACY_CLEAN_VERSION, "done");
   }
@@ -253,6 +259,8 @@ function useAppState() {
     setNotifications,
     victorySeenIds,
     setVictorySeenIds,
+    scheduledPayments,
+    setScheduledPayments,
     achievedGoals,
     unseenVictories,
     addActivity,
