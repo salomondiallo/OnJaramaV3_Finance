@@ -1,12 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  AlertTriangle,
+  ArrowRight,
+  CheckCircle2,
   CreditCard,
   Flame,
+  Gauge,
   Home,
   PiggyBank,
   Plus,
   ShieldCheck,
+  Sparkles,
+  Target,
   Trash2,
+  TrendingDown,
+  TrendingUp,
   Wallet,
 } from "lucide-react";
 import { cleanMoneyInput, formatMoney } from "../utils/formatters";
@@ -14,8 +22,14 @@ import { getText } from "../data/translations";
 
 const pageText = {
   FR: {
-    subtitle: "Comprendre l’origine et la destination de chaque dollar.",
+    subtitle: "Votre portrait financier clair, vivant et prêt à guider la suite.",
+    premium: "Situation Premium",
     health: "Santé financière",
+    scoreLabel: "Score OnJarama",
+    started: "Vous avez commencé il y a",
+    today: "aujourd’hui",
+    day: "jour",
+    days: "jours",
     incomeOrigin: "Origine des fonds",
     moneyDestination: "Destination des fonds",
     savingsProjects: "Épargne et projets",
@@ -40,11 +54,45 @@ const pageText = {
     stable: "Situation stable mais à surveiller",
     fragile: "Situation fragile",
     control: "Priorité : reprendre le contrôle",
+    snapshot: "Situation actuelle",
+    positive: "Positive",
+    warning: "À surveiller",
+    critical: "Prioritaire",
+    distribution: "Répartition mensuelle",
+    incomeShare: "Revenus utilisés",
+    expenseShare: "Dépenses",
+    savingShare: "Épargne",
+    debtShare: "Paiements dettes",
+    strengths: "Points forts",
+    risks: "Points à surveiller",
+    aiSummary: "Résumé IA OnJarama",
+    strongIncome: "Des revenus sont enregistrés.",
+    strongAvailable: "Il reste un montant disponible après les sorties.",
+    strongSavings: "Une épargne est déjà prévue.",
+    strongDebt: "Aucune dette active enregistrée.",
+    riskNoIncome: "Aucun revenu n’est encore indiqué.",
+    riskNegative: "Les sorties dépassent les revenus.",
+    riskDebt: "Le poids des dettes reste important.",
+    riskNoSavings: "Aucune épargne n’est encore prévue.",
+    aiGood:
+      "Votre situation montre une base solide. Continuez à protéger votre épargne et à avancer étape par étape.",
+    aiStable:
+      "Votre situation tient debout, mais quelques ajustements peuvent libérer plus de marge chaque mois.",
+    aiFragile:
+      "Votre priorité est de réduire la pression mensuelle et de concentrer l’effort sur la dette la plus coûteuse.",
+    debtPressure: "Pression dettes",
+    monthlyBreath: "Souffle mensuel",
   },
 
   EN: {
-    subtitle: "Understand where your money comes from and where it goes.",
+    subtitle: "Your clear financial picture, alive and ready to guide what comes next.",
+    premium: "Premium Situation",
     health: "Financial health",
+    scoreLabel: "OnJarama Score",
+    started: "You started",
+    today: "today",
+    day: "day ago",
+    days: "days ago",
     incomeOrigin: "Source of funds",
     moneyDestination: "Money destination",
     savingsProjects: "Savings and projects",
@@ -69,11 +117,45 @@ const pageText = {
     stable: "Stable situation but needs monitoring",
     fragile: "Fragile situation",
     control: "Priority: regain control",
+    snapshot: "Current situation",
+    positive: "Positive",
+    warning: "Watch",
+    critical: "Priority",
+    distribution: "Monthly distribution",
+    incomeShare: "Income used",
+    expenseShare: "Expenses",
+    savingShare: "Savings",
+    debtShare: "Debt payments",
+    strengths: "Strengths",
+    risks: "Watch points",
+    aiSummary: "OnJarama AI Summary",
+    strongIncome: "Income is registered.",
+    strongAvailable: "Money remains available after outgoing payments.",
+    strongSavings: "Savings are already planned.",
+    strongDebt: "No active debt registered.",
+    riskNoIncome: "No income has been entered yet.",
+    riskNegative: "Outgoing payments are higher than income.",
+    riskDebt: "Debt weight remains important.",
+    riskNoSavings: "No savings are planned yet.",
+    aiGood:
+      "Your situation shows a solid base. Keep protecting your savings and move step by step.",
+    aiStable:
+      "Your situation is standing, but a few adjustments can free more room every month.",
+    aiFragile:
+      "Your priority is to reduce monthly pressure and focus effort on the most expensive debt.",
+    debtPressure: "Debt pressure",
+    monthlyBreath: "Monthly breath",
   },
 
   ES: {
-    subtitle: "Comprender de dónde viene tu dinero y hacia dónde va.",
+    subtitle: "Tu retrato financiero claro, vivo y listo para guiar lo que sigue.",
+    premium: "Situación Premium",
     health: "Salud financiera",
+    scoreLabel: "Puntaje OnJarama",
+    started: "Comenzaste hace",
+    today: "hoy",
+    day: "día",
+    days: "días",
     incomeOrigin: "Origen de los fondos",
     moneyDestination: "Destino del dinero",
     savingsProjects: "Ahorro y proyectos",
@@ -98,6 +180,34 @@ const pageText = {
     stable: "Situación estable pero a vigilar",
     fragile: "Situación frágil",
     control: "Prioridad: recuperar el control",
+    snapshot: "Situación actual",
+    positive: "Positiva",
+    warning: "A vigilar",
+    critical: "Prioritaria",
+    distribution: "Distribución mensual",
+    incomeShare: "Ingresos usados",
+    expenseShare: "Gastos",
+    savingShare: "Ahorro",
+    debtShare: "Pagos de deuda",
+    strengths: "Puntos fuertes",
+    risks: "Puntos a vigilar",
+    aiSummary: "Resumen IA OnJarama",
+    strongIncome: "Hay ingresos registrados.",
+    strongAvailable: "Queda dinero disponible después de las salidas.",
+    strongSavings: "Ya hay ahorro previsto.",
+    strongDebt: "No hay deuda activa registrada.",
+    riskNoIncome: "Aún no se indicó ningún ingreso.",
+    riskNegative: "Las salidas superan los ingresos.",
+    riskDebt: "El peso de las deudas sigue siendo importante.",
+    riskNoSavings: "Aún no hay ahorro previsto.",
+    aiGood:
+      "Tu situación muestra una base sólida. Sigue protegiendo tu ahorro y avanzando paso a paso.",
+    aiStable:
+      "Tu situación se mantiene, pero algunos ajustes pueden liberar más margen cada mes.",
+    aiFragile:
+      "Tu prioridad es reducir la presión mensual y concentrar el esfuerzo en la deuda más costosa.",
+    debtPressure: "Presión de deuda",
+    monthlyBreath: "Respiro mensual",
   },
 };
 
@@ -105,6 +215,11 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
   const t = getText(settings);
   const p = pageText[settings?.language || "FR"] || pageText.FR;
   const currency = settings?.currency || "CAD";
+  const safeFinanceData = {
+    overview: financeData?.overview || {},
+    debts: Array.isArray(financeData?.debts) ? financeData.debts : [],
+    goals: Array.isArray(financeData?.goals) ? financeData.goals : [],
+  };
 
   const [details, setDetails] = useState(() => {
     try {
@@ -116,6 +231,18 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
       return getDefaultDetails(settings?.language || "FR");
     }
   });
+
+  const [startedAt, setStartedAt] = useState(() => {
+    const existing = localStorage.getItem("onjaramaPathStartedAt");
+
+    if (existing) return existing;
+
+    const now = new Date().toISOString();
+    localStorage.setItem("onjaramaPathStartedAt", now);
+    return now;
+  });
+
+  const [confirmAction, setConfirmAction] = useState("");
 
   const [newDebt, setNewDebt] = useState({
     name: "",
@@ -129,20 +256,25 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
   const expensesTotal = sum(details.expenses);
   const savingsTotal = sum(details.savings);
 
-  const totalDebt = financeData.debts.reduce(
+  const totalDebt = safeFinanceData.debts.reduce(
     (sumValue, debt) => sumValue + Number(debt.balance || 0),
     0
   );
 
-  const minimumDebtPayments = financeData.debts.reduce(
+  const minimumDebtPayments = safeFinanceData.debts.reduce(
     (sumValue, debt) => sumValue + Number(debt.minimumPayment || 0),
     0
   );
 
   const totalOutgoing = expensesTotal + savingsTotal + minimumDebtPayments;
   const available = incomeTotal - totalOutgoing;
+  const usedIncomePercent = percentage(totalOutgoing, incomeTotal);
+  const expensePercent = percentage(expensesTotal, totalOutgoing);
+  const savingPercent = percentage(savingsTotal, totalOutgoing);
+  const debtPaymentPercent = percentage(minimumDebtPayments, totalOutgoing);
+  const debtPressure = percentage(totalDebt, incomeTotal * 12 || totalDebt);
 
-  const priorityDebt = [...financeData.debts]
+  const priorityDebt = [...safeFinanceData.debts]
     .filter((debt) => Number(debt.balance || 0) > 0)
     .sort(
       (a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0)
@@ -160,6 +292,24 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
       }),
     [incomeTotal, expensesTotal, savingsTotal, totalDebt, available, p]
   );
+
+  const premiumStatus = getPremiumStatus(score.value, available, p);
+  const journeyDays = getDaysSince(startedAt);
+  const strengths = getStrengths({
+    incomeTotal,
+    available,
+    savingsTotal,
+    totalDebt,
+    p,
+  });
+  const risks = getRisks({
+    incomeTotal,
+    available,
+    savingsTotal,
+    totalDebt,
+    p,
+  });
+  const aiText = getAiSummary(score.value, p);
 
   useEffect(() => {
     localStorage.setItem("onjaramaSituationDetails", JSON.stringify(details));
@@ -182,6 +332,13 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
     setFinanceData,
   ]);
 
+  useEffect(() => {
+    if (!confirmAction) return;
+
+    const timer = window.setTimeout(() => setConfirmAction(""), 500);
+    return () => window.clearTimeout(timer);
+  }, [confirmAction]);
+
   function updateCategory(group, id, value) {
     setDetails({
       ...details,
@@ -194,7 +351,7 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
   }
 
   function updateDebt(index, field, value) {
-    const updatedDebts = financeData.debts.map((debt, debtIndex) => {
+    const updatedDebts = safeFinanceData.debts.map((debt, debtIndex) => {
       if (debtIndex !== index) return debt;
 
       return {
@@ -207,6 +364,7 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
     });
 
     setFinanceData({ ...financeData, debts: updatedDebts });
+    setConfirmAction("debt");
   }
 
   function addDebt() {
@@ -215,7 +373,7 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
     setFinanceData({
       ...financeData,
       debts: [
-        ...financeData.debts,
+        ...safeFinanceData.debts,
         {
           name: newDebt.name,
           type: newDebt.type,
@@ -233,27 +391,44 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
       interestRate: "",
       minimumPayment: "",
     });
+
+    setConfirmAction("addDebt");
   }
 
   function removeDebt(indexToRemove) {
     setFinanceData({
       ...financeData,
-      debts: financeData.debts.filter((_, index) => index !== indexToRemove),
+      debts: safeFinanceData.debts.filter((_, index) => index !== indexToRemove),
     });
+
+    setConfirmAction("removeDebt");
   }
 
   return (
     <div className="native-page">
-      <h1>{t.situation}</h1>
-      <p style={muted}>{p.subtitle}</p>
+      <div style={pageHead}>
+        <div>
+          <p style={eyebrow}>{p.premium}</p>
+          <h1>{t.situation}</h1>
+          <p style={muted}>{p.subtitle}</p>
+        </div>
 
-      <section style={scoreCard}>
-        <ShieldCheck color={score.color} size={34} />
-        <p style={muted}>{p.health}</p>
+        <div style={premiumBadge}>
+          <Sparkles size={16} />
+          <span>V8.7</span>
+        </div>
+      </div>
 
-        <h1 style={{ color: score.color }}>{score.value}/100</h1>
+      <section style={heroCard}>
+        <div style={heroTop}>
+          <div>
+            <p style={mutedSmall}>{p.scoreLabel}</p>
+            <h2 style={scoreTitle}>{score.value}/100</h2>
+            <p style={{ ...muted, color: score.color }}>{score.label}</p>
+          </div>
 
-        <p style={muted}>{score.label}</p>
+          <ScoreRing value={score.value} color={score.color} />
+        </div>
 
         <div style={barBg}>
           <div
@@ -264,6 +439,29 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
             }}
           />
         </div>
+
+        <div style={disciplineStrip}>
+          <Flame size={18} color="var(--gold)" />
+          <span>
+            {journeyDays === 0
+              ? p.today
+              : `${p.started} ${journeyDays} ${
+                  journeyDays > 1 ? p.days : p.day
+                }`}
+          </span>
+        </div>
+      </section>
+
+      <section style={statusCard(premiumStatus.color)}>
+        <div style={header}>
+          {premiumStatus.icon}
+          <div>
+            <p style={mutedSmall}>{p.snapshot}</p>
+            <h2>{premiumStatus.label}</h2>
+          </div>
+        </div>
+
+        <p style={muted}>{aiText}</p>
       </section>
 
       <div className="grid-2" style={grid}>
@@ -296,6 +494,84 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
         />
       </div>
 
+      <section style={card}>
+        <div style={header}>
+          <Gauge color="var(--gold)" />
+          <h2>{p.distribution}</h2>
+        </div>
+
+        <MetricBar
+          label={p.incomeShare}
+          value={`${usedIncomePercent}%`}
+          percent={usedIncomePercent}
+          color={usedIncomePercent <= 85 ? "var(--green)" : "var(--red)"}
+        />
+
+        <MetricBar
+          label={p.expenseShare}
+          value={`${expensePercent}%`}
+          percent={expensePercent}
+          color="var(--gold)"
+        />
+
+        <MetricBar
+          label={p.savingShare}
+          value={`${savingPercent}%`}
+          percent={savingPercent}
+          color="var(--green)"
+        />
+
+        <MetricBar
+          label={p.debtShare}
+          value={`${debtPaymentPercent}%`}
+          percent={debtPaymentPercent}
+          color="var(--red)"
+        />
+      </section>
+
+      <div className="grid-2" style={grid}>
+        <MiniInsight
+          icon={<TrendingUp size={18} />}
+          title={p.monthlyBreath}
+          value={formatMoney(available, currency)}
+          color={available >= 0 ? "var(--green)" : "var(--red)"}
+        />
+
+        <MiniInsight
+          icon={<TrendingDown size={18} />}
+          title={p.debtPressure}
+          value={`${debtPressure}%`}
+          color={debtPressure < 50 ? "var(--green)" : "var(--red)"}
+        />
+      </div>
+
+      <section style={card}>
+        <div style={header}>
+          <CheckCircle2 color="var(--green)" />
+          <h2>{p.strengths}</h2>
+        </div>
+
+        <InsightList items={strengths} empty={p.addPriority} color="var(--green)" />
+      </section>
+
+      <section style={card}>
+        <div style={header}>
+          <AlertTriangle color="var(--gold)" />
+          <h2>{p.risks}</h2>
+        </div>
+
+        <InsightList items={risks} empty={p.good} color="var(--gold)" />
+      </section>
+
+      <section style={aiCard}>
+        <div style={header}>
+          <Sparkles color="var(--blue)" />
+          <h2>{p.aiSummary}</h2>
+        </div>
+
+        <p style={muted}>{aiText}</p>
+      </section>
+
       <CategorySection
         title={p.incomeOrigin}
         icon={<Wallet color="var(--green)" />}
@@ -320,15 +596,15 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
         onChange={(id, value) => updateCategory("savings", id, value)}
       />
 
-      <section style={card}>
+      <section style={card} className={confirmAction === "debt" ? "action-confirm" : ""}>
         <div style={header}>
           <CreditCard color="var(--red)" />
           <h2>{p.editableDebts}</h2>
         </div>
 
-        {financeData.debts.length === 0 && <p style={muted}>{p.noDebt}</p>}
+        {safeFinanceData.debts.length === 0 && <p style={muted}>{p.noDebt}</p>}
 
-        {financeData.debts.map((debt, index) => (
+        {safeFinanceData.debts.map((debt, index) => (
           <div key={`${debt.name}-${index}`} style={debtCard}>
             <input
               value={debt.name}
@@ -382,7 +658,10 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
             />
 
             <div style={debtBottom}>
-              <strong>{formatMoney(debt.balance, currency)}</strong>
+              <div>
+                <strong>{formatMoney(debt.balance, currency)}</strong>
+                <p style={mutedTiny}>{Number(debt.interestRate || 0)}%</p>
+              </div>
 
               <button onClick={() => removeDebt(index)} style={trashButton}>
                 <Trash2 size={16} />
@@ -392,7 +671,10 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
         ))}
       </section>
 
-      <section style={card}>
+      <section
+        style={card}
+        className={confirmAction === "addDebt" ? "action-confirm" : ""}
+      >
         <div style={header}>
           <Plus color="var(--green)" />
           <h2>{p.addDebt}</h2>
@@ -404,7 +686,7 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
             setNewDebt({ ...newDebt, name: event.target.value })
           }
           style={input}
-          placeholder="Fairstone, Modulo, Visa"
+          placeholder="Visa, Modulo, Prêt personnel"
         />
 
         <select
@@ -468,8 +750,10 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
       </section>
 
       <section style={priorityCard}>
-        <Flame color="var(--gold)" />
-        <h2>{p.nextAction}</h2>
+        <div style={header}>
+          <Flame color="var(--gold)" />
+          <h2>{p.nextAction}</h2>
+        </div>
 
         <p style={muted}>
           {priorityDebt
@@ -480,6 +764,7 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
         <div style={actions}>
           <button onClick={() => setCurrentPage("parcours")} style={aiButton}>
             {p.viewPath}
+            <ArrowRight size={17} />
           </button>
 
           <button
@@ -607,8 +892,142 @@ function InfoCard({ icon, title, value, color }) {
   );
 }
 
+function MiniInsight({ icon, title, value, color }) {
+  return (
+    <div style={{ ...miniInsight, borderColor: color }}>
+      <span style={{ color }}>{icon}</span>
+      <div>
+        <p style={mutedSmall}>{title}</p>
+        <strong>{value}</strong>
+      </div>
+    </div>
+  );
+}
+
+function MetricBar({ label, value, percent, color }) {
+  return (
+    <div style={metricWrap}>
+      <div style={metricHead}>
+        <span>{label}</span>
+        <strong style={{ color }}>{value}</strong>
+      </div>
+
+      <div style={miniBarBg}>
+        <div
+          style={{
+            ...miniBarFill,
+            width: `${Math.min(100, percent)}%`,
+            background: color,
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function InsightList({ items, empty, color }) {
+  if (!items.length) return <p style={muted}>{empty}</p>;
+
+  return (
+    <div style={insightList}>
+      {items.map((item) => (
+        <div key={item} style={insightItem}>
+          <span style={{ ...dot, background: color }} />
+          <p>{item}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ScoreRing({ value, color }) {
+  const degree = Math.round((Number(value || 0) / 100) * 360);
+
+  return (
+    <div
+      style={{
+        ...scoreRing,
+        background: `conic-gradient(${color} ${degree}deg, rgba(255,255,255,.12) 0deg)`,
+      }}
+    >
+      <div style={scoreRingInner}>
+        <ShieldCheck size={22} color={color} />
+      </div>
+    </div>
+  );
+}
+
 function sum(items) {
   return items.reduce((total, item) => total + Number(item.amount || 0), 0);
+}
+
+function percentage(part, total) {
+  if (!total || total <= 0) return 0;
+  return Math.max(0, Math.min(100, Math.round((Number(part || 0) / total) * 100)));
+}
+
+function getDaysSince(dateValue) {
+  if (!dateValue) return 0;
+
+  const start = new Date(dateValue).getTime();
+  const now = Date.now();
+  const diff = now - start;
+
+  if (diff <= 0) return 0;
+
+  return Math.floor(diff / 86400000);
+}
+
+function getStrengths({ incomeTotal, available, savingsTotal, totalDebt, p }) {
+  const strengths = [];
+
+  if (incomeTotal > 0) strengths.push(p.strongIncome);
+  if (available > 0) strengths.push(p.strongAvailable);
+  if (savingsTotal > 0) strengths.push(p.strongSavings);
+  if (totalDebt === 0) strengths.push(p.strongDebt);
+
+  return strengths;
+}
+
+function getRisks({ incomeTotal, available, savingsTotal, totalDebt, p }) {
+  const risks = [];
+
+  if (incomeTotal <= 0) risks.push(p.riskNoIncome);
+  if (available < 0) risks.push(p.riskNegative);
+  if (incomeTotal > 0 && totalDebt > incomeTotal * 6) risks.push(p.riskDebt);
+  if (savingsTotal <= 0) risks.push(p.riskNoSavings);
+
+  return risks;
+}
+
+function getAiSummary(scoreValue, p) {
+  if (scoreValue >= 80) return p.aiGood;
+  if (scoreValue >= 55) return p.aiStable;
+  return p.aiFragile;
+}
+
+function getPremiumStatus(scoreValue, available, p) {
+  if (scoreValue >= 75 && available >= 0) {
+    return {
+      label: p.positive,
+      color: "var(--green)",
+      icon: <CheckCircle2 color="var(--green)" />,
+    };
+  }
+
+  if (scoreValue >= 45 || available >= 0) {
+    return {
+      label: p.warning,
+      color: "var(--gold)",
+      icon: <AlertTriangle color="var(--gold)" />,
+    };
+  }
+
+  return {
+    label: p.critical,
+    color: "var(--red)",
+    icon: <Flame color="var(--red)" />,
+  };
 }
 
 function calculateScore({ income, expenses, savings, totalDebt, available, p }) {
@@ -631,6 +1050,36 @@ function calculateScore({ income, expenses, savings, totalDebt, available, p }) 
   return { value, label: p.control, color: "var(--red)" };
 }
 
+const pageHead = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+  gap: "12px",
+};
+
+const eyebrow = {
+  color: "var(--gold)",
+  fontSize: "12px",
+  fontWeight: "900",
+  letterSpacing: ".04em",
+  textTransform: "uppercase",
+  margin: 0,
+};
+
+const premiumBadge = {
+  border: "1px solid var(--gold)",
+  color: "var(--gold)",
+  background: "rgba(212,175,55,.12)",
+  borderRadius: "999px",
+  padding: "8px 10px",
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+  fontWeight: "900",
+  fontSize: "12px",
+  flex: "0 0 auto",
+};
+
 const card = {
   background: "var(--bg-card)",
   border: "1px solid var(--border)",
@@ -639,11 +1088,74 @@ const card = {
   marginTop: "20px",
 };
 
-const scoreCard = {
-  background: "linear-gradient(135deg, rgba(34,197,94,.16), var(--bg-card))",
-  border: "1px solid var(--green)",
-  borderRadius: "24px",
+const heroCard = {
+  background:
+    "radial-gradient(circle at top right, rgba(212,175,55,.28), transparent 34%), linear-gradient(135deg, rgba(34,197,94,.16), var(--bg-card))",
+  border: "1px solid rgba(212,175,55,.45)",
+  borderRadius: "26px",
   padding: "22px",
+  marginTop: "20px",
+  boxShadow: "0 18px 40px var(--shadow)",
+};
+
+const heroTop = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "14px",
+};
+
+const scoreTitle = {
+  fontSize: "42px",
+  lineHeight: 1,
+  margin: "6px 0 0",
+};
+
+const scoreRing = {
+  width: "92px",
+  height: "92px",
+  borderRadius: "50%",
+  padding: "8px",
+  flex: "0 0 auto",
+};
+
+const scoreRingInner = {
+  width: "100%",
+  height: "100%",
+  borderRadius: "50%",
+  background: "var(--bg-card)",
+  display: "grid",
+  placeItems: "center",
+  border: "1px solid var(--border)",
+};
+
+const disciplineStrip = {
+  marginTop: "16px",
+  border: "1px solid rgba(212,175,55,.35)",
+  background: "rgba(212,175,55,.1)",
+  color: "var(--gold)",
+  borderRadius: "16px",
+  padding: "11px 12px",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  fontWeight: "900",
+};
+
+const statusCard = (color) => ({
+  background: "var(--bg-card)",
+  border: `1px solid ${color}`,
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+});
+
+const aiCard = {
+  background:
+    "linear-gradient(135deg, rgba(139,92,246,.18), rgba(56,189,248,.12), var(--bg-card))",
+  border: "1px solid rgba(56,189,248,.45)",
+  borderRadius: "22px",
+  padding: "20px",
   marginTop: "20px",
 };
 
@@ -665,6 +1177,16 @@ const infoCard = {
   border: "1px solid var(--border)",
   borderRadius: "18px",
   padding: "16px",
+};
+
+const miniInsight = {
+  background: "var(--bg-card)",
+  border: "1px solid var(--border)",
+  borderRadius: "18px",
+  padding: "15px",
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
 };
 
 const header = {
@@ -738,6 +1260,10 @@ const aiButton = {
   background: "linear-gradient(90deg,var(--purple),var(--blue))",
   color: "white",
   fontWeight: "bold",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
 };
 
 const simulatorButton = {
@@ -762,6 +1288,49 @@ const barFill = {
   borderRadius: "999px",
 };
 
+const miniBarBg = {
+  height: "9px",
+  background: "var(--bg-panel)",
+  borderRadius: "999px",
+  overflow: "hidden",
+};
+
+const miniBarFill = {
+  height: "100%",
+  borderRadius: "999px",
+};
+
+const metricWrap = {
+  marginTop: "14px",
+};
+
+const metricHead = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "10px",
+  marginBottom: "7px",
+};
+
+const insightList = {
+  display: "grid",
+  gap: "10px",
+};
+
+const insightItem = {
+  display: "flex",
+  alignItems: "flex-start",
+  gap: "9px",
+};
+
+const dot = {
+  width: "9px",
+  height: "9px",
+  borderRadius: "50%",
+  marginTop: "6px",
+  flex: "0 0 auto",
+};
+
 const muted = {
   color: "var(--text-muted)",
   marginTop: "8px",
@@ -771,6 +1340,12 @@ const mutedSmall = {
   color: "var(--text-muted)",
   fontSize: "13px",
   marginTop: "5px",
+};
+
+const mutedTiny = {
+  color: "var(--text-muted)",
+  fontSize: "12px",
+  margin: "4px 0 0",
 };
 
 export default Situation;
