@@ -13,6 +13,9 @@ import {
   Landmark,
   Sparkles,
   Trophy,
+  Wallet,
+  CreditCard,
+  Route,
 } from "lucide-react";
 
 import { useState } from "react";
@@ -41,6 +44,11 @@ function Accueil({
     hasRecentDeposit: false,
     hasOverduePayment: false,
   };
+
+  const monthlyIncome = Number(financeData?.overview?.monthlyIncome || 0);
+  const monthlyExpenses = Number(financeData?.overview?.monthlyExpenses || 0);
+  const monthlySavings = Number(financeData?.overview?.monthlySavings || 0);
+  const monthlyAvailable = monthlyIncome - monthlyExpenses - monthlySavings;
 
   const totalDebt = debts.reduce(
     (sum, debt) => sum + Number(debt.balance || 0),
@@ -82,11 +90,19 @@ function Accueil({
     history.find((item) => item.type === "victoire") || achievedGoals[0];
 
   const smartAlerts = buildSmartAlerts({ activeGoals, debts });
+  const situationScore = getSituationScore({
+    monthlyIncome,
+    monthlyExpenses,
+    monthlySavings,
+    monthlyAvailable,
+    totalDebt,
+  });
 
   const nextAction = getNextAction({
     totalDebt,
     mainGoal,
     closestGoal,
+    monthlyIncome,
   });
 
   function money(value) {
@@ -101,8 +117,8 @@ function Accueil({
     <div className="native-page accueil-page">
       <section className="accueil-hero" />
 
-      <section className="accueil-headline">
-        <p className="accueil-eyebrow">OnJarama Path V7.7</p>
+      <section className="accueil-headline" style={premiumHero}>
+        <p className="accueil-eyebrow">OnJarama Path V8.8</p>
 
         <h1 className="accueil-title">
           {t.heroTitle}
@@ -111,13 +127,51 @@ function Accueil({
         </h1>
 
         <p className="accueil-subtitle">
-          Transformez vos objectifs en un plan concret, réaliste et motivant.
+          Votre compagnon financier premium pour comprendre, décider et avancer
+          sans pression.
         </p>
+      </section>
+
+      <section className="accueil-headline" style={commandCenter}>
+        <div style={sectionHead}>
+          <Sparkles size={20} color="var(--gold)" />
+          <strong>Centre de commande OnJarama</strong>
+        </div>
+
+        <div style={commandGrid}>
+          <CommandStat
+            icon={<Gauge size={18} />}
+            label="Score situation"
+            value={`${situationScore.score}%`}
+            color={situationScore.color}
+          />
+
+          <CommandStat
+            icon={<Flame size={18} />}
+            label="Discipline"
+            value={`${discipline.score}%`}
+            color={getDisciplineColor(discipline.score)}
+          />
+
+          <CommandStat
+            icon={<Target size={18} />}
+            label="Objectifs actifs"
+            value={`${activeGoals.length}`}
+            color="var(--gold)"
+          />
+
+          <CommandStat
+            icon={<Trophy size={18} />}
+            label="Victoires"
+            value={`${achievedGoals.length}`}
+            color="var(--green)"
+          />
+        </div>
       </section>
 
       <section className="accueil-headline" style={companionCard}>
         <div style={sectionHead}>
-          <Sparkles size={20} color="var(--gold)" />
+          <Route size={20} color="var(--gold)" />
           <strong>Compagnon financier</strong>
         </div>
 
@@ -130,12 +184,6 @@ function Accueil({
                 ? `Commencé ${getStartedLabel(firstGoal.createdAt)}`
                 : "Pas encore commencé"
             }
-          />
-
-          <CompanionLine
-            icon="🎯"
-            label="Objectifs actifs"
-            value={`${activeGoals.length}`}
           />
 
           <CompanionLine
@@ -208,11 +256,46 @@ function Accueil({
         </div>
       </section>
 
+      <section className="accueil-headline" style={situationCard}>
+        <div style={sectionHead}>
+          <Wallet size={20} color={situationScore.color} />
+          <strong>Situation actuelle</strong>
+        </div>
+
+        <div style={situationGrid}>
+          <SituationLine
+            label="Revenus"
+            value={money(monthlyIncome)}
+            color="var(--green)"
+          />
+          <SituationLine
+            label="Sorties"
+            value={money(monthlyExpenses + monthlySavings)}
+            color="var(--red)"
+          />
+          <SituationLine
+            label="Disponible"
+            value={money(monthlyAvailable)}
+            color={monthlyAvailable >= 0 ? "var(--green)" : "var(--red)"}
+          />
+        </div>
+
+        <p style={softText}>{situationScore.label}</p>
+
+        <button
+          onClick={() => setCurrentPage("situation")}
+          className="primary-action"
+          style={{ marginTop: 12 }}
+        >
+          Ouvrir Situation Premium
+        </button>
+      </section>
+
       {smartAlerts.length > 0 && (
         <section className="accueil-headline" style={alertCard}>
           <div style={sectionHead}>
             <Flame size={20} color="var(--gold)" />
-            <strong>Alertes du jour</strong>
+            <strong>Alertes intelligentes</strong>
           </div>
 
           {smartAlerts.slice(0, 3).map((alert) => (
@@ -313,10 +396,10 @@ function Accueil({
 
       <section className="accueil-grid">
         <QuickTile
-          icon={<TrendingUp />}
-          title="Vue rapide"
+          icon={<CreditCard />}
+          title="Dettes"
           text={money(totalDebt)}
-          color="var(--gold)"
+          color="var(--red)"
           onClick={() => setCurrentPage("situation")}
         />
 
@@ -340,7 +423,7 @@ function Accueil({
                 ? "Réduire la dette"
                 : "Bâtir le plan"
           }
-          color="var(--blue)"
+          color="var(--gold)"
           onClick={() => setCurrentPage("parcours")}
         />
 
@@ -388,15 +471,24 @@ function Accueil({
         <Lightbulb size={16} color="var(--gold)" />
 
         <p>
-          Appui long, cartes réversibles et synchronisation bancaire arrivent
-          dans les prochaines versions.
+          Situation Premium, Parcours Premium et Objectifs intelligents sont
+          maintenant connectés dans l’expérience V8.
         </p>
       </section>
     </div>
   );
 }
 
-function getNextAction({ totalDebt, mainGoal, closestGoal }) {
+function getNextAction({ totalDebt, mainGoal, closestGoal, monthlyIncome }) {
+  if (!monthlyIncome || monthlyIncome <= 0) {
+    return {
+      title: "Compléter votre situation",
+      text: "Ajoutez vos revenus et vos sorties pour activer une lecture plus précise.",
+      button: "Ouvrir Situation",
+      page: "situation",
+    };
+  }
+
   if (totalDebt > 0) {
     return {
       title: "Réduire la dette prioritaire",
@@ -501,6 +593,48 @@ function buildSmartAlerts({ activeGoals, debts }) {
   return alerts.slice(0, 5);
 }
 
+function getSituationScore({
+  monthlyIncome,
+  monthlyExpenses,
+  monthlySavings,
+  monthlyAvailable,
+  totalDebt,
+}) {
+  let score = 50;
+
+  if (monthlyIncome > 0) score += 15;
+  if (monthlyAvailable > 0) score += 15;
+  if (monthlySavings > 0) score += 10;
+  if (totalDebt === 0) score += 10;
+  if (monthlyIncome > 0 && totalDebt > monthlyIncome * 6) score -= 18;
+  if (monthlyIncome > 0 && monthlyExpenses > monthlyIncome) score -= 15;
+  if (monthlyAvailable < 0) score -= 25;
+
+  const safeScore = Math.max(0, Math.min(100, score));
+
+  if (safeScore >= 80) {
+    return {
+      score: safeScore,
+      color: "var(--green)",
+      label: "Base solide. Continuez à protéger votre marge.",
+    };
+  }
+
+  if (safeScore >= 55) {
+    return {
+      score: safeScore,
+      color: "var(--gold)",
+      label: "Situation stable, mais quelques ajustements peuvent aider.",
+    };
+  }
+
+  return {
+    score: safeScore,
+    color: "var(--red)",
+    label: "Priorité : reprendre du souffle mensuel.",
+  };
+}
+
 function getStartedLabel(createdAt) {
   if (!createdAt) return "aujourd’hui";
 
@@ -535,6 +669,25 @@ function CompanionLine({ icon, label, value }) {
         <small style={companionLabel}>{label}</small>
         <strong style={companionValue}>{value}</strong>
       </div>
+    </div>
+  );
+}
+
+function CommandStat({ icon, label, value, color }) {
+  return (
+    <div style={{ ...commandStat, borderColor: color }}>
+      <span style={{ color }}>{icon}</span>
+      <small>{label}</small>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function SituationLine({ label, value, color }) {
+  return (
+    <div style={situationLine}>
+      <span>{label}</span>
+      <strong style={{ color }}>{value}</strong>
     </div>
   );
 }
@@ -584,6 +737,34 @@ const softText = {
   lineHeight: 1.4,
 };
 
+const premiumHero = {
+  border: "1px solid var(--gold)",
+  background:
+    "radial-gradient(circle at top right, rgba(212,175,55,.22), transparent 34%), var(--bg-card)",
+};
+
+const commandCenter = {
+  border: "1px solid rgba(212,175,55,.48)",
+  background:
+    "linear-gradient(135deg, rgba(212,175,55,.16), rgba(56,189,248,.08), var(--bg-card))",
+};
+
+const commandGrid = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "10px",
+  marginTop: "12px",
+};
+
+const commandStat = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "12px",
+  display: "grid",
+  gap: "5px",
+};
+
 const companionCard = {
   border: "1px solid var(--gold)",
   background: "linear-gradient(135deg, rgba(212,175,55,.16), var(--bg-card))",
@@ -592,6 +773,27 @@ const companionCard = {
 const disciplineGaugeCard = {
   border: "1px solid var(--gold)",
   background: "linear-gradient(135deg, rgba(212,175,55,.12), var(--bg-card))",
+};
+
+const situationCard = {
+  border: "1px solid var(--green)",
+  background: "linear-gradient(135deg, rgba(34,197,94,.12), var(--bg-card))",
+};
+
+const situationGrid = {
+  display: "grid",
+  gap: "8px",
+  margin: "12px 0",
+};
+
+const situationLine = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "14px",
+  padding: "10px",
+  display: "flex",
+  justifyContent: "space-between",
+  gap: "10px",
 };
 
 const companionGrid = {
