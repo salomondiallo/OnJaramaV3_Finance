@@ -32,6 +32,15 @@ const pageText = {
     testerMode: "Mode testeur",
     pwa: "PWA activée",
     localBackup: "Sauvegarde locale",
+    stats: "Mes statistiques",
+    activeGoals: "Objectifs actifs",
+    achievedGoals: "Objectifs atteints",
+    discipline: "Discipline",
+    sinceStart: "Depuis le départ",
+    days: "jours",
+    progress: "Progression personnelle",
+    victories: "Mes victoires",
+    noVictory: "Aucune victoire enregistrée pour le moment.",
     ecosystem: "Écosystème OnJarama",
     pathDesc: "Coach financier intelligent",
     ojcsDesc: "Services et connexions",
@@ -43,7 +52,7 @@ const pageText = {
     vision:
       "Développer des solutions numériques simples, accessibles et utiles pour accompagner les utilisateurs dans leurs projets financiers, professionnels et personnels.",
     achievements: "Réalisations",
-    achievementText: "Victoires financières bientôt disponibles.",
+    achievementText: "Victoires financières suivies automatiquement.",
     security: "Sécurité",
     securityText: "PIN, biométrie et connexion sécurisée prévus plus tard.",
     tips: "Conseils & astuces",
@@ -83,6 +92,15 @@ const pageText = {
     testerMode: "Tester mode",
     pwa: "PWA enabled",
     localBackup: "Local backup",
+    stats: "My statistics",
+    activeGoals: "Active goals",
+    achievedGoals: "Achieved goals",
+    discipline: "Discipline",
+    sinceStart: "Since start",
+    days: "days",
+    progress: "Personal progress",
+    victories: "My victories",
+    noVictory: "No victory recorded yet.",
     ecosystem: "OnJarama Ecosystem",
     pathDesc: "Smart financial coach",
     ojcsDesc: "Services and connections",
@@ -94,7 +112,7 @@ const pageText = {
     vision:
       "Develop simple, accessible and useful digital solutions to support users in their financial, professional and personal projects.",
     achievements: "Achievements",
-    achievementText: "Financial victories coming soon.",
+    achievementText: "Financial victories tracked automatically.",
     security: "Security",
     securityText: "PIN, biometrics and secure login planned later.",
     tips: "Tips & tricks",
@@ -134,6 +152,15 @@ const pageText = {
     testerMode: "Modo probador",
     pwa: "PWA activada",
     localBackup: "Copia local",
+    stats: "Mis estadísticas",
+    activeGoals: "Objetivos activos",
+    achievedGoals: "Objetivos logrados",
+    discipline: "Disciplina",
+    sinceStart: "Desde el inicio",
+    days: "días",
+    progress: "Progreso personal",
+    victories: "Mis victorias",
+    noVictory: "No hay victoria registrada por ahora.",
     ecosystem: "Ecosistema OnJarama",
     pathDesc: "Coach financiero inteligente",
     ojcsDesc: "Servicios y conexiones",
@@ -145,7 +172,7 @@ const pageText = {
     vision:
       "Desarrollar soluciones digitales simples, accesibles y útiles para acompañar a los usuarios en sus proyectos financieros, profesionales y personales.",
     achievements: "Logros",
-    achievementText: "Victorias financieras próximamente.",
+    achievementText: "Victorias financieras seguidas automáticamente.",
     security: "Seguridad",
     securityText: "PIN, biometría e inicio seguro previstos más adelante.",
     tips: "Consejos y trucos",
@@ -172,9 +199,31 @@ const pageText = {
   },
 };
 
-function Profil({ settings, setCurrentPage }) {
+function Profil({
+  settings,
+  setCurrentPage,
+  selectedGoals,
+  disciplineScore,
+}) {
   const t = getText(settings);
   const p = pageText[settings?.language || "FR"] || pageText.FR;
+
+  const goals = Array.isArray(selectedGoals)
+    ? selectedGoals.filter((goal) => !goal.archived)
+    : [];
+
+  const activeGoalsCount = goals.length;
+
+  const achievedGoals = goals.filter(
+    (goal) =>
+      Number(goal.targetAmount || 0) > 0 &&
+      Number(goal.currentAmount || 0) >= Number(goal.targetAmount || 0)
+  );
+
+  const achievedGoalsCount = achievedGoals.length;
+  const daysSinceStart = getDaysSinceStart(goals);
+  const disciplineValue = disciplineScore?.score || 0;
+  const disciplineLabel = disciplineScore?.label || "Départ";
 
   function shareApp() {
     const link = window.location.origin;
@@ -212,6 +261,58 @@ function Profil({ settings, setCurrentPage }) {
         </button>
       </section>
 
+      <Section icon={<Trophy />} title={p.stats} color="var(--gold)">
+        <InfoRow label={p.activeGoals} value={activeGoalsCount} />
+        <InfoRow label={p.achievedGoals} value={achievedGoalsCount} />
+        <InfoRow label={p.discipline} value={`${disciplineValue}%`} />
+        <InfoRow
+          label={p.sinceStart}
+          value={`${daysSinceStart} ${p.days}`}
+        />
+      </Section>
+
+      <section style={card}>
+        <div style={header}>
+          <Star color="var(--green)" />
+          <h2>{p.progress}</h2>
+        </div>
+
+        <p style={muted}>{disciplineLabel}</p>
+
+        <div style={progressBar}>
+          <div
+            style={{
+              ...progressFill,
+              width: `${disciplineValue}%`,
+              background: getDisciplineColor(disciplineValue),
+            }}
+          />
+        </div>
+      </section>
+
+      <section style={card}>
+        <div style={header}>
+          <Trophy color="var(--gold)" />
+          <h2>{p.victories}</h2>
+        </div>
+
+        {achievedGoals.length > 0 ? (
+          achievedGoals.map((goal) => (
+            <div key={goal.id} style={victoryItem}>
+              <CheckCircle size={18} color="var(--green)" />
+              <div>
+                <strong>{goal.title}</strong>
+                <p style={mutedSmall}>
+                  {goal.categoryLabel || goal.category || "Objectif"}
+                </p>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p style={muted}>{p.noVictory}</p>
+        )}
+      </section>
+
       <Section icon={<UserCircle />} title={p.account} color="var(--blue)">
         <InfoRow label={p.country} value="Canada / Guinée" />
         <InfoRow label={p.language} value={settings.language} />
@@ -219,7 +320,7 @@ function Profil({ settings, setCurrentPage }) {
       </Section>
 
       <Section icon={<CheckCircle />} title={p.app} color="var(--green)">
-        <InfoRow label={p.version} value="4.5 Beta" />
+        <InfoRow label={p.version} value="V8.4 Beta" />
         <InfoRow label={p.testerMode} value="ON" />
         <InfoRow label={p.pwa} value="ON" />
         <InfoRow label={p.localBackup} value="ON" />
@@ -321,6 +422,33 @@ function Profil({ settings, setCurrentPage }) {
   );
 }
 
+function getDaysSinceStart(goals) {
+  if (!Array.isArray(goals) || goals.length === 0) return 0;
+
+  const firstGoal = [...goals]
+    .filter((goal) => goal.createdAt)
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))[0];
+
+  if (!firstGoal?.createdAt) return 0;
+
+  const start = new Date(firstGoal.createdAt);
+  const now = new Date();
+
+  if (Number.isNaN(start.getTime())) return 0;
+
+  return Math.max(
+    0,
+    Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+  );
+}
+
+function getDisciplineColor(score) {
+  if (score <= 25) return "var(--red)";
+  if (score <= 50) return "var(--gold)";
+  if (score <= 75) return "var(--blue)";
+  return "var(--green)";
+}
+
 function Section({ icon, title, color, children }) {
   return (
     <section style={{ ...card, borderColor: color }}>
@@ -408,6 +536,33 @@ const photoBtn = {
   display: "flex",
   justifyContent: "center",
   gap: "8px",
+};
+
+const progressBar = {
+  height: "12px",
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "999px",
+  marginTop: "14px",
+  overflow: "hidden",
+};
+
+const progressFill = {
+  height: "100%",
+  borderRadius: "999px",
+  transition: "width .35s ease",
+};
+
+const victoryItem = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "14px",
+  padding: "12px",
+  marginTop: "8px",
+  display: "grid",
+  gridTemplateColumns: "24px 1fr",
+  gap: "10px",
+  alignItems: "center",
 };
 
 const grid = {
