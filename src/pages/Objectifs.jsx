@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import {
   ArrowLeft,
   Briefcase,
-  Calendar,
   Car,
   ChevronRight,
   CreditCard,
@@ -11,16 +10,15 @@ import {
   PiggyBank,
   Plane,
   Plus,
-  RotateCcw,
-  Sparkles,
   Star,
   Target,
-  Trash2,
   Trophy,
   Users,
 } from "lucide-react";
 import { cleanMoneyInput, formatMoney } from "../utils/formatters";
 import { getText } from "../data/translations";
+import GoalPremiumDashboard from "../components/GoalPremiumDashboard";
+import GoalPremiumCard from "../components/GoalPremiumCard";
 
 const pageText = {
   FR: {
@@ -43,7 +41,6 @@ const pageText = {
     targetDate: "Date cible",
     quickAnalysis: "Analyse rapide",
     remaining: "Reste",
-    flip: "Retourner",
     delete: "Supprimer",
     simulateLater: "Simulation détaillée bientôt disponible",
     achieved: "Objectif atteint",
@@ -57,23 +54,6 @@ const pageText = {
 
 function n(value) {
   return Number(value || 0);
-}
-
-function getStartedLabel(createdAt, text) {
-  if (!createdAt) return text.startedToday;
-
-  const start = new Date(createdAt);
-  const now = new Date();
-
-  if (Number.isNaN(start.getTime())) return text.startedToday;
-
-  const diffMs = now.getTime() - start.getTime();
-  const days = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
-
-  if (days === 0) return text.startedToday;
-  if (days === 1) return `${text.startedAgo} 1 jour`;
-
-  return `${text.startedAgo} ${days} jours`;
 }
 
 const goalTemplates = {
@@ -384,15 +364,11 @@ const goalTemplates = {
   },
 };
 
-function Objectifs({
-  selectedGoals,
-  setSelectedGoals,
-  settings,
-  addActivity,
-}) {
+function Objectifs({ selectedGoals, setSelectedGoals, settings, addActivity }) {
   const t = getText(settings);
   const p = pageText.FR;
   const currency = settings?.currency || "CAD";
+  const goals = Array.isArray(selectedGoals) ? selectedGoals : [];
 
   const categories = Object.entries(goalTemplates).map(([id, item]) => ({
     id,
@@ -401,7 +377,6 @@ function Objectifs({
 
   const [selectedType, setSelectedType] = useState(null);
   const [selectedSubType, setSelectedSubType] = useState(null);
-  const [flippedId, setFlippedId] = useState(null);
   const [celebratingGoalId, setCelebratingGoalId] = useState(null);
   const [form, setForm] = useState({
     title: "",
@@ -426,9 +401,7 @@ function Objectifs({
       };
     }
 
-    if (!hasSubcategories) {
-      return selectedCategory;
-    }
+    if (!hasSubcategories) return selectedCategory;
 
     return null;
   }, [selectedCategory, selectedSubType, hasSubcategories]);
@@ -437,6 +410,25 @@ function Objectifs({
     if (!selectedTemplate) return 0;
     return selectedTemplate.calculate(form.values);
   }, [selectedTemplate, form.values]);
+
+  const rankedGoals = useMemo(() => {
+    return [...goals]
+      .filter((goal) => !goal.archived)
+      .map((goal) => {
+        const progress = getProgress(goal);
+        const remaining = getRemaining(goal);
+        const status = getGoalStatus(progress);
+        const priorityScore =
+          (goal.highlighted ? 40 : 0) +
+          (progress >= 80 && progress < 100 ? 30 : 0) +
+          (progress >= 100 ? 20 : 0) +
+          (goal.targetDate ? 10 : 0) -
+          Math.min(20, Math.round(remaining / 1000));
+
+        return { ...goal, progress, remaining, status, priorityScore };
+      })
+      .sort((a, b) => b.priorityScore - a.priorityScore);
+  }, [goals]);
 
   function resetForm() {
     setSelectedType(null);
@@ -456,7 +448,7 @@ function Objectifs({
       title: selectedCategory?.label || "",
       currentAmount: "",
       targetDate: "",
-      highlighted: selectedGoals.length === 0,
+      highlighted: goals.length === 0,
       values: {},
     });
   }
@@ -481,7 +473,7 @@ function Objectifs({
       title: template.label,
       currentAmount: "",
       targetDate: "",
-      highlighted: selectedGoals.length === 0,
+      highlighted: goals.length === 0,
       values: {},
     });
   }
@@ -494,7 +486,7 @@ function Objectifs({
       title: `${selectedCategory.label} - ${subcategory.label}`,
       currentAmount: "",
       targetDate: "",
-      highlighted: selectedGoals.length === 0,
+      highlighted: goals.length === 0,
       values: {},
     });
   }
@@ -502,9 +494,9 @@ function Objectifs({
   function addGoal() {
     if (!selectedType || !selectedTemplate || targetAmount <= 0) return;
 
-    const shouldHighlight = selectedGoals.length === 0 || form.highlighted;
+    const shouldHighlight = goals.length === 0 || form.highlighted;
 
-    const updatedGoals = selectedGoals.map((goal) => ({
+    const updatedGoals = goals.map((goal) => ({
       ...goal,
       highlighted: shouldHighlight ? false : goal.highlighted,
     }));
@@ -543,9 +535,7 @@ function Objectifs({
     }
 
     if (newGoal.currentAmount >= newGoal.targetAmount) {
-      setCelebratingGoalId(newGoal.id);
-      setTimeout(() => setCelebratingGoalId(null), 1800);
-
+      celebrateGoal(newGoal.id);
       addActivity?.(
         "victoire",
         "Objectif atteint",
@@ -557,9 +547,9 @@ function Objectifs({
   }
 
   function removeGoal(id) {
-    const goalToRemove = selectedGoals.find((goal) => goal.id === id);
+    const goalToRemove = goals.find((goal) => goal.id === id);
 
-    setSelectedGoals(selectedGoals.filter((goal) => goal.id !== id));
+    setSelectedGoals(goals.filter((goal) => goal.id !== id));
 
     addActivity?.(
       "objectif",
@@ -569,10 +559,10 @@ function Objectifs({
   }
 
   function highlightGoal(id) {
-    const selectedGoal = selectedGoals.find((goal) => goal.id === id);
+    const selectedGoal = goals.find((goal) => goal.id === id);
 
     setSelectedGoals(
-      selectedGoals.map((goal) => ({
+      goals.map((goal) => ({
         ...goal,
         highlighted: goal.id === id,
       }))
@@ -586,24 +576,25 @@ function Objectifs({
   }
 
   function addDeposit(goalId, amount) {
+    const depositAmount = Number(amount || 0);
+    if (depositAmount <= 0) return;
+
     setSelectedGoals(
-      selectedGoals.map((goal) => {
+      goals.map((goal) => {
         if (goal.id !== goalId) return goal;
 
         const previousAmount = Number(goal.currentAmount || 0);
         const target = Number(goal.targetAmount || 0);
-        const nextAmount = Math.min(target, previousAmount + amount);
+        const nextAmount = Math.min(target, previousAmount + depositAmount);
 
         addActivity?.(
           "depot",
           "Dépôt ajouté",
-          `${formatMoney(amount, currency)} ajoutés à ${goal.title}.`
+          `${formatMoney(depositAmount, currency)} ajoutés à ${goal.title}.`
         );
 
         if (previousAmount < target && nextAmount >= target) {
-          setCelebratingGoalId(goal.id);
-          setTimeout(() => setCelebratingGoalId(null), 1800);
-
+          celebrateGoal(goal.id);
           addActivity?.(
             "victoire",
             "Objectif atteint",
@@ -615,7 +606,7 @@ function Objectifs({
           ...goal,
           currentAmount: nextAmount,
           lastDeposit: {
-            amount,
+            amount: depositAmount,
             date: new Date().toISOString(),
           },
         };
@@ -623,12 +614,24 @@ function Objectifs({
     );
   }
 
+  function celebrateGoal(id) {
+    setCelebratingGoalId(id);
+    window.setTimeout(() => setCelebratingGoalId(null), 1800);
+  }
+
   return (
     <div className="native-page" style={page}>
+      <GoalPremiumDashboard
+        goals={rankedGoals}
+        currency={currency}
+        templates={goalTemplates}
+        onOpenCreate={() => window.scrollTo?.({ top: 0, behavior: "smooth" })}
+      />
+
       <section
         style={{
           ...heroCard,
-          borderColor: selectedCategory?.color || "var(--border)",
+          borderColor: selectedCategory?.color || "var(--gold)",
         }}
       >
         <div
@@ -639,7 +642,10 @@ function Objectifs({
             <>
               <div style={header}>
                 <Target color="var(--gold)" />
-                <h1>{t.objectifs || p.smartCategories}</h1>
+                <div>
+                  <p style={eyebrow}>Objectifs Premium+ V8.9</p>
+                  <h1>{t.objectifs || p.smartCategories}</h1>
+                </div>
               </div>
 
               <p style={muted}>{p.subtitle}</p>
@@ -815,215 +821,26 @@ function Objectifs({
 
       <section style={card}>
         <div style={header}>
-          <Calendar color="var(--purple)" />
+          <Trophy color="var(--gold)" />
           <h2>{p.activeGoals}</h2>
         </div>
 
-        {selectedGoals.length === 0 && <p style={muted}>{p.noGoal}</p>}
+        {rankedGoals.length === 0 && <p style={muted}>{p.noGoal}</p>}
 
-        {selectedGoals.map((goal) => {
-          const category = goalTemplates[goal.category] || goalTemplates.securite;
-
-          const progress =
-            goal.targetAmount > 0
-              ? Math.min(
-                  100,
-                  Math.round((goal.currentAmount / goal.targetAmount) * 100)
-                )
-              : 0;
-
-          const remaining = Math.max(
-            0,
-            Number(goal.targetAmount || 0) - Number(goal.currentAmount || 0)
-          );
-
-          const isFlipped = flippedId === goal.id;
-          const isCelebrating = celebratingGoalId === goal.id;
-          const isAchieved = progress >= 100;
-          const isAlmostThere = progress >= 80 && progress < 100;
-
-          return (
-            <div
-              key={goal.id}
-              style={{
-                ...goalCard,
-                ...(isCelebrating ? celebrationCard : {}),
-                borderColor: isAchieved ? "var(--gold)" : category.color,
-                background: isFlipped
-                  ? "linear-gradient(135deg, rgba(212,175,55,.10), var(--bg-panel))"
-                  : isAchieved
-                    ? "linear-gradient(135deg, rgba(212,175,55,.13), var(--bg-panel))"
-                    : "var(--bg-panel)",
-              }}
-            >
-              {!isFlipped ? (
-                <>
-                  <div style={goalHeader}>
-                    <span
-                      style={{
-                        color: isAchieved ? "var(--gold)" : category.color,
-                      }}
-                    >
-                      {isAchieved ? <Trophy /> : category.icon}
-                    </span>
-
-                    <div>
-                      <strong>
-                        {goal.highlighted ? "⭐ " : ""}
-                        {goal.title}
-                      </strong>
-                      <p style={mutedSmall}>
-                        {goal.categoryLabel || category.label}
-                        {goal.option ? ` • ${goal.option}` : ""}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => setFlippedId(goal.id)}
-                      style={ghostButton}
-                      aria-label={p.flip}
-                    >
-                      <ChevronRight size={18} />
-                    </button>
-                  </div>
-
-                  <div style={badgeRow}>
-                    <span style={disciplineBadge}>
-                      {getStartedLabel(goal.createdAt, p)}
-                    </span>
-                    {isAlmostThere && (
-                      <span style={almostBadge}>{p.almostThere}</span>
-                    )}
-                    {isAchieved && (
-                      <span style={victoryBadge}>🏆 {p.achieved}</span>
-                    )}
-                  </div>
-
-                  {isCelebrating && (
-                    <div style={celebrationBox}>
-                      <Sparkles size={18} />
-                      <strong>{p.congratulations}</strong>
-                    </div>
-                  )}
-
-                  <div style={amountRow}>
-                    <span>{formatMoney(goal.currentAmount, currency)}</span>
-                    <strong>{formatMoney(goal.targetAmount, currency)}</strong>
-                  </div>
-
-                  <div style={barBg}>
-                    <div
-                      style={{
-                        ...barFill,
-                        width: `${progress}%`,
-                        background: isAchieved ? "var(--gold)" : category.color,
-                      }}
-                    />
-                  </div>
-
-                  <p style={mutedSmall}>
-                    {p.progress} : {progress}%
-                  </p>
-
-                  {goal.lastDeposit && (
-                    <p style={mutedSmall}>
-                      {p.lastDeposit} : +
-                      {formatMoney(goal.lastDeposit.amount, currency)}
-                    </p>
-                  )}
-                </>
-              ) : (
-                <>
-                  <div style={goalHeader}>
-                    <span style={{ color: category.color }}>
-                      <RotateCcw />
-                    </span>
-
-                    <div>
-                      <strong>{p.details}</strong>
-                      <p style={mutedSmall}>{goal.title}</p>
-                    </div>
-
-                    <button
-                      onClick={() => setFlippedId(null)}
-                      style={ghostButton}
-                      aria-label={p.flip}
-                    >
-                      <RotateCcw size={17} />
-                    </button>
-                  </div>
-
-                  <InfoLine
-                    label="Catégorie"
-                    value={`${goal.categoryLabel || category.label}${
-                      goal.option ? ` • ${goal.option}` : ""
-                    }`}
-                  />
-                  <InfoLine
-                    label="Discipline"
-                    value={getStartedLabel(goal.createdAt, p)}
-                  />
-                  <InfoLine
-                    label={p.targetAmount}
-                    value={formatMoney(goal.targetAmount, currency)}
-                  />
-                  <InfoLine
-                    label={p.currentAmount}
-                    value={formatMoney(goal.currentAmount, currency)}
-                  />
-                  <InfoLine
-                    label={p.remainingToGet}
-                    value={formatMoney(remaining, currency)}
-                  />
-                  <InfoLine label={p.progress} value={`${progress}%`} />
-
-                  {goal.lastDeposit && (
-                    <InfoLine
-                      label={p.lastDeposit}
-                      value={`+${formatMoney(goal.lastDeposit.amount, currency)}`}
-                    />
-                  )}
-
-                  <div style={quickDepositRow}>
-                    {[50, 100, 250, 500].map((amount) => (
-                      <button
-                        key={amount}
-                        onClick={() => addDeposit(goal.id, amount)}
-                        style={smallGreenBtn}
-                      >
-                        +{amount} $
-                      </button>
-                    ))}
-                  </div>
-
-                  {!goal.highlighted && (
-                    <button
-                      onClick={() => highlightGoal(goal.id)}
-                      style={smallGoldBtn}
-                    >
-                      {p.setMain}
-                    </button>
-                  )}
-
-                  <button onClick={() => removeGoal(goal.id)} style={deleteBtn}>
-                    <Trash2 size={16} />
-                    {p.delete}
-                  </button>
-                </>
-              )}
-            </div>
-          );
-        })}
+        {rankedGoals.map((goal, index) => (
+          <GoalPremiumCard
+            key={goal.id}
+            goal={goal}
+            rank={index + 1}
+            template={goalTemplates[goal.category] || goalTemplates.securite}
+            currency={currency}
+            isCelebrating={celebratingGoalId === goal.id}
+            onDeposit={addDeposit}
+            onHighlight={highlightGoal}
+            onRemove={removeGoal}
+          />
+        ))}
       </section>
-    </div>
-  );
-}
-
-function InfoLine({ label, value }) {
-  return (
-    <div style={infoLine}>
-      <span style={mutedSmall}>{label}</span>
-      <strong>{value}</strong>
     </div>
   );
 }
@@ -1055,21 +872,42 @@ function Preview({ targetAmount, currentAmount, currency, text }) {
   );
 }
 
-const page = {
-  paddingTop: "0",
-};
+function getProgress(goal) {
+  const target = Number(goal.targetAmount || 0);
+  if (target <= 0) return 0;
+  return Math.min(
+    100,
+    Math.round((Number(goal.currentAmount || 0) / target) * 100)
+  );
+}
+
+function getRemaining(goal) {
+  return Math.max(
+    0,
+    Number(goal.targetAmount || 0) - Number(goal.currentAmount || 0)
+  );
+}
+
+function getGoalStatus(progress) {
+  if (progress >= 100) return "Atteint";
+  if (progress >= 80) return "Presque atteint";
+  if (progress >= 30) return "En progression";
+  return "Début";
+}
+
+const page = { paddingTop: "0" };
 
 const heroCard = {
-  background: "var(--bg-card)",
-  border: "1px solid var(--border)",
+  background:
+    "radial-gradient(circle at top right, rgba(212,175,55,.18), transparent 32%), var(--bg-card)",
+  border: "1px solid var(--gold)",
   borderRadius: "22px",
   padding: "20px",
   overflow: "hidden",
+  marginTop: "20px",
 };
 
-const animatedPanel = {
-  animation: "fadeIn .22s ease",
-};
+const animatedPanel = { animation: "fadeIn .22s ease" };
 
 const formTop = {
   display: "flex",
@@ -1112,6 +950,13 @@ const header = {
   alignItems: "center",
   gap: "10px",
   marginBottom: "14px",
+};
+
+const eyebrow = {
+  color: "var(--gold)",
+  fontSize: "12px",
+  fontWeight: "900",
+  margin: 0,
 };
 
 const categoryGrid = {
@@ -1200,153 +1045,6 @@ const addButton = {
   border: "none",
   background: "var(--green)",
   color: "white",
-  fontWeight: "bold",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "8px",
-};
-
-const goalCard = {
-  border: "1px solid var(--border)",
-  borderRadius: "18px",
-  padding: "16px",
-  marginTop: "12px",
-  transition: "transform .22s ease, box-shadow .22s ease, border-color .22s ease",
-};
-
-const celebrationCard = {
-  transform: "scale(1.015)",
-  boxShadow: "0 0 0 1px rgba(212,175,55,.35), 0 0 28px rgba(212,175,55,.25)",
-};
-
-const goalHeader = {
-  display: "grid",
-  gridTemplateColumns: "32px 1fr auto",
-  gap: "10px",
-  alignItems: "center",
-};
-
-const badgeRow = {
-  display: "flex",
-  flexWrap: "wrap",
-  gap: "8px",
-  marginTop: "12px",
-};
-
-const disciplineBadge = {
-  border: "1px solid var(--border)",
-  background: "var(--bg-main)",
-  color: "var(--text-muted)",
-  borderRadius: "999px",
-  padding: "6px 9px",
-  fontSize: "12px",
-  fontWeight: "700",
-};
-
-const almostBadge = {
-  border: "1px solid var(--gold)",
-  background: "rgba(212,175,55,.12)",
-  color: "var(--gold)",
-  borderRadius: "999px",
-  padding: "6px 9px",
-  fontSize: "12px",
-  fontWeight: "800",
-};
-
-const victoryBadge = {
-  border: "1px solid var(--green)",
-  background: "rgba(34,197,94,.12)",
-  color: "var(--green)",
-  borderRadius: "999px",
-  padding: "6px 9px",
-  fontSize: "12px",
-  fontWeight: "800",
-};
-
-const celebrationBox = {
-  marginTop: "12px",
-  border: "1px solid var(--gold)",
-  background: "rgba(212,175,55,.14)",
-  color: "var(--gold)",
-  borderRadius: "14px",
-  padding: "11px",
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-};
-
-const amountRow = {
-  display: "flex",
-  justifyContent: "space-between",
-  marginTop: "14px",
-};
-
-const barBg = {
-  height: "10px",
-  background: "var(--bg-main)",
-  borderRadius: "999px",
-  marginTop: "10px",
-};
-
-const barFill = {
-  height: "100%",
-  borderRadius: "999px",
-};
-
-const ghostButton = {
-  border: "1px solid var(--border)",
-  background: "transparent",
-  color: "var(--text-main)",
-  borderRadius: "10px",
-  padding: "7px",
-};
-
-const infoLine = {
-  background: "var(--bg-main)",
-  border: "1px solid var(--border)",
-  borderRadius: "12px",
-  padding: "10px",
-  marginTop: "8px",
-  display: "grid",
-  gap: "4px",
-};
-
-const quickDepositRow = {
-  display: "grid",
-  gridTemplateColumns: "repeat(4, 1fr)",
-  gap: "8px",
-  marginTop: "12px",
-};
-
-const smallGreenBtn = {
-  padding: "10px",
-  borderRadius: "12px",
-  border: "1px solid var(--green)",
-  background: "rgba(34,197,94,.12)",
-  color: "var(--green)",
-  fontWeight: "bold",
-};
-
-const smallGoldBtn = {
-  marginTop: "12px",
-  width: "100%",
-  padding: "11px",
-  borderRadius: "12px",
-  border: "1px solid var(--gold)",
-  background: "rgba(212,175,55,.12)",
-  color: "var(--gold)",
-  fontWeight: "bold",
-};
-
-const deleteBtn = {
-  width: "100%",
-  marginTop: "10px",
-  padding: "11px",
-  borderRadius: "12px",
-  border: "1px solid var(--red)",
-  background: "rgba(239,68,68,.12)",
-  color: "var(--red)",
   fontWeight: "bold",
   display: "flex",
   alignItems: "center",
