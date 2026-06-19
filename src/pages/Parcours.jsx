@@ -36,8 +36,6 @@ const pageText = {
     target: "Objectif",
     progress: "Progression",
     targetDate: "Date cible",
-    emergencyFund: "Fonds d’urgence",
-    emergencySubtitle: "Créer une sécurité minimale",
     travel: "Voyage",
     travelSubtitle: "Projet personnel ou familial",
     house: "Maison",
@@ -64,8 +62,15 @@ const pageText = {
     step5: "Étape 5",
     eliminateDebt: "Éliminer la dette prioritaire",
     secureBase: "Sécuriser la base",
+    emergencySubtitle: "Créer une sécurité minimale",
     buildGoals: "Construire les objectifs",
-    longTerm: "Vision long terme",
+    discipline: "Discipline OnJarama",
+    started: "Vous avez commencé votre parcours",
+    notStarted: "Votre parcours commencera dès votre premier objectif.",
+    nextStep: "Prochaine étape",
+    victories: "Victoires",
+    noVictory: "Aucune victoire enregistrée pour le moment.",
+    openPlan: "Ouvrir Mon Plan",
   },
 
   EN: {
@@ -88,8 +93,6 @@ const pageText = {
     target: "Target",
     progress: "Progress",
     targetDate: "Target date",
-    emergencyFund: "Emergency fund",
-    emergencySubtitle: "Build minimum security",
     travel: "Travel",
     travelSubtitle: "Personal or family project",
     house: "Home",
@@ -116,8 +119,15 @@ const pageText = {
     step5: "Step 5",
     eliminateDebt: "Eliminate priority debt",
     secureBase: "Secure the base",
+    emergencySubtitle: "Build minimum security",
     buildGoals: "Build goals",
-    longTerm: "Long-term vision",
+    discipline: "OnJarama Discipline",
+    started: "You started your path",
+    notStarted: "Your path will start with your first goal.",
+    nextStep: "Next step",
+    victories: "Victories",
+    noVictory: "No victory recorded yet.",
+    openPlan: "Open My Plan",
   },
 
   ES: {
@@ -140,8 +150,6 @@ const pageText = {
     target: "Objetivo",
     progress: "Progreso",
     targetDate: "Fecha objetivo",
-    emergencyFund: "Fondo de emergencia",
-    emergencySubtitle: "Crear una seguridad mínima",
     travel: "Viaje",
     travelSubtitle: "Proyecto personal o familiar",
     house: "Casa",
@@ -168,12 +176,25 @@ const pageText = {
     step5: "Paso 5",
     eliminateDebt: "Eliminar deuda prioritaria",
     secureBase: "Asegurar la base",
+    emergencySubtitle: "Crear una seguridad mínima",
     buildGoals: "Construir objetivos",
-    longTerm: "Visión a largo plazo",
+    discipline: "Disciplina OnJarama",
+    started: "Empezaste tu camino",
+    notStarted: "Tu camino empezará con tu primer objetivo.",
+    nextStep: "Próxima etapa",
+    victories: "Victorias",
+    noVictory: "No hay victoria registrada por ahora.",
+    openPlan: "Abrir Mi Plan",
   },
 };
 
-function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
+function Parcours({
+  financeData,
+  selectedGoals,
+  settings,
+  setCurrentPage,
+  disciplineScore,
+}) {
   const t = getText(settings);
   const language = settings?.language || "FR";
   const p = pageText[language] || pageText.FR;
@@ -191,13 +212,9 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
 
   const priorityDebt = [...debts]
     .filter((debt) => Number(debt.balance || 0) > 0)
-    .sort(
-      (a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0)
-    )[0];
+    .sort((a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0))[0];
 
-  const highlightedGoal =
-    goals.find((goal) => goal.highlighted) || goals[0];
-
+  const highlightedGoal = goals.find((goal) => goal.highlighted) || goals[0];
   const simulatorGoal = goals.find((goal) => goal.source === "simulateur");
 
   const totalGoalTarget = goals.reduce(
@@ -216,6 +233,28 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
       : 0;
 
   const nextVictory = priorityDebt || highlightedGoal || simulatorGoal;
+
+  const achievedGoals = goals.filter(
+    (goal) =>
+      Number(goal.targetAmount || 0) > 0 &&
+      Number(goal.currentAmount || 0) >= Number(goal.targetAmount || 0)
+  );
+
+  const firstGoal = [...goals]
+    .filter((goal) => goal.createdAt)
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))[0];
+
+  const daysSinceStart = getDaysSinceStart(firstGoal?.createdAt);
+  const disciplineValue = disciplineScore?.score || 0;
+  const disciplineLabel = disciplineScore?.label || "Départ";
+
+  const nextStep = getNextStep({
+    priorityDebt,
+    highlightedGoal,
+    simulatorGoal,
+    goals,
+    p,
+  });
 
   return (
     <div className="native-page">
@@ -252,6 +291,67 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
                 : p.goalAdvice
               : p.addDebtGoal}
         </p>
+      </section>
+
+      <section style={disciplineCard}>
+        <Flag color="var(--gold)" />
+
+        <div>
+          <h2>{p.discipline}</h2>
+
+          <p style={muted}>
+            {firstGoal
+              ? `${p.started} il y a ${daysSinceStart} jour${
+                  daysSinceStart > 1 ? "s" : ""
+                }.`
+              : p.notStarted}
+          </p>
+
+          <strong style={{ color: getDisciplineColor(disciplineValue) }}>
+            {disciplineValue}% • {disciplineLabel}
+          </strong>
+
+          <div style={miniBarBg}>
+            <div
+              style={{
+                ...miniBarFill,
+                width: `${disciplineValue}%`,
+                background: getDisciplineColor(disciplineValue),
+              }}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section style={nextStepCard}>
+        <Star color="var(--green)" />
+
+        <div>
+          <h2>{p.nextStep}</h2>
+          <p style={muted}>{nextStep.text}</p>
+
+          <button onClick={() => setCurrentPage(nextStep.page)} style={greenBtn}>
+            {nextStep.button}
+          </button>
+        </div>
+      </section>
+
+      <section style={victoryCard}>
+        <Trophy color="var(--gold)" />
+
+        <div>
+          <h2>{p.victories}</h2>
+
+          {achievedGoals.length > 0 ? (
+            <p style={muted}>
+              {achievedGoals.length} objectif
+              {achievedGoals.length > 1 ? "s" : ""} atteint
+              {achievedGoals.length > 1 ? "s" : ""}.
+            </p>
+          ) : (
+            <p style={muted}>{p.noVictory}</p>
+          )}
+        </div>
       </section>
 
       <div className="grid-2" style={grid}>
@@ -294,8 +394,8 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
         </div>
 
         <TimelineStep
-          icon={<CheckCircle />}
-          stepLabel={p.today}
+          icon={<Flag />}
+          stepLabel="🚩 Départ"
           title={p.startingPoint}
           subtitle="OnJarama analyse votre point de départ financier."
           current={formatMoney(0, currency)}
@@ -309,7 +409,7 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
 
         <TimelineStep
           icon={<CreditCard />}
-          stepLabel={p.step1}
+          stepLabel="💳 Dette"
           title={priorityDebt ? p.eliminateDebt : p.priorityDebt}
           subtitle={
             priorityDebt
@@ -339,7 +439,7 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
 
         <TimelineStep
           icon={<ShieldCheck />}
-          stepLabel={p.step2}
+          stepLabel="🛡 Sécurité"
           title={p.secureBase}
           subtitle={p.emergencySubtitle}
           current={formatMoney(0, currency)}
@@ -354,7 +454,7 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
         <GoalStep
           goals={goals}
           category="voyage"
-          stepLabel={p.step3}
+          stepLabel="✈️ Voyage"
           fallbackTitle={p.travel}
           fallbackSubtitle={p.travelSubtitle}
           icon={<Plane />}
@@ -366,7 +466,7 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
         <GoalStep
           goals={goals}
           category="maison"
-          stepLabel={p.step4}
+          stepLabel="🏠 Maison"
           fallbackTitle={p.house}
           fallbackSubtitle={p.houseSubtitle}
           icon={<Home />}
@@ -378,7 +478,7 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
         <GoalStep
           goals={goals}
           category="liberte"
-          stepLabel={p.step5}
+          stepLabel="🏆 Liberté"
           fallbackTitle={p.freedom}
           fallbackSubtitle={p.freedomSubtitle}
           icon={<Trophy />}
@@ -409,11 +509,11 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
           <h2>{p.aiReading}</h2>
           <p style={muted}>
             {priorityDebt
-              ? p.debtAdvice
+              ? `${p.debtAdvice} ${p.discipline} : ${disciplineValue}% (${disciplineLabel}).`
               : goals.length > 0
                 ? simulatorGoal
                   ? p.simulatorAdvice
-                  : p.goalAdvice
+                  : `${p.goalAdvice} ${p.discipline} : ${disciplineValue}% (${disciplineLabel}).`
                 : p.startAdvice}
           </p>
         </div>
@@ -438,6 +538,67 @@ function Parcours({ financeData, selectedGoals, settings, setCurrentPage }) {
       </section>
     </div>
   );
+}
+
+function getDaysSinceStart(createdAt) {
+  if (!createdAt) return 0;
+
+  const start = new Date(createdAt);
+  const now = new Date();
+
+  if (Number.isNaN(start.getTime())) return 0;
+
+  return Math.max(
+    0,
+    Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+  );
+}
+
+function getDisciplineColor(score) {
+  if (score <= 25) return "var(--red)";
+  if (score <= 50) return "var(--gold)";
+  if (score <= 75) return "var(--blue)";
+  return "var(--green)";
+}
+
+function getNextStep({ priorityDebt, highlightedGoal, simulatorGoal, goals, p }) {
+  if (priorityDebt) {
+    return {
+      text: `Réduire ${priorityDebt.name} reste la priorité actuelle.`,
+      button: p.updateSituation,
+      page: "situation",
+    };
+  }
+
+  if (highlightedGoal) {
+    return {
+      text: `Continuer ${highlightedGoal.title} pour créer la prochaine victoire.`,
+      button: p.manageGoals,
+      page: "objectifs",
+    };
+  }
+
+  if (simulatorGoal) {
+    return {
+      text: "Transformer votre simulation en objectif suivi.",
+      button: p.openSimulator,
+      page: "simulateur",
+    };
+  }
+
+  if (goals.length === 0) {
+    return {
+      text: p.addDebtGoal,
+      button: p.manageGoals,
+      page: "objectifs",
+    };
+  }
+
+  return {
+    text: "Ouvrir Mon Plan pour garder une action claire.",
+    button: p.openPlan,
+    page: "monplan",
+  };
 }
 
 function GoalStep({
@@ -530,9 +691,7 @@ function TimelineStep({
 
         <p style={actionText}>{action}</p>
 
-        {safeProgress >= 100 && (
-          <p style={victoryText}>🏆 Objectif atteint</p>
-        )}
+        {safeProgress >= 100 && <p style={victoryText}>🏆 Objectif atteint</p>}
       </div>
     </div>
   );
@@ -582,6 +741,60 @@ function getDebtProgress(balance) {
 
   return 90;
 }
+
+const disciplineCard = {
+  background: "linear-gradient(135deg, rgba(212,175,55,.14), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+  display: "flex",
+  gap: "12px",
+};
+
+const nextStepCard = {
+  background: "linear-gradient(135deg, rgba(34,197,94,.14), var(--bg-card))",
+  border: "1px solid var(--green)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+  display: "flex",
+  gap: "12px",
+};
+
+const victoryCard = {
+  background: "linear-gradient(135deg, rgba(212,175,55,.16), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+  display: "flex",
+  gap: "12px",
+};
+
+const miniBarBg = {
+  height: "10px",
+  background: "var(--bg-panel)",
+  borderRadius: "999px",
+  marginTop: "12px",
+  overflow: "hidden",
+};
+
+const miniBarFill = {
+  height: "100%",
+  borderRadius: "999px",
+};
+
+const greenBtn = {
+  width: "100%",
+  padding: "14px",
+  borderRadius: "14px",
+  border: "none",
+  background: "var(--green)",
+  color: "white",
+  fontWeight: "bold",
+  marginTop: "12px",
+};
 
 const heroCard = {
   background: "linear-gradient(135deg,#2a210b,var(--bg-card))",
