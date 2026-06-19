@@ -1,9 +1,11 @@
 import {
   AlertTriangle,
+  CalendarDays,
   CheckCircle,
   Clock3,
   CreditCard,
   Flag,
+  Gauge,
   PiggyBank,
   Route,
   Sparkles,
@@ -19,6 +21,7 @@ function MonPlan({
   settings,
   setCurrentPage,
   activityHistory,
+  disciplineScore,
 }) {
   const currency = settings?.currency || "CAD";
 
@@ -30,9 +33,15 @@ function MonPlan({
 
   const lastActivity = history[0];
   const lastVictory = history.find((item) => item.type === "victoire");
+
   const firstGoal = [...goals].sort(
     (a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0)
   )[0];
+
+  const monthlyIncome = Number(financeData?.overview?.monthlyIncome || 0);
+  const monthlyExpenses = Number(financeData?.overview?.monthlyExpenses || 0);
+  const monthlySavings = Number(financeData?.overview?.monthlySavings || 0);
+  const monthlyAvailable = monthlyIncome - monthlyExpenses - monthlySavings;
 
   const debtTotal = debts.reduce(
     (sum, debt) => sum + Number(debt.balance || 0),
@@ -60,27 +69,34 @@ function MonPlan({
       ? Math.min(100, Math.round((totalGoalCurrent / totalGoalTarget) * 100))
       : 0;
 
-  const mainGoal = goals.find((goal) => goal.highlighted) || goals[0];
+  const enrichedGoals = goals.map((goal) => ({
+    ...goal,
+    progress: getGoalProgress(goal),
+    remaining: getGoalRemaining(goal),
+  }));
 
-  const closestGoal = [...goals]
+  const mainGoal =
+    enrichedGoals.find((goal) => goal.highlighted) || enrichedGoals[0];
+
+  const closestGoal = [...enrichedGoals]
     .filter((goal) => Number(goal.targetAmount || 0) > 0)
-    .map((goal) => ({
-      ...goal,
-      progress: Math.min(
-        100,
-        Math.round(
-          (Number(goal.currentAmount || 0) / Number(goal.targetAmount || 0)) *
-            100
-        )
-      ),
-    }))
     .sort((a, b) => b.progress - a.progress)[0];
 
-  const achievedGoals = goals.filter(
-    (goal) =>
-      Number(goal.targetAmount || 0) > 0 &&
-      Number(goal.currentAmount || 0) >= Number(goal.targetAmount || 0)
-  );
+  const achievedGoals = enrichedGoals.filter((goal) => goal.progress >= 100);
+
+  const disciplineValue =
+    Number(disciplineScore?.score || 0) ||
+    calculateDisciplineFromHistory(history, goals);
+
+  const onjaramaScore = calculateOnJaramaScore({
+    monthlyIncome,
+    monthlyAvailable,
+    monthlySavings,
+    debtTotal,
+    goalProgress,
+    achievedGoals,
+    disciplineValue,
+  });
 
   const nextAction = getNextAction({
     priorityDebt,
@@ -91,15 +107,133 @@ function MonPlan({
     currency,
   });
 
+  const forecast = buildForecast({
+    priorityDebt,
+    mainGoal,
+    monthlyAvailable,
+    monthlySavings,
+    currency,
+  });
+
+  const weekStats = getPeriodStats(history, 7);
+  const yearStats = getPeriodStats(history, 365);
+
   return (
     <div className="native-page">
-      <h1>Mon Plan V8</h1>
+      <div style={pageHead}>
+        <div>
+          <p style={eyebrow}>OnJarama Path V9.0</p>
+          <h1>Mon Plan Premium</h1>
+          <p style={muted}>
+            Le cerveau de votre parcours : une priorité claire, un score et une
+            prochaine action.
+          </p>
+        </div>
 
-      <p style={muted}>
-        Votre feuille de route intelligente pour avancer sans vous disperser.
-      </p>
+        <Sparkles color="var(--gold)" />
+      </div>
 
-      <section style={priorityCard}>
+      <section style={brainCard}>
+        <div style={header}>
+          <Sparkles color="var(--gold)" />
+          <h2>Centre de décision</h2>
+        </div>
+
+        <p>
+          <strong>{nextAction.title}</strong>
+        </p>
+
+        <p style={muted}>{nextAction.description}</p>
+
+        <div style={decisionGrid}>
+          <DecisionLine text="Garder une action principale" ok />
+          <DecisionLine text="Éviter une nouvelle dette inutile" ok />
+          <DecisionLine
+            text={
+              monthlyAvailable >= 0
+                ? "Marge mensuelle positive"
+                : "Marge mensuelle à reprendre"
+            }
+            ok={monthlyAvailable >= 0}
+          />
+        </div>
+
+        <button
+          onClick={() => setCurrentPage(nextAction.page)}
+          style={goldButton}
+        >
+          {nextAction.button}
+        </button>
+      </section>
+
+      <section style={scoreCard(onjaramaScore.color)}>
+        <div style={header}>
+          <Gauge color={onjaramaScore.color} />
+          <h2>Score financier OnJarama</h2>
+        </div>
+
+        <div style={scoreRow}>
+          <strong style={{ ...scoreValue, color: onjaramaScore.color }}>
+            {onjaramaScore.value}/100
+          </strong>
+          <span style={{ ...scoreBadge, borderColor: onjaramaScore.color }}>
+            {onjaramaScore.label}
+          </span>
+        </div>
+
+        <MiniBar progress={onjaramaScore.value} color={onjaramaScore.color} />
+
+        <p style={muted}>{onjaramaScore.message}</p>
+      </section>
+
+      <section style={calendarCard}>
+        <div style={header}>
+          <CalendarDays color="var(--blue)" />
+          <h2>Prévisions</h2>
+        </div>
+
+        <ForecastLine
+          label="Dette prioritaire"
+          value={forecast.debt}
+          color={priorityDebt ? "var(--red)" : "var(--green)"}
+        />
+        <ForecastLine
+          label="Objectif principal"
+          value={forecast.goal}
+          color="var(--gold)"
+        />
+        <ForecastLine
+          label="Souffle mensuel"
+          value={formatMoney(monthlyAvailable, currency)}
+          color={monthlyAvailable >= 0 ? "var(--green)" : "var(--red)"}
+        />
+      </section>
+
+      <section style={disciplineCard}>
+        <Flag color="var(--gold)" />
+
+        <div style={{ flex: 1 }}>
+          <h2>Discipline OnJarama</h2>
+          <p style={muted}>
+            {firstGoal
+              ? `Vous avez commencé votre parcours ${getStartedLabel(
+                  firstGoal.createdAt
+                )}.`
+              : "Votre parcours commence dès votre premier objectif."}
+          </p>
+
+          <strong style={{ color: getDisciplineColor(disciplineValue) }}>
+            {disciplineValue}% • {getDisciplineLabel(disciplineValue)}
+          </strong>
+
+          <MiniBar
+            progress={disciplineValue}
+            color={getDisciplineColor(disciplineValue)}
+          />
+        </div>
+      </section>
+
+      <section style={card}>
         <div style={header}>
           <TrendingUp color="var(--gold)" />
           <h2>Priorité automatique</h2>
@@ -119,22 +253,17 @@ function MonPlan({
         </button>
       </section>
 
-      {firstGoal && (
-        <section style={disciplineCard}>
-          <Flag color="var(--gold)" />
+      <section style={card}>
+        <div style={header}>
+          <Clock3 color="var(--blue)" />
+          <h2>Vue activité</h2>
+        </div>
 
-          <div>
-            <h2>Discipline OnJarama</h2>
-            <p style={muted}>
-              Vous avez commencé votre parcours {getStartedLabel(firstGoal.createdAt)}.
-            </p>
-            <p style={muted}>
-              Le but n’est pas de mettre de la pression, mais de rappeler que le
-              chemin est déjà commencé.
-            </p>
-          </div>
-        </section>
-      )}
+        <div style={periodGrid}>
+          <PeriodCard title="Cette semaine" stats={weekStats} />
+          <PeriodCard title="Cette année" stats={yearStats} />
+        </div>
+      </section>
 
       {lastActivity && (
         <section style={card}>
@@ -281,7 +410,7 @@ function MonPlan({
           Progression globale : <strong>{goalProgress}%</strong>
         </p>
 
-        <MiniBar progress={goalProgress} />
+        <MiniBar progress={goalProgress} color="var(--green)" />
 
         <button
           onClick={() => setCurrentPage("objectifs")}
@@ -360,6 +489,16 @@ function getNextAction({
   achievedGoals,
   currency,
 }) {
+  if (closestGoal && closestGoal.progress >= 95 && closestGoal.progress < 100) {
+    return {
+      title: `Finaliser ${closestGoal.title}`,
+      description:
+        "Cet objectif est presque terminé. V9.0 recommande de le finaliser avant de revenir à la prochaine priorité.",
+      button: "Voir mes objectifs",
+      page: "objectifs",
+    };
+  }
+
   if (priorityDebt) {
     return {
       title: `Réduire ${priorityDebt.name}`,
@@ -411,29 +550,194 @@ function getNextAction({
   };
 }
 
+function calculateOnJaramaScore({
+  monthlyIncome,
+  monthlyAvailable,
+  monthlySavings,
+  debtTotal,
+  goalProgress,
+  achievedGoals,
+  disciplineValue,
+}) {
+  let score = 42;
+
+  if (monthlyIncome > 0) score += 10;
+  if (monthlyAvailable > 0) score += 16;
+  if (monthlySavings > 0) score += 10;
+  if (debtTotal === 0) score += 12;
+  if (goalProgress > 0) score += Math.min(12, Math.round(goalProgress / 8));
+  if (achievedGoals.length > 0) score += 8;
+  if (disciplineValue > 0) score += Math.min(16, Math.round(disciplineValue / 6));
+
+  if (monthlyAvailable < 0) score -= 18;
+  if (monthlyIncome > 0 && debtTotal > monthlyIncome * 6) score -= 12;
+
+  const value = Math.max(0, Math.min(100, score));
+
+  if (value >= 80) {
+    return {
+      value,
+      color: "var(--green)",
+      label: "Solide",
+      message: "Votre base est forte. Continuez à protéger votre marge.",
+    };
+  }
+
+  if (value >= 55) {
+    return {
+      value,
+      color: "var(--gold)",
+      label: "En progression",
+      message:
+        "Votre plan avance. La priorité est de garder une action claire chaque semaine.",
+    };
+  }
+
+  return {
+    value,
+    color: "var(--red)",
+    label: "À renforcer",
+    message:
+      "Votre priorité est de reprendre du souffle mensuel et de réduire la pression.",
+  };
+}
+
+function buildForecast({ priorityDebt, mainGoal, monthlyAvailable, monthlySavings }) {
+  const monthlyCapacity = Math.max(0, monthlyAvailable + monthlySavings);
+
+  return {
+    debt: priorityDebt
+      ? estimateCompletion(priorityDebt.balance, monthlyCapacity)
+      : "Aucune dette prioritaire",
+    goal: mainGoal
+      ? estimateCompletion(getGoalRemaining(mainGoal), monthlyCapacity)
+      : "Aucun objectif principal",
+  };
+}
+
+function estimateCompletion(amount, monthlyCapacity) {
+  const remaining = Number(amount || 0);
+
+  if (remaining <= 0) return "Atteint";
+  if (monthlyCapacity <= 0) return "À définir";
+
+  const months = Math.max(1, Math.ceil(remaining / monthlyCapacity));
+  const date = new Date();
+  date.setMonth(date.getMonth() + months);
+
+  return date.toLocaleDateString("fr-CA", {
+    year: "numeric",
+    month: "short",
+  });
+}
+
+function getPeriodStats(history, daysBack) {
+  const now = Date.now();
+  const since = now - daysBack * 24 * 60 * 60 * 1000;
+
+  const items = history.filter((item) => {
+    const time = new Date(item.createdAt || 0).getTime();
+    return time >= since;
+  });
+
+  return {
+    total: items.length,
+    deposits: items.filter((item) => item.type === "depot").length,
+    victories: items.filter((item) => item.type === "victoire").length,
+  };
+}
+
+function PeriodCard({ title, stats }) {
+  return (
+    <div style={periodCard}>
+      <strong>{title}</strong>
+      <p style={mutedSmall}>{stats.total} activités</p>
+      <p style={mutedSmall}>{stats.deposits} dépôts</p>
+      <p style={mutedSmall}>{stats.victories} victoires</p>
+    </div>
+  );
+}
+
+function DecisionLine({ text, ok }) {
+  return (
+    <div style={{ ...decisionLine, borderColor: ok ? "var(--green)" : "var(--red)" }}>
+      <span>{ok ? "✅" : "⚠️"}</span>
+      <small>{text}</small>
+    </div>
+  );
+}
+
+function ForecastLine({ label, value, color }) {
+  return (
+    <div style={forecastLine}>
+      <span>{label}</span>
+      <strong style={{ color }}>{value}</strong>
+    </div>
+  );
+}
+
 function ProgressLine({ goal, currency }) {
-  const target = Number(goal.targetAmount || 0);
-  const current = Number(goal.currentAmount || 0);
-  const progress =
-    target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+  const progress = getGoalProgress(goal);
 
   return (
     <>
       <p style={muted}>
-        {formatMoney(current, currency)} / {formatMoney(target, currency)}
+        {formatMoney(goal.currentAmount, currency)} /{" "}
+        {formatMoney(goal.targetAmount, currency)}
       </p>
-      <MiniBar progress={progress} />
+      <MiniBar progress={progress} color="var(--green)" />
       <p style={muted}>Progression : {progress}%</p>
     </>
   );
 }
 
-function MiniBar({ progress }) {
+function MiniBar({ progress, color = "var(--green)" }) {
   return (
     <div style={barBg}>
-      <div style={{ ...barFill, width: `${progress}%` }} />
+      <div style={{ ...barFill, width: `${progress}%`, background: color }} />
     </div>
   );
+}
+
+function getGoalProgress(goal) {
+  const target = Number(goal?.targetAmount || 0);
+  const current = Number(goal?.currentAmount || 0);
+
+  if (target <= 0) return 0;
+
+  return Math.min(100, Math.round((current / target) * 100));
+}
+
+function getGoalRemaining(goal) {
+  return Math.max(
+    0,
+    Number(goal?.targetAmount || 0) - Number(goal?.currentAmount || 0)
+  );
+}
+
+function calculateDisciplineFromHistory(history, goals) {
+  let score = 0;
+
+  if (goals.length > 0) score += 30;
+  if (history.length > 0) score += 20;
+  if (history.some((item) => item.type === "depot")) score += 25;
+  if (history.some((item) => item.type === "victoire")) score += 25;
+
+  return Math.min(100, score);
+}
+
+function getDisciplineColor(score) {
+  if (score <= 25) return "var(--red)";
+  if (score <= 50) return "var(--gold)";
+  if (score <= 75) return "var(--blue)";
+  return "var(--green)";
+}
+
+function getDisciplineLabel(score) {
+  if (score <= 25) return "Départ";
+  if (score <= 50) return "En mouvement";
+  if (score <= 75) return "Régulier";
+  return "Solide";
 }
 
 function labelType(type) {
@@ -478,6 +782,22 @@ function getStartedLabel(createdAt) {
   return `il y a ${days} jours`;
 }
 
+const pageHead = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: "14px",
+  alignItems: "flex-start",
+};
+
+const eyebrow = {
+  margin: 0,
+  color: "var(--gold)",
+  fontSize: "12px",
+  fontWeight: "900",
+  letterSpacing: ".04em",
+  textTransform: "uppercase",
+};
+
 const card = {
   background: "var(--bg-card)",
   border: "1px solid var(--border)",
@@ -486,9 +806,26 @@ const card = {
   marginTop: "20px",
 };
 
-const priorityCard = {
-  background: "linear-gradient(135deg, rgba(212,175,55,.18), var(--bg-card))",
+const brainCard = {
+  background:
+    "radial-gradient(circle at top right, rgba(212,175,55,.22), transparent 34%), linear-gradient(135deg, rgba(56,189,248,.10), var(--bg-card))",
   border: "1px solid var(--gold)",
+  borderRadius: "24px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const scoreCard = (color) => ({
+  background: "var(--bg-card)",
+  border: `1px solid ${color}`,
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+});
+
+const calendarCard = {
+  background: "linear-gradient(135deg, rgba(56,189,248,.12), var(--bg-card))",
+  border: "1px solid var(--blue)",
   borderRadius: "22px",
   padding: "20px",
   marginTop: "20px",
@@ -541,6 +878,66 @@ const header = {
   marginBottom: "12px",
 };
 
+const scoreRow = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "12px",
+};
+
+const scoreValue = {
+  fontSize: "42px",
+  lineHeight: 1,
+};
+
+const scoreBadge = {
+  border: "1px solid var(--gold)",
+  borderRadius: "999px",
+  padding: "7px 10px",
+  fontSize: "12px",
+  fontWeight: "900",
+};
+
+const decisionGrid = {
+  display: "grid",
+  gap: "8px",
+  marginTop: "14px",
+};
+
+const decisionLine = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "13px",
+  padding: "10px",
+  display: "flex",
+  gap: "8px",
+  alignItems: "center",
+};
+
+const forecastLine = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "14px",
+  padding: "12px",
+  marginTop: "10px",
+  display: "flex",
+  justifyContent: "space-between",
+  gap: "12px",
+};
+
+const periodGrid = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "10px",
+};
+
+const periodCard = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "12px",
+};
+
 const barBg = {
   height: "10px",
   background: "var(--bg-main)",
@@ -552,7 +949,6 @@ const barBg = {
 const barFill = {
   height: "100%",
   borderRadius: "999px",
-  background: "var(--green)",
 };
 
 const typeBadge = {
