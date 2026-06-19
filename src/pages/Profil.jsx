@@ -2,11 +2,13 @@ import {
   BookOpen,
   Camera,
   CheckCircle,
+  Cloud,
   Contact,
   Globe,
   HelpCircle,
   Info,
   Lock,
+  LogOut,
   Mail,
   PlayCircle,
   Share2,
@@ -22,6 +24,18 @@ const pageText = {
     subtitle: "Compte, crédits, partage et informations OnJarama.",
     user: "Utilisateur OnJarama",
     beta: "Version bêta locale",
+    connected: "Compte connecté",
+    guest: "Mode invité",
+    cloudReady: "Cloud Supabase prêt",
+    cloudNotReady: "Cloud non configuré",
+    googleLogin: "Connexion Google",
+    microsoftLogin: "Connexion Microsoft",
+    signOut: "Déconnexion",
+    accountEmail: "E-mail",
+    localModeText:
+      "Vous utilisez OnJarama Path en mode invité. Les données restent locales sur cet appareil.",
+    connectedText:
+      "Votre session est active. La synchronisation cloud sera activée progressivement.",
     photoSoon: "Photo bientôt",
     account: "Compte",
     country: "Pays",
@@ -56,7 +70,8 @@ const pageText = {
     security: "Sécurité",
     securityText: "PIN, biométrie et connexion sécurisée prévus plus tard.",
     tips: "Conseils & astuces",
-    tipsText: "Touchez une tuile pour l’ouvrir. Retournez les objectifs pour voir les détails.",
+    tipsText:
+      "Touchez une tuile pour l’ouvrir. Retournez les objectifs pour voir les détails.",
     about: "À propos",
     aboutText: "OnJarama Path accompagne vos objectifs financiers.",
     share: "Partager / Copier le lien",
@@ -82,6 +97,18 @@ const pageText = {
     subtitle: "Account, credits, sharing and OnJarama information.",
     user: "OnJarama User",
     beta: "Local beta version",
+    connected: "Connected account",
+    guest: "Guest mode",
+    cloudReady: "Supabase cloud ready",
+    cloudNotReady: "Cloud not configured",
+    googleLogin: "Sign in with Google",
+    microsoftLogin: "Sign in with Microsoft",
+    signOut: "Sign out",
+    accountEmail: "Email",
+    localModeText:
+      "You are using OnJarama Path in guest mode. Data stays local on this device.",
+    connectedText:
+      "Your session is active. Cloud synchronization will be enabled progressively.",
     photoSoon: "Photo coming soon",
     account: "Account",
     country: "Country",
@@ -142,6 +169,18 @@ const pageText = {
     subtitle: "Cuenta, créditos, compartir e información OnJarama.",
     user: "Usuario OnJarama",
     beta: "Versión beta local",
+    connected: "Cuenta conectada",
+    guest: "Modo invitado",
+    cloudReady: "Cloud Supabase listo",
+    cloudNotReady: "Cloud no configurado",
+    googleLogin: "Conexión Google",
+    microsoftLogin: "Conexión Microsoft",
+    signOut: "Cerrar sesión",
+    accountEmail: "Correo",
+    localModeText:
+      "Usas OnJarama Path en modo invitado. Los datos permanecen locales en este dispositivo.",
+    connectedText:
+      "Tu sesión está activa. La sincronización cloud se activará progresivamente.",
     photoSoon: "Foto próximamente",
     account: "Cuenta",
     country: "País",
@@ -204,6 +243,7 @@ function Profil({
   setCurrentPage,
   selectedGoals,
   disciplineScore,
+  auth,
 }) {
   const t = getText(settings);
   const p = pageText[settings?.language || "FR"] || pageText.FR;
@@ -224,6 +264,10 @@ function Profil({
   const daysSinceStart = getDaysSinceStart(goals);
   const disciplineValue = disciplineScore?.score || 0;
   const disciplineLabel = disciplineScore?.label || "Départ";
+
+  const isConfigured = Boolean(auth?.isConfigured);
+  const isConnected = Boolean(auth?.isConnected);
+  const userEmail = auth?.user?.email || "";
 
   function shareApp() {
     const link = window.location.origin;
@@ -251,8 +295,8 @@ function Profil({
         </div>
 
         <div>
-          <h2>{p.user}</h2>
-          <p style={muted}>{p.beta}</p>
+          <h2>{isConnected ? p.connected : p.user}</h2>
+          <p style={muted}>{isConnected ? p.connectedText : p.beta}</p>
           <p style={proud}>{p.proud}</p>
         </div>
 
@@ -261,14 +305,63 @@ function Profil({
         </button>
       </section>
 
+      <section style={authCard(isConnected)}>
+        <div style={header}>
+          <Cloud color={isConnected ? "var(--green)" : "var(--gold)"} />
+          <h2>OnJarama Cloud</h2>
+        </div>
+
+        <InfoRow
+          label="Statut"
+          value={isConnected ? p.connected : p.guest}
+        />
+
+        <InfoRow
+          label="Supabase"
+          value={isConfigured ? p.cloudReady : p.cloudNotReady}
+        />
+
+        {isConnected && (
+          <InfoRow label={p.accountEmail} value={userEmail || "Compte actif"} />
+        )}
+
+        <p style={muted}>
+          {isConnected ? p.connectedText : p.localModeText}
+        </p>
+
+        {!isConnected ? (
+          <div style={authActions}>
+            <button
+              onClick={auth?.signInWithGoogle}
+              disabled={!isConfigured}
+              style={googleBtn}
+            >
+              <Globe size={18} />
+              {p.googleLogin}
+            </button>
+
+            <button
+              onClick={auth?.signInWithMicrosoft}
+              disabled={!isConfigured}
+              style={microsoftBtn}
+            >
+              <Cloud size={18} />
+              {p.microsoftLogin}
+            </button>
+          </div>
+        ) : (
+          <button onClick={auth?.signOut} style={logoutBtn}>
+            <LogOut size={18} />
+            {p.signOut}
+          </button>
+        )}
+      </section>
+
       <Section icon={<Trophy />} title={p.stats} color="var(--gold)">
         <InfoRow label={p.activeGoals} value={activeGoalsCount} />
         <InfoRow label={p.achievedGoals} value={achievedGoalsCount} />
         <InfoRow label={p.discipline} value={`${disciplineValue}%`} />
-        <InfoRow
-          label={p.sinceStart}
-          value={`${daysSinceStart} ${p.days}`}
-        />
+        <InfoRow label={p.sinceStart} value={`${daysSinceStart} ${p.days}`} />
       </Section>
 
       <section style={card}>
@@ -320,7 +413,7 @@ function Profil({
       </Section>
 
       <Section icon={<CheckCircle />} title={p.app} color="var(--green)">
-        <InfoRow label={p.version} value="V8.4 Beta" />
+        <InfoRow label={p.version} value="V10.1 Auth UI" />
         <InfoRow label={p.testerMode} value="ON" />
         <InfoRow label={p.pwa} value="ON" />
         <InfoRow label={p.localBackup} value="ON" />
@@ -515,6 +608,16 @@ const profileCard = {
   alignItems: "center",
 };
 
+const authCard = (connected) => ({
+  background: connected
+    ? "linear-gradient(135deg, rgba(34,197,94,.15), var(--bg-card))"
+    : "linear-gradient(135deg, rgba(212,175,55,.14), var(--bg-card))",
+  border: `1px solid ${connected ? "var(--green)" : "var(--gold)"}`,
+  borderRadius: "22px",
+  padding: "18px",
+  marginTop: "16px",
+});
+
 const avatar = {
   width: "72px",
   height: "72px",
@@ -534,6 +637,56 @@ const photoBtn = {
   borderRadius: "14px",
   padding: "12px",
   display: "flex",
+  justifyContent: "center",
+  gap: "8px",
+};
+
+const authActions = {
+  display: "grid",
+  gridTemplateColumns: "1fr",
+  gap: "10px",
+  marginTop: "14px",
+};
+
+const googleBtn = {
+  width: "100%",
+  border: "1px solid var(--gold)",
+  borderRadius: "14px",
+  padding: "14px",
+  background: "rgba(212,175,55,.13)",
+  color: "var(--gold)",
+  fontWeight: "900",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+};
+
+const microsoftBtn = {
+  width: "100%",
+  border: "1px solid var(--blue)",
+  borderRadius: "14px",
+  padding: "14px",
+  background: "rgba(56,189,248,.13)",
+  color: "var(--blue)",
+  fontWeight: "900",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+};
+
+const logoutBtn = {
+  width: "100%",
+  border: "1px solid var(--red)",
+  borderRadius: "14px",
+  padding: "14px",
+  marginTop: "14px",
+  background: "rgba(239,68,68,.12)",
+  color: "var(--red)",
+  fontWeight: "900",
+  display: "flex",
+  alignItems: "center",
   justifyContent: "center",
   gap: "8px",
 };

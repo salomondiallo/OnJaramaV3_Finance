@@ -13,6 +13,7 @@ import {
 
 import useAppState from "./hooks/useAppState";
 import useNavigation from "./hooks/useNavigation";
+import useAuth from "./hooks/useAuth";
 
 import TopBar from "./components/TopBar";
 import BottomNav from "./components/BottomNav";
@@ -39,6 +40,7 @@ import Historique from "./pages/Historique";
 
 function App() {
   const appState = useAppState();
+  const auth = useAuth();
 
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
@@ -100,10 +102,11 @@ function App() {
   const pageProps = useMemo(
     () => ({
       ...appState,
+      auth,
       setCurrentPage,
       goBack,
     }),
-    [appState, setCurrentPage, goBack]
+    [appState, auth, setCurrentPage, goBack]
   );
 
   const pages = {
@@ -271,25 +274,21 @@ function ContextualNavigation({ currentPage, setCurrentPage }) {
   const actions = {
     dettes: {
       icon: <CreditCard size={16} />,
-      title: "Dette",
       action: "Simuler remboursement",
       page: "simulateur",
     },
     epargne: {
       icon: <PiggyBank size={16} />,
-      title: "Épargne",
       action: "Voir Mon Plan",
       page: "monplan",
     },
     objectifs: {
       icon: <Target size={16} />,
-      title: "Objectifs",
       action: "Voir parcours",
       page: "parcours",
     },
     paiements: {
       icon: <Sparkles size={16} />,
-      title: "Paiements",
       action: "Voir dettes",
       page: "dettes",
     },
