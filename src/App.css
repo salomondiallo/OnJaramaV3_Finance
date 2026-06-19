@@ -165,7 +165,7 @@
   padding: 10px;
   box-shadow: 0 18px 40px var(--shadow);
   z-index: 1100;
-  animation: slideMenuIn 0.18s ease;
+  animation: menuSlideIn 0.22s ease;
   backdrop-filter: blur(10px);
 }
 
@@ -604,4 +604,143 @@ img {
   100% {
     box-shadow: 0 0 0 rgba(34, 197, 94, 0);
   }
+}@keyframes victoryPop {
+
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.topbar-menu-head {
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: rgba(212, 175, 55, 0.1);
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 10px;
+  display: grid;
+  gap: 4px;
+}
+
+.topbar-menu-head strong {
+  color: var(--gold);
+}
+
+.topbar-menu-head span {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.topbar-close-btn {
+  border-color: rgba(239, 68, 68, 0.42) !important;
+  color: var(--red) !important;
+}
+
+.bottom-nav-btn.active .bottom-nav-icon {
+  color: var(--gold);
+  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.35));
+}
+
+.page-scroll-shell {
+  scroll-behavior: smooth;
+}
+.bottom-center-plan {
+  width: 72px;
+  height: 72px;
+  margin-top: -26px;
+
+  border-radius: 999px;
+  border: 2px solid var(--gold);
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(212, 175, 55, 0.25),
+      var(--bg-card)
+    );
+
+  color: var(--gold);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 3px;
+
+  font-size: 10px;
+  font-weight: 900;
+
+  box-shadow:
+    0 0 18px rgba(212, 175, 55, 0.28),
+    0 0 32px rgba(212, 175, 55, 0.14);
+
+  transition: all .22s ease;
+}
+
+.bottom-center-plan.active {
+  transform: translateY(-4px);
+
+  box-shadow:
+    0 0 22px rgba(212,175,55,.45),
+    0 0 44px rgba(212,175,55,.25);
+}
+.bottom-nav-btn.active {
+  color: var(--gold);
+
+  transform: translateY(-2px);
+}
+
+.bottom-nav-btn.active .bottom-nav-icon {
+  color: var(--gold);
+
+  filter:
+    drop-shadow(0 0 8px rgba(212,175,55,.45))
+    drop-shadow(0 0 16px rgba(212,175,55,.25));
+}
+.topbar-left {
+  gap: 10px;
+}
+
+.topbar-left strong {
+  font-size: 13px;
+  color: var(--gold);
+}
+@keyframes menuSlideIn {
+
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  touch-action: manipulation;
+}
+.context-nav-btn {
+  border-radius: 999px;
+}
+.bottom-nav-btn,
+.bottom-logo-btn,
+.bottom-center-plan {
+  transition:
+    transform .2s ease,
+    box-shadow .2s ease,
+    color .2s ease;
+}
+.accueil-hero {
+  will-change: transform;
 }

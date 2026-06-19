@@ -1,10 +1,10 @@
 import {
-  Route,
-  Target,
   Brain,
   Calculator,
   ChevronDown,
   ChevronUp,
+  Route,
+  Target,
 } from "lucide-react";
 
 function BottomNav({ currentPage, setCurrentPage, navHidden, setNavHidden }) {
@@ -44,12 +44,18 @@ function BottomNav({ currentPage, setCurrentPage, navHidden, setNavHidden }) {
           onClick={() => go("parcours")}
         />
 
-        <NavButton
-          active={currentPage === "monplan"}
-          icon={<Brain size={20} />}
-          label="Mon Plan"
+        <button
           onClick={() => go("monplan")}
-        />
+          className={`bottom-center-plan ${
+            currentPage === "monplan" ? "active" : ""
+          }`}
+          aria-label="Mon Plan"
+        >
+          <span>
+            <Brain size={24} />
+          </span>
+          <strong>Mon Plan</strong>
+        </button>
 
         <NavButton
           active={currentPage === "objectifs"}

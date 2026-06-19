@@ -1,9 +1,10 @@
 import {
   ArrowLeft,
   Bell,
+  ChevronRight,
   Clock3,
   Globe2,
-  Menu,
+  Home,
   Settings,
   ShieldCheck,
   UserCircle,
@@ -46,35 +47,64 @@ function TopBar({
   return (
     <div className={`topbar ${isMainPage ? "topbar-main" : ""}`}>
       <div className="topbar-left">
-        {!isMainPage && canGoBack && (
+        {!isMainPage && canGoBack ? (
           <button onClick={goBack} className="topbar-back" aria-label="Retour">
             <ArrowLeft size={20} />
           </button>
-        )}
-
-        {isMainPage && (
+        ) : (
           <img
             src="/onjarama-path-logo.png"
             alt="OnJarama Path"
             className="topbar-logo"
           />
         )}
+
+        <div style={brandBlock}>
+          <strong>ONJARAMA PATH</strong>
+          <span style={breadcrumb}>
+            Accueil
+            {currentPage !== "accueil" && (
+              <>
+                <ChevronRight size={12} />
+                {getPageLabel(currentPage)}
+              </>
+            )}
+          </span>
+        </div>
       </div>
 
-      <button
-        onClick={() => setMenuOpen(!menuOpen)}
-        className="topbar-menu-btn"
-        aria-label="Menu"
-        style={menuButtonWithBadge}
-      >
-        {menuOpen ? <X size={20} /> : <Menu size={20} />}
+      <div style={topActions}>
+        <button
+          onClick={() => openPage("reglages", true)}
+          className="topbar-menu-btn"
+          aria-label="Langue"
+        >
+          FR/EN
+        </button>
 
-        {!menuOpen && unreadCount > 0 && (
-          <span style={hamburgerBadge}>
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
-        )}
-      </button>
+        <button
+          onClick={() => openPage("notifications")}
+          className="topbar-menu-btn"
+          aria-label="Notifications"
+          style={menuButtonWithBadge}
+        >
+          <Bell size={19} />
+
+          {unreadCount > 0 && (
+            <span style={hamburgerBadge}>
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setMenuOpen(true)}
+          className="topbar-menu-btn"
+          aria-label="Profil"
+        >
+          <UserCircle size={21} />
+        </button>
+      </div>
 
       {menuOpen && (
         <>
@@ -84,15 +114,20 @@ function TopBar({
             aria-label="Fermer le menu"
           />
 
-          <div className="topbar-menu-panel">
+          <div className="topbar-menu-panel" style={slidePanel}>
             <div className="topbar-menu-head">
-              <strong>OnJarama Path V8</strong>
-              <span>Menu personnel</span>
+              <strong>OnJarama Path V9.1</strong>
+              <span>Navigation Premium</span>
             </div>
+
+            <button onClick={() => openPage("accueil")}>
+              <Home size={18} />
+              Accueil
+            </button>
 
             <button onClick={() => openPage("profil")}>
               <UserCircle size={18} />
-              Profil
+              Mon profil
             </button>
 
             <button onClick={() => openPage("reglages")}>
@@ -120,7 +155,7 @@ function TopBar({
 
             <button onClick={() => openPage("reglages")}>
               <ShieldCheck size={18} />
-              Confidentialité
+              Sécurité & confidentialité
             </button>
 
             <div className="topbar-credit">
@@ -143,6 +178,56 @@ function TopBar({
     </div>
   );
 }
+
+function getPageLabel(page) {
+  const labels = {
+    accueil: "Accueil",
+    situation: "Situation",
+    objectifs: "Objectifs",
+    parcours: "Parcours",
+    monplan: "Mon Plan",
+    simulateur: "Simulateur",
+    dettes: "Dettes",
+    epargne: "Épargne",
+    paiements: "Paiements",
+    transactions: "Transactions",
+    assistant: "Assistant IA",
+    budget: "Budget",
+    explorer: "Explorer",
+    horizon: "Horizon",
+    profil: "Profil",
+    reglages: "Réglages",
+    notifications: "Notifications",
+    historique: "Historique",
+  };
+
+  return labels[page] || "Page";
+}
+
+const brandBlock = {
+  display: "grid",
+  gap: "2px",
+  minWidth: 0,
+};
+
+const breadcrumb = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "3px",
+  color: "var(--text-muted)",
+  fontSize: "11px",
+  whiteSpace: "nowrap",
+};
+
+const topActions = {
+  display: "flex",
+  alignItems: "center",
+  gap: "7px",
+};
+
+const slidePanel = {
+  animation: "menuSlideIn .22s ease",
+};
 
 const menuButtonWithBadge = {
   position: "relative",

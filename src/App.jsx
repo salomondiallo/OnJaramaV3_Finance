@@ -1,7 +1,15 @@
 import "./App.css";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Trophy, X } from "lucide-react";
+import {
+  CreditCard,
+  PiggyBank,
+  Route,
+  Sparkles,
+  Target,
+  Trophy,
+  X,
+} from "lucide-react";
 
 import useAppState from "./hooks/useAppState";
 import useNavigation from "./hooks/useNavigation";
@@ -62,11 +70,17 @@ function App() {
     document.documentElement.style.overscrollBehavior = "none";
     document.body.style.overscrollBehavior = "none";
     document.body.style.overflow = "hidden";
+    document.body.style.userSelect = "none";
+    document.body.style.webkitUserSelect = "none";
+    document.body.style.touchAction = "manipulation";
 
     return () => {
       document.documentElement.style.overscrollBehavior = "";
       document.body.style.overscrollBehavior = "";
       document.body.style.overflow = "";
+      document.body.style.userSelect = "";
+      document.body.style.webkitUserSelect = "";
+      document.body.style.touchAction = "";
     };
   }, []);
 
@@ -195,6 +209,11 @@ function App() {
           notifications={appState.notifications}
         />
 
+        <ContextualNavigation
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+        />
+
         <div className="page-stage">
           <div className="page-scroll-shell">
             {pages[currentPage] || <Accueil {...pageProps} />}
@@ -243,6 +262,89 @@ function App() {
     </div>
   );
 }
+
+function ContextualNavigation({ currentPage, setCurrentPage }) {
+  const contextPages = ["dettes", "epargne", "objectifs", "paiements"];
+
+  if (!contextPages.includes(currentPage)) return null;
+
+  const actions = {
+    dettes: {
+      icon: <CreditCard size={16} />,
+      title: "Dette",
+      action: "Simuler remboursement",
+      page: "simulateur",
+    },
+    epargne: {
+      icon: <PiggyBank size={16} />,
+      title: "Épargne",
+      action: "Voir Mon Plan",
+      page: "monplan",
+    },
+    objectifs: {
+      icon: <Target size={16} />,
+      title: "Objectifs",
+      action: "Voir parcours",
+      page: "parcours",
+    },
+    paiements: {
+      icon: <Sparkles size={16} />,
+      title: "Paiements",
+      action: "Voir dettes",
+      page: "dettes",
+    },
+  };
+
+  const context = actions[currentPage];
+
+  return (
+    <div style={contextBar}>
+      <button onClick={() => setCurrentPage("parcours")} style={contextBack}>
+        <Route size={16} />
+        Retour au Parcours
+      </button>
+
+      <button onClick={() => setCurrentPage(context.page)} style={contextAction}>
+        {context.icon}
+        {context.action}
+      </button>
+    </div>
+  );
+}
+
+const contextBar = {
+  display: "flex",
+  gap: "8px",
+  padding: "8px 14px 0",
+};
+
+const contextBack = {
+  flex: 1,
+  border: "1px solid var(--gold)",
+  background: "rgba(212,175,55,.12)",
+  color: "var(--gold)",
+  borderRadius: "999px",
+  padding: "10px 12px",
+  fontWeight: "800",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "7px",
+};
+
+const contextAction = {
+  flex: 1,
+  border: "1px solid var(--border)",
+  background: "var(--bg-card)",
+  color: "var(--text-main)",
+  borderRadius: "999px",
+  padding: "10px 12px",
+  fontWeight: "800",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "7px",
+};
 
 const victoryOverlay = {
   position: "fixed",
