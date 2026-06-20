@@ -10,6 +10,7 @@ import {
   PiggyBank,
   Plane,
   Plus,
+  Route,
   Star,
   Target,
   Trophy,
@@ -49,6 +50,10 @@ const pageText = {
     startedToday: "Commencé aujourd’hui",
     startedAgo: "Commencé il y a",
     lastDeposit: "Dernier dépôt",
+    smartJourney: "Smart Journey",
+    journeyHint:
+      "Chaque objectif est maintenant connecté à votre parcours global.",
+    seeJourney: "Voir dans mon parcours",
   },
 };
 
@@ -364,7 +369,13 @@ const goalTemplates = {
   },
 };
 
-function Objectifs({ selectedGoals, setSelectedGoals, settings, addActivity }) {
+function Objectifs({
+  selectedGoals,
+  setSelectedGoals,
+  settings,
+  addActivity,
+  setCurrentPage,
+}) {
   const t = getText(settings);
   const p = pageText.FR;
   const currency = settings?.currency || "CAD";
@@ -515,6 +526,8 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings, addActivity }) {
       archived: false,
       createdAt: new Date().toISOString(),
       lastDeposit: null,
+      journeyLinked: true,
+      journeyMilestone: "goal_created",
       config: form.values,
     };
 
@@ -524,6 +537,12 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings, addActivity }) {
       "objectif",
       "Objectif créé",
       `${newGoal.title} a été ajouté à vos objectifs.`
+    );
+
+    addActivity?.(
+      "parcours",
+      "Smart Journey",
+      `${newGoal.title} est maintenant connecté au parcours.`
     );
 
     if (shouldHighlight) {
@@ -573,6 +592,12 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings, addActivity }) {
       "Objectif principal",
       `${selectedGoal?.title || "Un objectif"} est maintenant prioritaire.`
     );
+
+    addActivity?.(
+      "parcours",
+      "Objectif principal",
+      `${selectedGoal?.title || "Un objectif"} devient le repère du Smart Journey.`
+    );
   }
 
   function addDeposit(goalId, amount) {
@@ -593,6 +618,12 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings, addActivity }) {
           `${formatMoney(depositAmount, currency)} ajoutés à ${goal.title}.`
         );
 
+        addActivity?.(
+          "parcours",
+          "Progression Smart Journey",
+          `${goal.title} avance avec un nouveau dépôt.`
+        );
+
         if (previousAmount < target && nextAmount >= target) {
           celebrateGoal(goal.id);
           addActivity?.(
@@ -609,9 +640,18 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings, addActivity }) {
             amount: depositAmount,
             date: new Date().toISOString(),
           },
+          journeyLinked: true,
+          journeyMilestone:
+            previousAmount < target && nextAmount >= target
+              ? "goal_achieved"
+              : "deposit_added",
         };
       })
     );
+  }
+
+  function openJourney() {
+    setCurrentPage?.("parcours");
   }
 
   function celebrateGoal(id) {
@@ -626,7 +666,20 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings, addActivity }) {
         currency={currency}
         templates={goalTemplates}
         onOpenCreate={() => window.scrollTo?.({ top: 0, behavior: "smooth" })}
+        onOpenJourney={openJourney}
       />
+
+      <section style={journeyNotice}>
+        <Route color="var(--gold)" />
+        <div>
+          <h2>{p.smartJourney}</h2>
+          <p style={muted}>{p.journeyHint}</p>
+          <button onClick={openJourney} style={journeyButton}>
+            <Route size={17} />
+            {p.seeJourney}
+          </button>
+        </div>
+      </section>
 
       <section
         style={{
@@ -643,7 +696,7 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings, addActivity }) {
               <div style={header}>
                 <Target color="var(--gold)" />
                 <div>
-                  <p style={eyebrow}>Objectifs Premium+ V8.9</p>
+                  <p style={eyebrow}>Objectifs Premium+ V10.5</p>
                   <h1>{t.objectifs || p.smartCategories}</h1>
                 </div>
               </div>
@@ -838,6 +891,7 @@ function Objectifs({ selectedGoals, setSelectedGoals, settings, addActivity }) {
             onDeposit={addDeposit}
             onHighlight={highlightGoal}
             onRemove={removeGoal}
+            onOpenJourney={openJourney}
           />
         ))}
       </section>
@@ -896,6 +950,31 @@ function getGoalStatus(progress) {
 }
 
 const page = { paddingTop: "0" };
+
+const journeyNotice = {
+  background: "linear-gradient(135deg, rgba(212,175,55,.16), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "22px",
+  padding: "18px",
+  marginTop: "16px",
+  display: "flex",
+  gap: "12px",
+};
+
+const journeyButton = {
+  marginTop: "12px",
+  width: "100%",
+  padding: "12px",
+  borderRadius: "14px",
+  border: "1px solid var(--gold)",
+  background: "rgba(212,175,55,.13)",
+  color: "var(--gold)",
+  fontWeight: "900",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+};
 
 const heroCard = {
   background:

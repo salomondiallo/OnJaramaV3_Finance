@@ -1,7 +1,12 @@
-import { Flag, Sparkles, Target, Trophy } from "lucide-react";
+import { Calendar, Flag, Route, Sparkles, Target, Trophy } from "lucide-react";
 import { formatMoney } from "../utils/formatters";
 
-function GoalPremiumDashboard({ goals, currency, templates }) {
+function GoalPremiumDashboard({
+  goals,
+  currency,
+  templates,
+  onOpenJourney,
+}) {
   const activeGoals = Array.isArray(goals) ? goals : [];
   const goalOfMoment =
     activeGoals.find((goal) => goal.highlighted) ||
@@ -19,12 +24,20 @@ function GoalPremiumDashboard({ goals, currency, templates }) {
   );
 
   const globalProgress =
-    totalTarget > 0 ? Math.min(100, Math.round((totalCurrent / totalTarget) * 100)) : 0;
+    totalTarget > 0
+      ? Math.min(100, Math.round((totalCurrent / totalTarget) * 100))
+      : 0;
 
   const victories = activeGoals.filter((goal) => goal.progress >= 100).length;
   const nextVictory = activeGoals.find(
     (goal) => goal.progress >= 80 && goal.progress < 100
   );
+
+  const firstGoal = [...activeGoals]
+    .filter((goal) => goal.createdAt)
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))[0];
+
+  const daysSinceStart = getDaysSinceStart(firstGoal?.createdAt);
 
   const color = goalOfMoment
     ? templates?.[goalOfMoment.category]?.color || "var(--gold)"
@@ -34,11 +47,29 @@ function GoalPremiumDashboard({ goals, currency, templates }) {
     <section style={dashboard}>
       <div style={head}>
         <div>
-          <p style={eyebrow}>Objectifs Premium+ V8.9</p>
+          <p style={eyebrow}>Objectifs Premium+ V10.5</p>
           <h1 style={title}>Objectif du moment</h1>
         </div>
 
         <Sparkles color="var(--gold)" />
+      </div>
+
+      <div style={smartJourneyStrip}>
+        <div>
+          <strong>Smart Journey actif</strong>
+          <p style={muted}>
+            {firstGoal
+              ? `Parcours commencé il y a ${daysSinceStart} jour${
+                  daysSinceStart > 1 ? "s" : ""
+                }.`
+              : "Créez un objectif pour démarrer le parcours."}
+          </p>
+        </div>
+
+        <button onClick={onOpenJourney} style={journeyBtn}>
+          <Route size={16} />
+          Parcours
+        </button>
       </div>
 
       {goalOfMoment ? (
@@ -47,7 +78,8 @@ function GoalPremiumDashboard({ goals, currency, templates }) {
             <div>
               <strong>{goalOfMoment.title}</strong>
               <p style={muted}>
-                {goalOfMoment.categoryLabel || templates?.[goalOfMoment.category]?.label}
+                {goalOfMoment.categoryLabel ||
+                  templates?.[goalOfMoment.category]?.label}
                 {goalOfMoment.option ? ` • ${goalOfMoment.option}` : ""}
               </p>
             </div>
@@ -104,6 +136,20 @@ function GoalPremiumDashboard({ goals, currency, templates }) {
           color="var(--purple)"
         />
       </div>
+
+      <div style={journeyStats}>
+        <MiniJourneyStat
+          icon={<Calendar size={16} />}
+          label="Départ"
+          value={firstGoal ? formatDate(firstGoal.createdAt) : "—"}
+        />
+
+        <MiniJourneyStat
+          icon={<Route size={16} />}
+          label="Jours"
+          value={firstGoal ? daysSinceStart : 0}
+        />
+      </div>
     </section>
   );
 }
@@ -118,8 +164,19 @@ function DashStat({ icon, label, value, color }) {
   );
 }
 
+function MiniJourneyStat({ icon, label, value }) {
+  return (
+    <div style={miniJourneyStat}>
+      <span style={{ color: "var(--gold)" }}>{icon}</span>
+      <small>{label}</small>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
 function ScoreRing({ value, color }) {
-  const degree = Math.round((Number(value || 0) / 100) * 360);
+  const safeValue = Math.min(100, Math.max(0, Number(value || 0)));
+  const degree = Math.round((safeValue / 100) * 360);
 
   return (
     <div
@@ -128,9 +185,36 @@ function ScoreRing({ value, color }) {
         background: `conic-gradient(${color} ${degree}deg, rgba(255,255,255,.12) 0deg)`,
       }}
     >
-      <div style={ringInner}>{value}%</div>
+      <div style={ringInner}>{safeValue}%</div>
     </div>
   );
+}
+
+function getDaysSinceStart(createdAt) {
+  if (!createdAt) return 0;
+
+  const start = new Date(createdAt);
+  const now = new Date();
+
+  if (Number.isNaN(start.getTime())) return 0;
+
+  return Math.max(
+    0,
+    Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+  );
+}
+
+function formatDate(dateValue) {
+  if (!dateValue) return "—";
+
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  return date.toLocaleDateString("fr-CA", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 const dashboard = {
@@ -157,6 +241,30 @@ const eyebrow = {
 
 const title = {
   margin: "4px 0 0",
+};
+
+const smartJourneyStrip = {
+  background: "linear-gradient(135deg, rgba(34,197,94,.14), var(--bg-panel))",
+  border: "1px solid var(--green)",
+  borderRadius: "18px",
+  padding: "14px",
+  marginTop: "16px",
+  display: "grid",
+  gridTemplateColumns: "1fr auto",
+  gap: "10px",
+  alignItems: "center",
+};
+
+const journeyBtn = {
+  border: "1px solid var(--gold)",
+  background: "rgba(212,175,55,.12)",
+  color: "var(--gold)",
+  borderRadius: "999px",
+  padding: "10px 12px",
+  fontWeight: "900",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "7px",
 };
 
 const momentCard = {
@@ -192,6 +300,22 @@ const grid = {
 };
 
 const dashStat = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "12px",
+  display: "grid",
+  gap: "5px",
+};
+
+const journeyStats = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "10px",
+  marginTop: "12px",
+};
+
+const miniJourneyStat = {
   background: "var(--bg-panel)",
   border: "1px solid var(--border)",
   borderRadius: "16px",

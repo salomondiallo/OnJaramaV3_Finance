@@ -8,6 +8,7 @@ import {
   Plane,
   Route,
   ShieldCheck,
+  Sparkles,
   Star,
   Target,
   Trophy,
@@ -18,6 +19,18 @@ import { getText } from "../data/translations";
 const pageText = {
   FR: {
     subtitle: "Votre chemin financier, étape par étape.",
+    smartJourney: "Smart Journey",
+    journeyStart: "Départ du parcours",
+    journeyDays: "Jours de parcours",
+    globalProgress: "Progression globale",
+    mainGoal: "Objectif principal",
+    noMainGoal: "À définir",
+    today: "Aujourd’hui",
+    todaySubtitle: "Une action simple pour continuer sans pression.",
+    rhythm: "Rythme OnJarama",
+    continueRhythm: "Continue à ton rythme.",
+    activeDays: "jours actifs",
+    lastUpdate: "Dernière mise à jour",
     nextVictory: "Prochaine victoire",
     recommendedAction: "Action recommandée",
     priorityDebt: "Dette prioritaire",
@@ -27,7 +40,6 @@ const pageText = {
     goalsAmount: "Montant objectifs",
     timeline: "Timeline OnJarama",
     story: "Une histoire claire, pas seulement des chiffres.",
-    today: "Aujourd’hui",
     startingPoint: "Point de départ",
     noDebt: "Aucune dette prioritaire",
     highRate: "Taux élevé",
@@ -55,11 +67,6 @@ const pageText = {
       "Commencez par ajouter votre situation financière et un objectif principal.",
     simulatorAdvice:
       "Un objectif créé depuis le simulateur peut maintenant être suivi ici.",
-    step1: "Étape 1",
-    step2: "Étape 2",
-    step3: "Étape 3",
-    step4: "Étape 4",
-    step5: "Étape 5",
     eliminateDebt: "Éliminer la dette prioritaire",
     secureBase: "Sécuriser la base",
     emergencySubtitle: "Créer une sécurité minimale",
@@ -71,10 +78,28 @@ const pageText = {
     victories: "Victoires",
     noVictory: "Aucune victoire enregistrée pour le moment.",
     openPlan: "Ouvrir Mon Plan",
+    createdGoal: "Premier objectif créé",
+    firstDeposit: "Premier dépôt enregistré",
+    firstVictory: "Première victoire",
+    cloudReady: "Préparation V11 Cloud Journey",
+    cloudText:
+      "Historique, parcours cloud et assistant contextualisé sont préparés pour la prochaine fondation.",
   },
 
   EN: {
     subtitle: "Your financial path, step by step.",
+    smartJourney: "Smart Journey",
+    journeyStart: "Journey start",
+    journeyDays: "Journey days",
+    globalProgress: "Global progress",
+    mainGoal: "Main goal",
+    noMainGoal: "To define",
+    today: "Today",
+    todaySubtitle: "One simple action to keep moving without pressure.",
+    rhythm: "OnJarama Rhythm",
+    continueRhythm: "Keep going at your pace.",
+    activeDays: "active days",
+    lastUpdate: "Last update",
     nextVictory: "Next victory",
     recommendedAction: "Recommended action",
     priorityDebt: "Priority debt",
@@ -84,7 +109,6 @@ const pageText = {
     goalsAmount: "Goals amount",
     timeline: "OnJarama Timeline",
     story: "A clear story, not just numbers.",
-    today: "Today",
     startingPoint: "Starting point",
     noDebt: "No priority debt",
     highRate: "High rate",
@@ -106,17 +130,9 @@ const pageText = {
     addDebtGoal: "Add a debt or goal to create your path.",
     debtAdvice:
       "Your current priority is the debt with the highest rate. Once reduced, your goals will move faster.",
-    goalAdvice:
-      "Your main goal is active. Keep funding it regularly.",
-    startAdvice:
-      "Start by adding your financial situation and one main goal.",
-    simulatorAdvice:
-      "A goal created from the simulator can now be tracked here.",
-    step1: "Step 1",
-    step2: "Step 2",
-    step3: "Step 3",
-    step4: "Step 4",
-    step5: "Step 5",
+    goalAdvice: "Your main goal is active. Keep funding it regularly.",
+    startAdvice: "Start by adding your financial situation and one main goal.",
+    simulatorAdvice: "A goal created from the simulator can now be tracked here.",
     eliminateDebt: "Eliminate priority debt",
     secureBase: "Secure the base",
     emergencySubtitle: "Build minimum security",
@@ -128,10 +144,28 @@ const pageText = {
     victories: "Victories",
     noVictory: "No victory recorded yet.",
     openPlan: "Open My Plan",
+    createdGoal: "First goal created",
+    firstDeposit: "First deposit recorded",
+    firstVictory: "First victory",
+    cloudReady: "V11 Cloud Journey preparation",
+    cloudText:
+      "History, cloud journey and contextual assistant are prepared for the next foundation.",
   },
 
   ES: {
     subtitle: "Tu camino financiero, paso a paso.",
+    smartJourney: "Smart Journey",
+    journeyStart: "Inicio del camino",
+    journeyDays: "Días de camino",
+    globalProgress: "Progreso global",
+    mainGoal: "Objetivo principal",
+    noMainGoal: "Por definir",
+    today: "Hoy",
+    todaySubtitle: "Una acción simple para avanzar sin presión.",
+    rhythm: "Ritmo OnJarama",
+    continueRhythm: "Continúa a tu ritmo.",
+    activeDays: "días activos",
+    lastUpdate: "Última actualización",
     nextVictory: "Próxima victoria",
     recommendedAction: "Acción recomendada",
     priorityDebt: "Deuda prioritaria",
@@ -141,7 +175,6 @@ const pageText = {
     goalsAmount: "Monto de objetivos",
     timeline: "Cronología OnJarama",
     story: "Una historia clara, no solo números.",
-    today: "Hoy",
     startingPoint: "Punto de partida",
     noDebt: "No hay deuda prioritaria",
     highRate: "Tasa alta",
@@ -169,11 +202,6 @@ const pageText = {
       "Empieza agregando tu situación financiera y un objetivo principal.",
     simulatorAdvice:
       "Un objetivo creado desde el simulador ahora puede seguirse aquí.",
-    step1: "Paso 1",
-    step2: "Paso 2",
-    step3: "Paso 3",
-    step4: "Paso 4",
-    step5: "Paso 5",
     eliminateDebt: "Eliminar deuda prioritaria",
     secureBase: "Asegurar la base",
     emergencySubtitle: "Crear una seguridad mínima",
@@ -185,6 +213,12 @@ const pageText = {
     victories: "Victorias",
     noVictory: "No hay victoria registrada por ahora.",
     openPlan: "Abrir Mi Plan",
+    createdGoal: "Primer objetivo creado",
+    firstDeposit: "Primer depósito registrado",
+    firstVictory: "Primera victoria",
+    cloudReady: "Preparación V11 Cloud Journey",
+    cloudText:
+      "Historial, recorrido cloud y asistente contextual están preparados para la próxima base.",
   },
 };
 
@@ -232,21 +266,40 @@ function Parcours({
       ? Math.min(100, Math.round((totalGoalCurrent / totalGoalTarget) * 100))
       : 0;
 
-  const nextVictory = priorityDebt || highlightedGoal || simulatorGoal;
-
   const achievedGoals = goals.filter(
     (goal) =>
       Number(goal.targetAmount || 0) > 0 &&
       Number(goal.currentAmount || 0) >= Number(goal.targetAmount || 0)
   );
 
+  const goalsWithDeposit = goals.filter((goal) => goal.lastDeposit);
   const firstGoal = [...goals]
     .filter((goal) => goal.createdAt)
     .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))[0];
 
+  const lastDepositGoal = [...goalsWithDeposit]
+    .sort(
+      (a, b) =>
+        new Date(b.lastDeposit?.date || 0) - new Date(a.lastDeposit?.date || 0)
+    )[0];
+
   const daysSinceStart = getDaysSinceStart(firstGoal?.createdAt);
+  const journeyStartDate = formatDate(firstGoal?.createdAt, language);
   const disciplineValue = disciplineScore?.score || 0;
   const disciplineLabel = disciplineScore?.label || "Départ";
+
+  const journeyStats = {
+    journeyStartDate,
+    daysSinceStart,
+    globalGoalProgress,
+    mainGoal: highlightedGoal?.title || p.noMainGoal,
+    activeDays: Math.max(0, Math.min(daysSinceStart + 1, goals.length + goalsWithDeposit.length)),
+    lastUpdate: lastDepositGoal?.lastDeposit?.date
+      ? formatDate(lastDepositGoal.lastDeposit.date, language)
+      : firstGoal?.createdAt
+        ? formatDate(firstGoal.createdAt, language)
+        : "—",
+  };
 
   const nextStep = getNextStep({
     priorityDebt,
@@ -256,10 +309,89 @@ function Parcours({
     p,
   });
 
+  const todayActions = getTodayActions({
+    priorityDebt,
+    highlightedGoal,
+    simulatorGoal,
+    goals,
+    p,
+  });
+
+  const nextVictory = priorityDebt || highlightedGoal || simulatorGoal;
+
   return (
     <div className="native-page">
       <h1>{t.parcours}</h1>
       <p style={muted}>{p.subtitle}</p>
+
+      <section style={smartHeaderCard}>
+        <div style={header}>
+          <Route color="var(--gold)" />
+          <div>
+            <p style={eyebrow}>{p.smartJourney}</p>
+            <h2>{p.journeyStart}</h2>
+          </div>
+        </div>
+
+        <div style={journeyGrid}>
+          <JourneyStat
+            icon={<Flag size={18} />}
+            label={p.journeyStart}
+            value={firstGoal ? journeyStats.journeyStartDate : "—"}
+            color="var(--gold)"
+          />
+          <JourneyStat
+            icon={<Calendar size={18} />}
+            label={p.journeyDays}
+            value={firstGoal ? `${daysSinceStart}` : "0"}
+            color="var(--blue)"
+          />
+          <JourneyStat
+            icon={<Target size={18} />}
+            label={p.mainGoal}
+            value={journeyStats.mainGoal}
+            color="var(--green)"
+          />
+          <JourneyStat
+            icon={<Trophy size={18} />}
+            label={p.globalProgress}
+            value={`${globalGoalProgress}%`}
+            color="var(--purple)"
+          />
+        </div>
+
+        <p style={muted}>
+          {firstGoal
+            ? `${p.started} il y a ${daysSinceStart} jour${
+                daysSinceStart > 1 ? "s" : ""
+              }.`
+            : p.notStarted}
+        </p>
+      </section>
+
+      <section style={todayCard}>
+        <div style={header}>
+          <Sparkles color="var(--green)" />
+          <div>
+            <p style={eyebrowGreen}>{p.today}</p>
+            <h2>{nextStep.text}</h2>
+            <p style={muted}>{p.todaySubtitle}</p>
+          </div>
+        </div>
+
+        <div style={todayList}>
+          {todayActions.map((action) => (
+            <div key={action} style={todayLine}>
+              <CheckCircle size={17} color="var(--green)" />
+              <span>{action}</span>
+            </div>
+          ))}
+        </div>
+
+        <button onClick={() => setCurrentPage(nextStep.page)} style={greenBtn}>
+          {nextStep.button}
+        </button>
+      </section>
 
       <section style={heroCard}>
         <Trophy color="var(--gold)" size={38} />
@@ -297,14 +429,11 @@ function Parcours({
         <Flag color="var(--gold)" />
 
         <div>
-          <h2>{p.discipline}</h2>
+          <h2>{p.rhythm}</h2>
 
           <p style={muted}>
-            {firstGoal
-              ? `${p.started} il y a ${daysSinceStart} jour${
-                  daysSinceStart > 1 ? "s" : ""
-                }.`
-              : p.notStarted}
+            {journeyStats.activeDays} {p.activeDays} • {p.lastUpdate} :{" "}
+            {journeyStats.lastUpdate}
           </p>
 
           <strong style={{ color: getDisciplineColor(disciplineValue) }}>
@@ -320,6 +449,8 @@ function Parcours({
               }}
             />
           </div>
+
+          <p style={muted}>{p.continueRhythm}</p>
         </div>
       </section>
 
@@ -393,19 +524,74 @@ function Parcours({
           </div>
         </div>
 
-        <TimelineStep
+        <Milestone
           icon={<Flag />}
-          stepLabel="🚩 Départ"
           title={p.startingPoint}
-          subtitle="OnJarama analyse votre point de départ financier."
-          current={formatMoney(0, currency)}
-          target="Plan"
-          remaining="À construire"
-          progress={100}
-          action={p.startingPoint}
+          subtitle={
+            firstGoal
+              ? `${p.journeyStart} : ${journeyStartDate}`
+              : p.notStarted
+          }
+          active={Boolean(firstGoal)}
           color="var(--blue)"
-          p={p}
         />
+
+        <Milestone
+          icon={<Target />}
+          title={p.createdGoal}
+          subtitle={firstGoal?.title || p.addDebtGoal}
+          active={Boolean(firstGoal)}
+          color="var(--gold)"
+        />
+
+        <Milestone
+          icon={<CreditCard />}
+          title={priorityDebt ? p.eliminateDebt : p.priorityDebt}
+          subtitle={
+            priorityDebt
+              ? `${priorityDebt.name} · ${p.highRate} : ${priorityDebt.interestRate}%`
+              : p.noDebt
+          }
+          active={Boolean(priorityDebt)}
+          color={priorityDebt ? "var(--red)" : "var(--green)"}
+        />
+
+        <Milestone
+          icon={<ShieldCheck />}
+          title={p.firstDeposit}
+          subtitle={
+            lastDepositGoal
+              ? `${lastDepositGoal.title} • +${formatMoney(
+                  lastDepositGoal.lastDeposit.amount,
+                  currency
+                )}`
+              : p.emergencySubtitle
+          }
+          active={Boolean(lastDepositGoal)}
+          color="var(--green)"
+        />
+
+        <Milestone
+          icon={<Trophy />}
+          title={p.firstVictory}
+          subtitle={
+            achievedGoals[0]
+              ? achievedGoals[0].title
+              : p.noVictory
+          }
+          active={achievedGoals.length > 0}
+          color="var(--gold)"
+        />
+      </section>
+
+      <section style={card}>
+        <div style={header}>
+          <Route color="var(--green)" />
+          <div>
+            <h2>{p.buildGoals}</h2>
+            <p style={muted}>{p.story}</p>
+          </div>
+        </div>
 
         <TimelineStep
           icon={<CreditCard />}
@@ -509,13 +695,21 @@ function Parcours({
           <h2>{p.aiReading}</h2>
           <p style={muted}>
             {priorityDebt
-              ? `${p.debtAdvice} ${p.discipline} : ${disciplineValue}% (${disciplineLabel}).`
+              ? `${p.debtAdvice} ${p.rhythm} : ${disciplineValue}% (${disciplineLabel}).`
               : goals.length > 0
                 ? simulatorGoal
                   ? p.simulatorAdvice
-                  : `${p.goalAdvice} ${p.discipline} : ${disciplineValue}% (${disciplineLabel}).`
+                  : `${p.goalAdvice} ${p.rhythm} : ${disciplineValue}% (${disciplineLabel}).`
                 : p.startAdvice}
           </p>
+        </div>
+      </section>
+
+      <section style={cloudCard}>
+        <Sparkles color="var(--blue)" />
+        <div>
+          <h2>{p.cloudReady}</h2>
+          <p style={muted}>{p.cloudText}</p>
         </div>
       </section>
 
@@ -540,6 +734,83 @@ function Parcours({
   );
 }
 
+function JourneyStat({ icon, label, value, color }) {
+  return (
+    <div style={{ ...journeyStat, borderColor: color }}>
+      <span style={{ color }}>{icon}</span>
+      <small>{label}</small>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function Milestone({ icon, title, subtitle, active, color }) {
+  return (
+    <div
+      style={{
+        ...milestone,
+        borderColor: active ? color : "var(--border)",
+        opacity: active ? 1 : 0.62,
+      }}
+    >
+      <div
+        style={{
+          ...milestoneIcon,
+          color: active ? color : "var(--text-muted)",
+          borderColor: active ? color : "var(--border)",
+        }}
+      >
+        {icon}
+      </div>
+
+      <div>
+        <strong>{active ? "✓ " : "○ "}{title}</strong>
+        <p style={mutedSmall}>{subtitle}</p>
+      </div>
+    </div>
+  );
+}
+
+function getTodayActions({ priorityDebt, highlightedGoal, simulatorGoal, goals, p }) {
+  if (priorityDebt) {
+    return [
+      `Continuer ${priorityDebt.name}`,
+      p.updateSituation,
+      p.manageGoals,
+    ];
+  }
+
+  if (highlightedGoal) {
+    return [
+      `Ajouter un dépôt à ${highlightedGoal.title}`,
+      p.manageGoals,
+      p.openSimulator,
+    ];
+  }
+
+  if (simulatorGoal) {
+    return [
+      "Revoir la simulation créée",
+      p.openSimulator,
+      p.manageGoals,
+    ];
+  }
+
+  if (goals.length === 0) {
+    return [
+      p.addDebtGoal,
+      p.manageGoals,
+      p.openSimulator,
+    ];
+  }
+
+  return [
+    p.openPlan,
+    p.manageGoals,
+    p.updateSituation,
+  ];
+}
+
 function getDaysSinceStart(createdAt) {
   if (!createdAt) return 0;
 
@@ -552,6 +823,22 @@ function getDaysSinceStart(createdAt) {
     0,
     Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
   );
+}
+
+function formatDate(dateValue, language) {
+  if (!dateValue) return "—";
+
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  const locale =
+    language === "EN" ? "en-CA" : language === "ES" ? "es-CA" : "fr-CA";
+
+  return date.toLocaleDateString(locale, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 function getDisciplineColor(score) {
@@ -742,6 +1029,56 @@ function getDebtProgress(balance) {
   return 90;
 }
 
+const smartHeaderCard = {
+  background:
+    "radial-gradient(circle at top right, rgba(212,175,55,.22), transparent 34%), linear-gradient(135deg, rgba(15,23,42,.98), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "24px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const journeyGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: "10px",
+  marginTop: "14px",
+};
+
+const journeyStat = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "12px",
+  display: "grid",
+  gap: "6px",
+  minHeight: "94px",
+};
+
+const todayCard = {
+  background: "linear-gradient(135deg, rgba(34,197,94,.16), var(--bg-card))",
+  border: "1px solid var(--green)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const todayList = {
+  display: "grid",
+  gap: "9px",
+  marginTop: "14px",
+};
+
+const todayLine = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "14px",
+  padding: "11px",
+  display: "flex",
+  alignItems: "center",
+  gap: "9px",
+};
+
 const disciplineCard = {
   background: "linear-gradient(135deg, rgba(212,175,55,.14), var(--bg-card))",
   border: "1px solid var(--gold)",
@@ -770,6 +1107,28 @@ const victoryCard = {
   marginTop: "20px",
   display: "flex",
   gap: "12px",
+};
+
+const milestone = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "12px",
+  marginTop: "10px",
+  display: "grid",
+  gridTemplateColumns: "42px 1fr",
+  gap: "10px",
+  alignItems: "center",
+};
+
+const milestoneIcon = {
+  width: "42px",
+  height: "42px",
+  borderRadius: "14px",
+  border: "1px solid var(--border)",
+  background: "var(--bg-card)",
+  display: "grid",
+  placeItems: "center",
 };
 
 const miniBarBg = {
@@ -834,11 +1193,35 @@ const adviceCard = {
   gap: "12px",
 };
 
+const cloudCard = {
+  background: "linear-gradient(135deg, rgba(59,130,246,.14), var(--bg-card))",
+  border: "1px solid var(--blue)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+  display: "flex",
+  gap: "12px",
+};
+
 const header = {
   display: "flex",
   alignItems: "center",
   gap: "12px",
   marginBottom: "16px",
+};
+
+const eyebrow = {
+  color: "var(--gold)",
+  fontSize: "12px",
+  fontWeight: "900",
+  margin: 0,
+  textTransform: "uppercase",
+  letterSpacing: "0.04em",
+};
+
+const eyebrowGreen = {
+  ...eyebrow,
+  color: "var(--green)",
 };
 
 const step = {

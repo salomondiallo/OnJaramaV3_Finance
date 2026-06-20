@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   ChevronRight,
   RotateCcw,
+  Route,
   Sparkles,
   Star,
   Trash2,
@@ -18,11 +19,13 @@ function GoalPremiumCard({
   onDeposit,
   onHighlight,
   onRemove,
+  onOpenJourney,
 }) {
   const [flipped, setFlipped] = useState(false);
   const [customDeposit, setCustomDeposit] = useState("");
 
-  const color = goal.progress >= 100 ? "var(--gold)" : template?.color || "var(--gold)";
+  const color =
+    goal.progress >= 100 ? "var(--gold)" : template?.color || "var(--gold)";
   const estimated = getEstimatedDate(goal);
   const aiText = getAiText(goal);
 
@@ -76,9 +79,15 @@ function GoalPremiumCard({
 
           <div style={badgeRow}>
             <span style={disciplineBadge}>{getStartedLabel(goal.createdAt)}</span>
+
             <span style={{ ...statusBadge, borderColor: color, color }}>
               {goal.status}
             </span>
+
+            {goal.journeyLinked && (
+              <span style={journeyBadge}>🧭 Parcours connecté</span>
+            )}
+
             {goal.progress >= 100 && (
               <span style={victoryBadge}>🏆 Objectif atteint</span>
             )}
@@ -109,6 +118,11 @@ function GoalPremiumCard({
           <p style={mutedSmall}>Progression : {goal.progress}%</p>
           <p style={mutedSmall}>Reste : {formatMoney(goal.remaining, currency)}</p>
           <p style={mutedSmall}>Prévision : {estimated}</p>
+
+          <button onClick={onOpenJourney} style={journeyButton}>
+            <Route size={16} />
+            Voir dans mon parcours
+          </button>
         </>
       ) : (
         <>
@@ -146,7 +160,14 @@ function GoalPremiumCard({
             value={formatMoney(goal.remaining, currency)}
           />
           <InfoLine label="Date estimée" value={estimated} />
-          <InfoLine label="Priorité automatique" value={`Score ${goal.priorityScore}`} />
+          <InfoLine
+            label="Priorité automatique"
+            value={`Score ${goal.priorityScore}`}
+          />
+          <InfoLine
+            label="Smart Journey"
+            value={goal.journeyLinked ? "Connecté au parcours" : "Prêt"}
+          />
 
           {goal.lastDeposit && (
             <InfoLine
@@ -154,6 +175,11 @@ function GoalPremiumCard({
               value={`+${formatMoney(goal.lastDeposit.amount, currency)}`}
             />
           )}
+
+          <button onClick={onOpenJourney} style={journeyButton}>
+            <Route size={16} />
+            Voir dans mon parcours
+          </button>
 
           <div style={quickDepositRow}>
             {[50, 100, 250, 500].map((amount) => (
@@ -277,7 +303,8 @@ const goalCard = {
 
 const celebrationCard = {
   transform: "scale(1.015)",
-  boxShadow: "0 0 0 1px rgba(212,175,55,.35), 0 0 28px rgba(212,175,55,.25)",
+  boxShadow:
+    "0 0 0 1px rgba(212,175,55,.35), 0 0 28px rgba(212,175,55,.25)",
 };
 
 const goalHeader = {
@@ -307,6 +334,16 @@ const disciplineBadge = {
 const statusBadge = {
   border: "1px solid var(--gold)",
   background: "rgba(212,175,55,.10)",
+  borderRadius: "999px",
+  padding: "6px 9px",
+  fontSize: "12px",
+  fontWeight: "800",
+};
+
+const journeyBadge = {
+  border: "1px solid var(--blue)",
+  background: "rgba(59,130,246,.12)",
+  color: "var(--blue)",
   borderRadius: "999px",
   padding: "6px 9px",
   fontSize: "12px",
@@ -359,6 +396,21 @@ const ghostButton = {
   color: "var(--text-main)",
   borderRadius: "10px",
   padding: "7px",
+};
+
+const journeyButton = {
+  marginTop: "12px",
+  width: "100%",
+  padding: "12px",
+  borderRadius: "14px",
+  border: "1px solid var(--gold)",
+  background: "rgba(212,175,55,.12)",
+  color: "var(--gold)",
+  fontWeight: "900",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
 };
 
 const aiBox = {
