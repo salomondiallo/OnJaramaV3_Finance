@@ -7,9 +7,11 @@ import {
   Globe,
   HelpCircle,
   Info,
+  Lightbulb,
   Lock,
   LogOut,
   Mail,
+  NotebookText,
   PlayCircle,
   Share2,
   ShieldCheck,
@@ -21,7 +23,7 @@ import { getText } from "../data/translations";
 
 const pageText = {
   FR: {
-    subtitle: "Compte, crédits, partage et informations OnJarama.",
+    subtitle: "Compte, sources, guide et informations OnJarama.",
     user: "Utilisateur OnJarama",
     beta: "Version bêta locale",
     connected: "Compte connecté",
@@ -65,13 +67,24 @@ const pageText = {
     visionTitle: "Vision",
     vision:
       "Développer des solutions numériques simples, accessibles et utiles pour accompagner les utilisateurs dans leurs projets financiers, professionnels et personnels.",
+    financialSources: "Mes sources financières",
+    noSource: "Aucune source enregistrée pour le moment.",
+    sourceReady: "source enregistrée",
+    sourcesReady: "sources enregistrées",
+    sourceText:
+      "Les sources financières servent à comprendre votre situation. Les montants restent protégés et ne s’affichent pas sur l’accueil.",
+    configureSources: "Configurer dans Ma Situation",
+    guideHub: "Guide & aide",
+    guide: "Guide utilisateur",
+    guideText: "Comprendre chaque page et savoir quoi faire étape par étape.",
+    tips: "Astuces",
+    tipsText: "Conseils rapides pour utiliser OnJarama Path sans se perdre.",
+    patchNotes: "Patch Notes",
+    patchNotesText: "Voir les nouveautés et les changements de version.",
     achievements: "Réalisations",
     achievementText: "Victoires financières suivies automatiquement.",
     security: "Sécurité",
     securityText: "PIN, biométrie et connexion sécurisée prévus plus tard.",
-    tips: "Conseils & astuces",
-    tipsText:
-      "Touchez une tuile pour l’ouvrir. Retournez les objectifs pour voir les détails.",
     about: "À propos",
     aboutText: "OnJarama Path accompagne vos objectifs financiers.",
     share: "Partager / Copier le lien",
@@ -94,7 +107,7 @@ const pageText = {
   },
 
   EN: {
-    subtitle: "Account, credits, sharing and OnJarama information.",
+    subtitle: "Account, sources, guide and OnJarama information.",
     user: "OnJarama User",
     beta: "Local beta version",
     connected: "Connected account",
@@ -138,12 +151,24 @@ const pageText = {
     visionTitle: "Vision",
     vision:
       "Develop simple, accessible and useful digital solutions to support users in their financial, professional and personal projects.",
+    financialSources: "My financial sources",
+    noSource: "No source recorded yet.",
+    sourceReady: "source recorded",
+    sourcesReady: "sources recorded",
+    sourceText:
+      "Financial sources help understand your situation. Amounts stay protected and are not shown on the home screen.",
+    configureSources: "Configure in My Situation",
+    guideHub: "Guide & help",
+    guide: "User guide",
+    guideText: "Understand each page and know what to do step by step.",
+    tips: "Tips",
+    tipsText: "Quick tips to use OnJarama Path without getting lost.",
+    patchNotes: "Patch Notes",
+    patchNotesText: "See what changed in each version.",
     achievements: "Achievements",
     achievementText: "Financial victories tracked automatically.",
     security: "Security",
     securityText: "PIN, biometrics and secure login planned later.",
-    tips: "Tips & tricks",
-    tipsText: "Tap a tile to open it. Flip goals to see details.",
     about: "About",
     aboutText: "OnJarama Path supports your financial goals.",
     share: "Share / Copy link",
@@ -166,7 +191,7 @@ const pageText = {
   },
 
   ES: {
-    subtitle: "Cuenta, créditos, compartir e información OnJarama.",
+    subtitle: "Cuenta, fuentes, guía e información OnJarama.",
     user: "Usuario OnJarama",
     beta: "Versión beta local",
     connected: "Cuenta conectada",
@@ -210,12 +235,24 @@ const pageText = {
     visionTitle: "Visión",
     vision:
       "Desarrollar soluciones digitales simples, accesibles y útiles para acompañar a los usuarios en sus proyectos financieros, profesionales y personales.",
+    financialSources: "Mis fuentes financieras",
+    noSource: "No hay fuente registrada por ahora.",
+    sourceReady: "fuente registrada",
+    sourcesReady: "fuentes registradas",
+    sourceText:
+      "Las fuentes financieras ayudan a entender tu situación. Los montos permanecen protegidos y no se muestran en el inicio.",
+    configureSources: "Configurar en Mi Situación",
+    guideHub: "Guía y ayuda",
+    guide: "Guía de usuario",
+    guideText: "Entender cada página y saber qué hacer paso a paso.",
+    tips: "Consejos",
+    tipsText: "Consejos rápidos para usar OnJarama Path sin perderse.",
+    patchNotes: "Patch Notes",
+    patchNotesText: "Ver cambios y novedades por versión.",
     achievements: "Logros",
     achievementText: "Victorias financieras seguidas automáticamente.",
     security: "Seguridad",
     securityText: "PIN, biometría e inicio seguro previstos más adelante.",
-    tips: "Consejos y trucos",
-    tipsText: "Toca una tarjeta para abrirla. Gira objetivos para ver detalles.",
     about: "Acerca de",
     aboutText: "OnJarama Path acompaña tus objetivos financieros.",
     share: "Compartir / Copiar enlace",
@@ -244,6 +281,7 @@ function Profil({
   selectedGoals,
   disciplineScore,
   auth,
+  financeData,
 }) {
   const t = getText(settings);
   const p = pageText[settings?.language || "FR"] || pageText.FR;
@@ -253,7 +291,6 @@ function Profil({
     : [];
 
   const activeGoalsCount = goals.length;
-
   const achievedGoals = goals.filter(
     (goal) =>
       Number(goal.targetAmount || 0) > 0 &&
@@ -268,6 +305,9 @@ function Profil({
   const isConfigured = Boolean(auth?.isConfigured);
   const isConnected = Boolean(auth?.isConnected);
   const userEmail = auth?.user?.email || "";
+
+  const monthlyIncome = Number(financeData?.overview?.monthlyIncome || 0);
+  const sourceCount = getFinancialSourceCount({ monthlyIncome, financeData });
 
   function shareApp() {
     const link = window.location.origin;
@@ -305,29 +345,42 @@ function Profil({
         </button>
       </section>
 
+      <section style={sourceCard}>
+        <div style={header}>
+          <ShieldCheck color={sourceCount > 0 ? "var(--green)" : "var(--gold)"} />
+          <h2>{p.financialSources}</h2>
+        </div>
+
+        <InfoRow
+          label="Statut"
+          value={
+            sourceCount > 0
+              ? `${sourceCount} ${sourceCount > 1 ? p.sourcesReady : p.sourceReady}`
+              : p.noSource
+          }
+        />
+
+        <p style={muted}>{p.sourceText}</p>
+
+        <button onClick={() => setCurrentPage("situation")} style={primaryBtn}>
+          {p.configureSources}
+        </button>
+      </section>
+
       <section style={authCard(isConnected)}>
         <div style={header}>
           <Cloud color={isConnected ? "var(--green)" : "var(--gold)"} />
           <h2>OnJarama Cloud</h2>
         </div>
 
-        <InfoRow
-          label="Statut"
-          value={isConnected ? p.connected : p.guest}
-        />
-
-        <InfoRow
-          label="Supabase"
-          value={isConfigured ? p.cloudReady : p.cloudNotReady}
-        />
+        <InfoRow label="Statut" value={isConnected ? p.connected : p.guest} />
+        <InfoRow label="Supabase" value={isConfigured ? p.cloudReady : p.cloudNotReady} />
 
         {isConnected && (
           <InfoRow label={p.accountEmail} value={userEmail || "Compte actif"} />
         )}
 
-        <p style={muted}>
-          {isConnected ? p.connectedText : p.localModeText}
-        </p>
+        <p style={muted}>{isConnected ? p.connectedText : p.localModeText}</p>
 
         {!isConnected ? (
           <div style={authActions}>
@@ -355,6 +408,37 @@ function Profil({
             {p.signOut}
           </button>
         )}
+      </section>
+
+      <section style={guideCard}>
+        <div style={header}>
+          <BookOpen color="var(--gold)" />
+          <h2>{p.guideHub}</h2>
+        </div>
+
+        <div style={guideGrid}>
+          <ActionTile
+            icon={<BookOpen />}
+            title={p.guide}
+            text={p.guideText}
+            color="var(--gold)"
+            onClick={() => setCurrentPage("guide")}
+          />
+          <ActionTile
+            icon={<Lightbulb />}
+            title={p.tips}
+            text={p.tipsText}
+            color="var(--green)"
+            onClick={() => setCurrentPage("guide")}
+          />
+          <ActionTile
+            icon={<NotebookText />}
+            title={p.patchNotes}
+            text={p.patchNotesText}
+            color="var(--blue)"
+            onClick={() => setCurrentPage("patchnotes")}
+          />
+        </div>
       </section>
 
       <Section icon={<Trophy />} title={p.stats} color="var(--gold)">
@@ -413,7 +497,7 @@ function Profil({
       </Section>
 
       <Section icon={<CheckCircle />} title={p.app} color="var(--green)">
-        <InfoRow label={p.version} value="V10.1 Auth UI" />
+        <InfoRow label={p.version} value="V10.7 Core Experience" />
         <InfoRow label={p.testerMode} value="ON" />
         <InfoRow label={p.pwa} value="ON" />
         <InfoRow label={p.localBackup} value="ON" />
@@ -448,12 +532,6 @@ function Profil({
           title={p.security}
           text={p.securityText}
           color="var(--purple)"
-        />
-        <Tile
-          icon={<BookOpen />}
-          title={p.tips}
-          text={p.tipsText}
-          color="var(--green)"
         />
         <Tile
           icon={<Info />}
@@ -515,6 +593,14 @@ function Profil({
   );
 }
 
+function getFinancialSourceCount({ monthlyIncome, financeData }) {
+  const sources = financeData?.fundingSources || financeData?.incomeSources;
+  if (Array.isArray(sources)) {
+    return sources.filter((source) => source && !source.archived).length;
+  }
+  return monthlyIncome > 0 ? 1 : 0;
+}
+
 function getDaysSinceStart(goals) {
   if (!Array.isArray(goals) || goals.length === 0) return 0;
 
@@ -549,7 +635,6 @@ function Section({ icon, title, color, children }) {
         <span style={{ color }}>{icon}</span>
         <h2>{title}</h2>
       </div>
-
       {children}
     </section>
   );
@@ -587,6 +672,16 @@ function Tile({ icon, title, text, color }) {
   );
 }
 
+function ActionTile({ icon, title, text, color, onClick }) {
+  return (
+    <button onClick={onClick} style={{ ...actionTile, borderColor: color }}>
+      <span style={{ color }}>{icon}</span>
+      <strong>{title}</strong>
+      <small>{text}</small>
+    </button>
+  );
+}
+
 function Social({ icon, label }) {
   return (
     <div style={social}>
@@ -606,6 +701,39 @@ const profileCard = {
   gridTemplateColumns: "72px 1fr",
   gap: "14px",
   alignItems: "center",
+};
+
+const sourceCard = {
+  background: "linear-gradient(135deg, rgba(212,175,55,.14), rgba(34,197,94,.08), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "22px",
+  padding: "18px",
+  marginTop: "16px",
+};
+
+const guideCard = {
+  background: "linear-gradient(135deg, rgba(56,189,248,.10), var(--bg-card))",
+  border: "1px solid var(--blue)",
+  borderRadius: "22px",
+  padding: "18px",
+  marginTop: "16px",
+};
+
+const guideGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+  gap: "10px",
+};
+
+const actionTile = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "12px",
+  color: "var(--text-main)",
+  textAlign: "left",
+  display: "grid",
+  gap: "6px",
 };
 
 const authCard = (connected) => ({
@@ -771,6 +899,7 @@ const primaryBtn = {
   border: "none",
   borderRadius: "14px",
   padding: "14px",
+  marginTop: "12px",
   background: "var(--green)",
   color: "white",
   fontWeight: "bold",

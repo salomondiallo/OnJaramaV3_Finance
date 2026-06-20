@@ -2,6 +2,7 @@ import "./App.css";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  BarChart3,
   CreditCard,
   PiggyBank,
   Route,
@@ -272,30 +273,52 @@ function App() {
 }
 
 function ContextualNavigation({ currentPage, setCurrentPage }) {
-  const contextPages = ["dettes", "epargne", "objectifs", "paiements"];
+  const contextPages = ["situation", "dettes", "epargne", "objectifs", "paiements", "simulateur"];
 
   if (!contextPages.includes(currentPage)) return null;
 
   const actions = {
+    situation: {
+      backLabel: "Retour à l'accueil",
+      backPage: "accueil",
+      icon: <Sparkles size={16} />,
+      action: "Voir Mon Plan",
+      page: "monplan",
+    },
     dettes: {
+      backLabel: "Retour à la Situation",
+      backPage: "situation",
       icon: <CreditCard size={16} />,
       action: "Simuler remboursement",
       page: "simulateur",
     },
     epargne: {
+      backLabel: "Retour à la Situation",
+      backPage: "situation",
       icon: <PiggyBank size={16} />,
       action: "Voir Mon Plan",
       page: "monplan",
     },
     objectifs: {
+      backLabel: "Retour à Mon Plan",
+      backPage: "monplan",
       icon: <Target size={16} />,
-      action: "Voir parcours",
+      action: "Voir Parcours",
       page: "parcours",
     },
     paiements: {
-      icon: <Sparkles size={16} />,
-      action: "Voir dettes",
+      backLabel: "Retour à la Situation",
+      backPage: "situation",
+      icon: <CreditCard size={16} />,
+      action: "Voir Dettes",
       page: "dettes",
+    },
+    simulateur: {
+      backLabel: "Retour à Mon Plan",
+      backPage: "monplan",
+      icon: <BarChart3 size={16} />,
+      action: "Ma Situation",
+      page: "situation",
     },
   };
 
@@ -303,9 +326,9 @@ function ContextualNavigation({ currentPage, setCurrentPage }) {
 
   return (
     <div style={contextBar}>
-      <button onClick={() => setCurrentPage("parcours")} style={contextBack}>
+      <button onClick={() => setCurrentPage(context.backPage)} style={contextBack}>
         <Route size={16} />
-        Retour au Parcours
+        {context.backLabel}
       </button>
 
       <button onClick={() => setCurrentPage(context.page)} style={contextAction}>

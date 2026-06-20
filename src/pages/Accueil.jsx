@@ -3,13 +3,10 @@ import {
   Eye,
   EyeOff,
   Flag,
-  Flame,
   Gauge,
-  Lightbulb,
   PiggyBank,
   ShieldCheck,
   Target,
-  TrendingUp,
   Landmark,
   Sparkles,
   Trophy,
@@ -18,9 +15,8 @@ import {
   Route,
   Brain,
   Calculator,
-  Lock,
   CheckCircle,
-  AlertTriangle,
+  BarChart3,
 } from "lucide-react";
 
 import { useState } from "react";
@@ -61,9 +57,7 @@ function Accueil({
   );
 
   const activeGoals = goals.filter((goal) => !goal.archived);
-
-  const mainGoal =
-    activeGoals.find((goal) => goal.highlighted) || activeGoals[0];
+  const mainGoal = activeGoals.find((goal) => goal.highlighted) || activeGoals[0];
 
   const firstGoal = [...activeGoals].sort(
     (a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0)
@@ -91,10 +85,8 @@ function Accueil({
 
   const lastActivity = history[0];
   const lastDeposit = history.find((item) => item.type === "depot");
-  const lastVictory =
-    history.find((item) => item.type === "victoire") || achievedGoals[0];
+  const lastVictory = history.find((item) => item.type === "victoire") || achievedGoals[0];
 
-  const smartAlerts = buildSmartAlerts({ activeGoals, debts });
   const situationScore = getSituationScore({
     monthlyIncome,
     monthlyExpenses,
@@ -110,12 +102,8 @@ function Accueil({
     monthlyIncome,
   });
 
-  const fundingConfigured = monthlyIncome > 0;
-  const isCloudConnected =
-    settings?.cloudStatus === "connected" ||
-    settings?.cloudStatus === "synced" ||
-    settings?.isCloudConnected ||
-    settings?.user;
+  const sourceCount = getFinancialSourceCount({ monthlyIncome, financeData });
+  const hasSources = sourceCount > 0;
 
   function money(value) {
     if (!showAmounts) return "Chiffres masqués";
@@ -130,7 +118,7 @@ function Accueil({
       <section className="accueil-hero" />
 
       <section className="accueil-headline" style={premiumHero}>
-        <p className="accueil-eyebrow">OnJarama Path V10.3</p>
+        <p className="accueil-eyebrow">OnJarama Path V10.7</p>
 
         <h1 className="accueil-title">
           {t.heroTitle}
@@ -139,35 +127,21 @@ function Accueil({
         </h1>
 
         <p className="accueil-subtitle">
-          Votre compagnon financier premium pour comprendre, décider et avancer
-          sans pression.
-        </p>
-      </section>
-
-      <section className="accueil-headline" style={progressFlagCard}>
-        <div style={sectionHead}>
-          <Flag size={20} color="var(--gold)" />
-          <strong>Progression OnJarama</strong>
-        </div>
-
-        <p style={softText}>
-          {firstGoal
-            ? `🚩 Parcours démarré ${getStartedLabel(firstGoal.createdAt)}.`
-            : "🚩 Votre parcours commencera dès votre premier objectif actif."}
+          Votre situation d’abord. Votre plan ensuite. Votre parcours à votre rythme.
         </p>
       </section>
 
       <section className="context-nav-row">
         <ContextNavButton
-          icon={<Brain size={18} />}
-          label="Mon Plan"
-          onClick={() => setCurrentPage("monplan")}
+          icon={<BarChart3 size={18} />}
+          label="Situation"
+          onClick={() => setCurrentPage("situation")}
         />
 
         <ContextNavButton
-          icon={<Target size={18} />}
-          label="Objectifs"
-          onClick={() => setCurrentPage("objectifs")}
+          icon={<Brain size={18} />}
+          label="Mon Plan"
+          onClick={() => setCurrentPage("monplan")}
         />
 
         <ContextNavButton
@@ -183,178 +157,10 @@ function Accueil({
         />
       </section>
 
-      <section className="accueil-headline" style={fundingCard}>
-        <div style={sectionHead}>
-          <Wallet
-            size={20}
-            color={fundingConfigured ? "var(--green)" : "var(--gold)"}
-          />
-          <strong>Origine des fonds</strong>
-        </div>
-
-        <div style={fundingStatusRow}>
-          {fundingConfigured ? (
-            <CheckCircle size={18} color="var(--green)" />
-          ) : (
-            <AlertTriangle size={18} color="var(--gold)" />
-          )}
-
-          <strong
-            style={{
-              color: fundingConfigured ? "var(--green)" : "var(--gold)",
-            }}
-          >
-            {fundingConfigured ? "Configurée" : "À compléter"}
-          </strong>
-        </div>
-
-        <p style={softText}>
-          Les montants restent cachés sur l’accueil. Les détails sont accessibles
-          uniquement dans votre profil financier.
-        </p>
-
-        {isCloudConnected && (
-          <p style={syncLine}>✔ Synchronisée avec le profil connecté</p>
-        )}
-
-        <button
-          onClick={() => setCurrentPage("profil")}
-          className="ai-action"
-          style={{ marginTop: 12 }}
-        >
-          <Lock size={17} />
-          Ouvrir Profil / Finances
-        </button>
-      </section>
-
-      <section className="accueil-headline" style={commandCenter}>
-        <div style={sectionHead}>
-          <Sparkles size={20} color="var(--gold)" />
-          <strong>Centre de commande OnJarama</strong>
-        </div>
-
-        <div style={commandGrid}>
-          <CommandStat
-            icon={<Gauge size={18} />}
-            label="Score situation"
-            value={`${situationScore.score}%`}
-            color={situationScore.color}
-          />
-
-          <CommandStat
-            icon={<Flame size={18} />}
-            label="Discipline"
-            value={`${discipline.score}%`}
-            color={getDisciplineColor(discipline.score)}
-          />
-
-          <CommandStat
-            icon={<Target size={18} />}
-            label="Objectifs actifs"
-            value={`${activeGoals.length}`}
-            color="var(--gold)"
-          />
-
-          <CommandStat
-            icon={<Trophy size={18} />}
-            label="Victoires"
-            value={`${achievedGoals.length}`}
-            color="var(--green)"
-          />
-        </div>
-      </section>
-
-      <section className="accueil-headline" style={companionCard}>
-        <div style={sectionHead}>
-          <Route size={20} color="var(--gold)" />
-          <strong>Compagnon financier</strong>
-        </div>
-
-        <div style={companionGrid}>
-          <CompanionLine
-            icon="🚩"
-            label="Parcours"
-            value={
-              firstGoal
-                ? `Commencé ${getStartedLabel(firstGoal.createdAt)}`
-                : "Pas encore commencé"
-            }
-          />
-
-          <CompanionLine
-            icon="💰"
-            label="Dernier dépôt"
-            value={lastDeposit ? lastDeposit.message : "Aucun dépôt enregistré"}
-          />
-
-          <CompanionLine
-            icon="🏆"
-            label="Dernière victoire"
-            value={
-              lastVictory?.message ||
-              lastVictory?.title ||
-              "Aucune victoire enregistrée"
-            }
-          />
-
-          <CompanionLine
-            icon="➡️"
-            label="Action recommandée"
-            value={nextAction.title}
-          />
-        </div>
-
-        <button
-          onClick={() => setCurrentPage(nextAction.page)}
-          className="primary-action"
-          style={{ marginTop: 14 }}
-        >
-          {nextAction.button}
-        </button>
-      </section>
-
-      <section className="accueil-headline" style={disciplineGaugeCard}>
-        <div style={sectionHead}>
-          <Gauge size={20} color="var(--gold)" />
-          <strong>Discipline OnJarama</strong>
-        </div>
-
-        <div style={scoreRow}>
-          <strong style={scoreValue}>{discipline.score}%</strong>
-          <span style={scoreLabel}>{discipline.label}</span>
-        </div>
-
-        <div style={scoreBarBg}>
-          <div
-            style={{
-              ...scoreBarFill,
-              width: `${discipline.score}%`,
-              background: getDisciplineColor(discipline.score),
-            }}
-          />
-        </div>
-
-        <div style={disciplineChecklist}>
-          <DisciplineCheck ok={discipline.hasActiveGoal} text="Objectif actif" />
-          <DisciplineCheck
-            ok={discipline.hasRecentActivity}
-            text="Activité récente"
-          />
-          <DisciplineCheck
-            ok={!discipline.hasOverduePayment}
-            text="Aucun paiement en retard"
-          />
-          <DisciplineCheck
-            ok={discipline.hasRecentDeposit}
-            text="Dépôt récent"
-          />
-        </div>
-      </section>
-
       <section className="accueil-headline" style={situationCard}>
         <div style={sectionHead}>
           <Wallet size={20} color={situationScore.color} />
-          <strong>Situation actuelle</strong>
+          <strong>Ma situation</strong>
         </div>
 
         <div style={situationGrid}>
@@ -382,32 +188,9 @@ function Accueil({
           className="primary-action"
           style={{ marginTop: 12 }}
         >
-          Ouvrir Situation Premium
+          Ouvrir Ma Situation
         </button>
       </section>
-
-      {smartAlerts.length > 0 && (
-        <section className="accueil-headline" style={alertCard}>
-          <div style={sectionHead}>
-            <Flame size={20} color="var(--gold)" />
-            <strong>Alertes intelligentes</strong>
-          </div>
-
-          {smartAlerts.slice(0, 3).map((alert) => (
-            <p key={alert.id} style={alertLine}>
-              • {alert.message}
-            </p>
-          ))}
-
-          <button
-            onClick={() => setCurrentPage("notifications")}
-            className="ai-action"
-            style={{ marginTop: 12 }}
-          >
-            Voir les notifications
-          </button>
-        </section>
-      )}
 
       <section className="accueil-headline" style={nextActionCard}>
         <div style={sectionHead}>
@@ -430,6 +213,124 @@ function Accueil({
         </button>
       </section>
 
+      <section className="accueil-headline" style={fundingCard}>
+        <div style={sectionHead}>
+          <PiggyBank
+            size={20}
+            color={hasSources ? "var(--green)" : "var(--gold)"}
+          />
+          <strong>Mes sources financières</strong>
+        </div>
+
+        <div style={fundingStatusRow}>
+          {hasSources ? (
+            <CheckCircle size={18} color="var(--green)" />
+          ) : (
+            <Sparkles size={18} color="var(--gold)" />
+          )}
+
+          <strong
+            style={{
+              color: hasSources ? "var(--green)" : "var(--gold)",
+            }}
+          >
+            {hasSources
+              ? `${sourceCount} source${sourceCount > 1 ? "s" : ""} enregistrée${
+                  sourceCount > 1 ? "s" : ""
+                }`
+              : "Aucune source enregistrée"}
+          </strong>
+        </div>
+
+        <p style={softText}>
+          Vos montants restent masqués sur l’accueil. Ajoutez vos revenus lorsque vous serez prêt.
+        </p>
+
+        <button
+          onClick={() => setCurrentPage("situation")}
+          className="ai-action"
+          style={{ marginTop: 12 }}
+        >
+          Configurer
+        </button>
+      </section>
+
+      <section className="accueil-headline" style={commandCenter}>
+        <div style={sectionHead}>
+          <Sparkles size={20} color="var(--gold)" />
+          <strong>Centre de commande</strong>
+        </div>
+
+        <div style={commandGrid}>
+          <CommandStat
+            icon={<Gauge size={18} />}
+            label="Score situation"
+            value={`${situationScore.score}%`}
+            color={situationScore.color}
+          />
+
+          <CommandStat
+            icon={<Flag size={18} />}
+            label="Discipline"
+            value={`${discipline.score}%`}
+            color={getDisciplineColor(discipline.score)}
+          />
+
+          <CommandStat
+            icon={<Target size={18} />}
+            label="Objectifs"
+            value={`${activeGoals.length}`}
+            color="var(--gold)"
+          />
+
+          <CommandStat
+            icon={<Trophy size={18} />}
+            label="Victoires"
+            value={`${achievedGoals.length}`}
+            color="var(--green)"
+          />
+        </div>
+      </section>
+
+      <section className="accueil-headline" style={progressFlagCard}>
+        <div style={sectionHead}>
+          <Flag size={20} color="var(--gold)" />
+          <strong>Progression OnJarama</strong>
+        </div>
+
+        <p style={softText}>
+          {firstGoal
+            ? `🚩 Parcours démarré ${getStartedLabel(firstGoal.createdAt)}.`
+            : "🚩 Votre parcours commencera dès votre première situation ou objectif."}
+        </p>
+      </section>
+
+      <section className="accueil-headline" style={companionCard}>
+        <div style={sectionHead}>
+          <Route size={20} color="var(--gold)" />
+          <strong>Compagnon financier</strong>
+        </div>
+
+        <div style={companionGrid}>
+          <CompanionLine
+            icon="📊"
+            label="Fondation"
+            value={monthlyIncome > 0 ? "Situation renseignée" : "Situation à démarrer"}
+          />
+          <CompanionLine
+            icon="💰"
+            label="Dernier dépôt"
+            value={lastDeposit ? lastDeposit.message : "Aucun dépôt enregistré"}
+          />
+          <CompanionLine
+            icon="🏆"
+            label="Dernière victoire"
+            value={lastVictory?.message || lastVictory?.title || "Aucune victoire enregistrée"}
+          />
+          <CompanionLine icon="➡️" label="Action" value={nextAction.title} />
+        </div>
+      </section>
+
       {lastActivity && (
         <section className="accueil-headline">
           <div style={sectionHead}>
@@ -450,7 +351,7 @@ function Accueil({
           onClick={() => setCurrentPage("situation")}
           className="primary-action"
         >
-          Commencer ma situation
+          Ma Situation
         </button>
 
         <button onClick={() => setCurrentPage("assistant")} className="ai-action">
@@ -461,7 +362,6 @@ function Accueil({
 
       <section className="accueil-safe-row">
         <span className="accueil-badge">🔒 Privé</span>
-
         <span className="accueil-badge">🌍 Démo</span>
 
         <button
@@ -484,10 +384,10 @@ function Accueil({
 
         <QuickTile
           icon={<PiggyBank />}
-          title="Fonds"
-          text={fundingConfigured ? "Origine configurée" : "À compléter"}
-          color={fundingConfigured ? "var(--green)" : "var(--gold)"}
-          onClick={() => setCurrentPage("profil")}
+          title="Sources"
+          text={hasSources ? `${sourceCount} enregistrée${sourceCount > 1 ? "s" : ""}` : "À votre rythme"}
+          color={hasSources ? "var(--green)" : "var(--gold)"}
+          onClick={() => setCurrentPage("situation")}
         />
 
         <QuickTile
@@ -495,7 +395,7 @@ function Accueil({
           title="Objectif"
           text={mainGoal ? mainGoal.title : "Créer un objectif"}
           color="var(--green)"
-          onClick={() => setCurrentPage("objectifs")}
+          onClick={() => setCurrentPage("monplan")}
         />
 
         <QuickTile
@@ -507,44 +407,12 @@ function Accueil({
         />
       </section>
 
-      <section className="accueil-headline">
-        <div style={sectionHead}>
-          <Landmark size={20} color="var(--gold)" />
+      <section className="accueil-headline" style={bankMiniCard}>
+        <div style={sectionHeadCompact}>
+          <Landmark size={18} color="var(--gold)" />
           <strong>Connexion bancaire</strong>
+          <span style={miniBadge}>Bientôt disponible</span>
         </div>
-
-        <p style={softText}>
-          Bientôt disponible. Synchronisation lecture seule sécurisée de vos
-          comptes, dépenses, épargne et progression financière.
-        </p>
-      </section>
-
-      <section className="accueil-headline">
-        <div style={sectionHead}>
-          <Sparkles size={20} color="var(--blue)" />
-          <strong>Ce que peut faire OnJarama Path</strong>
-        </div>
-
-        <p style={softText}>
-          • Prioriser vos dettes automatiquement.
-          <br />
-          • Construire un plan financier personnalisé.
-          <br />
-          • Simuler plusieurs objectifs.
-          <br />
-          • Suivre votre progression dans une timeline claire.
-          <br />
-          • Recevoir des recommandations intelligentes.
-        </p>
-      </section>
-
-      <section className="accueil-hint">
-        <Lightbulb size={16} color="var(--gold)" />
-
-        <p>
-          Situation Premium, Parcours Premium et Objectifs intelligents sont
-          maintenant connectés dans l’expérience V10.3.
-        </p>
       </section>
     </div>
   );
@@ -559,12 +427,22 @@ function ContextNavButton({ icon, label, onClick }) {
   );
 }
 
+function getFinancialSourceCount({ monthlyIncome, financeData }) {
+  const sources = financeData?.fundingSources || financeData?.incomeSources;
+
+  if (Array.isArray(sources)) {
+    return sources.filter((source) => source && !source.archived).length;
+  }
+
+  return monthlyIncome > 0 ? 1 : 0;
+}
+
 function getNextAction({ totalDebt, mainGoal, closestGoal, monthlyIncome }) {
   if (!monthlyIncome || monthlyIncome <= 0) {
     return {
       title: "Compléter votre situation",
       text: "Ajoutez vos revenus et vos sorties pour activer une lecture plus précise.",
-      button: "Ouvrir Situation",
+      button: "Ouvrir Ma Situation",
       page: "situation",
     };
   }
@@ -582,8 +460,8 @@ function getNextAction({ totalDebt, mainGoal, closestGoal, monthlyIncome }) {
     return {
       title: `Finaliser ${closestGoal.title}`,
       text: `Progression : ${closestGoal.progress} %. Vous êtes proche d’une victoire.`,
-      button: "Voir mes objectifs",
-      page: "objectifs",
+      button: "Voir Mon Plan",
+      page: "monplan",
     };
   }
 
@@ -591,86 +469,17 @@ function getNextAction({ totalDebt, mainGoal, closestGoal, monthlyIncome }) {
     return {
       title: `Avancer ${mainGoal.title}`,
       text: "Gardez le cap sur votre objectif principal.",
-      button: "Continuer",
-      page: "objectifs",
+      button: "Voir Mon Plan",
+      page: "monplan",
     };
   }
 
   return {
     title: "Créer votre premier objectif",
     text: "Ajoutez un objectif pour que OnJarama Path construise votre parcours.",
-    button: "Créer un objectif",
-    page: "objectifs",
+    button: "Ouvrir Mon Plan",
+    page: "monplan",
   };
-}
-
-function buildSmartAlerts({ activeGoals, debts }) {
-  const alerts = [];
-
-  const priorityDebt = [...debts]
-    .filter((debt) => Number(debt.balance || 0) > 0)
-    .sort((a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0))[0];
-
-  if (priorityDebt) {
-    alerts.push({
-      id: "debt-priority",
-      message: `Dette prioritaire : ${priorityDebt.name || "dette"} à ${
-        priorityDebt.interestRate || 0
-      } %.`,
-    });
-  }
-
-  activeGoals.forEach((goal) => {
-    const target = Number(goal.targetAmount || 0);
-    const current = Number(goal.currentAmount || 0);
-
-    if (target <= 0) return;
-
-    const progress = Math.min(100, Math.round((current / target) * 100));
-
-    if (progress >= 100) {
-      alerts.push({
-        id: `goal-win-${goal.id}`,
-        message: `${goal.title} est atteint à 100 %.`,
-      });
-      return;
-    }
-
-    if (progress >= 90) {
-      alerts.push({
-        id: `goal-90-${goal.id}`,
-        message: `${goal.title} est atteint à ${progress} %.`,
-      });
-      return;
-    }
-
-    if (progress >= 80) {
-      alerts.push({
-        id: `goal-80-${goal.id}`,
-        message: `${goal.title} est presque atteint (${progress} %).`,
-      });
-    }
-
-    if (goal.lastDeposit?.date) {
-      const lastDate = new Date(goal.lastDeposit.date);
-      const now = new Date();
-
-      if (!Number.isNaN(lastDate.getTime())) {
-        const days = Math.floor(
-          (now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
-        );
-
-        if (days >= 14 && progress < 100) {
-          alerts.push({
-            id: `deposit-${goal.id}`,
-            message: `Aucun dépôt sur ${goal.title} depuis ${days} jours.`,
-          });
-        }
-      }
-    }
-  });
-
-  return alerts.slice(0, 5);
 }
 
 function getSituationScore({
@@ -772,20 +581,6 @@ function SituationLine({ label, value, color }) {
   );
 }
 
-function DisciplineCheck({ ok, text }) {
-  return (
-    <div
-      style={{
-        ...disciplineCheck,
-        borderColor: ok ? "var(--green)" : "var(--border)",
-      }}
-    >
-      <span>{ok ? "✅" : "○"}</span>
-      <small>{text}</small>
-    </div>
-  );
-}
-
 function QuickTile({ icon, title, text, color, onClick }) {
   return (
     <button
@@ -796,9 +591,7 @@ function QuickTile({ icon, title, text, color, onClick }) {
       <span className="accueil-tile-icon" style={{ color }}>
         {icon}
       </span>
-
       <strong>{title}</strong>
-
       <small>{text}</small>
     </button>
   );
@@ -809,6 +602,13 @@ const sectionHead = {
   gap: 10,
   alignItems: "center",
   marginBottom: 8,
+};
+
+const sectionHeadCompact = {
+  display: "flex",
+  gap: 10,
+  alignItems: "center",
+  justifyContent: "space-between",
 };
 
 const softText = {
@@ -841,13 +641,6 @@ const fundingStatusRow = {
   marginBottom: "8px",
 };
 
-const syncLine = {
-  margin: "9px 0 0",
-  color: "var(--green)",
-  fontSize: "12px",
-  fontWeight: "800",
-};
-
 const commandCenter = {
   border: "1px solid rgba(212,175,55,.48)",
   background:
@@ -873,11 +666,6 @@ const commandStat = {
 const companionCard = {
   border: "1px solid var(--gold)",
   background: "linear-gradient(135deg, rgba(212,175,55,.16), var(--bg-card))",
-};
-
-const disciplineGaugeCard = {
-  border: "1px solid var(--gold)",
-  background: "linear-gradient(135deg, rgba(212,175,55,.12), var(--bg-card))",
 };
 
 const situationCard = {
@@ -930,70 +718,23 @@ const companionValue = {
   marginTop: "2px",
 };
 
-const scoreRow = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "baseline",
-  marginTop: "8px",
-};
-
-const scoreValue = {
-  fontSize: "34px",
-  color: "var(--text-main)",
-};
-
-const scoreLabel = {
-  color: "var(--gold)",
-  fontWeight: "bold",
-};
-
-const scoreBarBg = {
-  height: "12px",
-  background: "var(--bg-panel)",
-  border: "1px solid var(--border)",
-  borderRadius: "999px",
-  marginTop: "12px",
-  overflow: "hidden",
-};
-
-const scoreBarFill = {
-  height: "100%",
-  borderRadius: "999px",
-  transition: "width .35s ease",
-};
-
-const disciplineChecklist = {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: "8px",
-  marginTop: "12px",
-};
-
-const disciplineCheck = {
-  background: "var(--bg-panel)",
-  border: "1px solid var(--border)",
-  borderRadius: "12px",
-  padding: "9px",
-  display: "flex",
-  gap: "6px",
-  alignItems: "center",
-  color: "var(--text-muted)",
-};
-
-const alertCard = {
-  border: "1px solid var(--gold)",
-  background: "linear-gradient(135deg, rgba(212,175,55,.12), var(--bg-card))",
-};
-
-const alertLine = {
-  margin: "6px 0 0",
-  color: "var(--text-muted)",
-  lineHeight: 1.4,
-};
-
 const nextActionCard = {
   border: "1px solid var(--green)",
   background: "linear-gradient(135deg, rgba(34,197,94,.12), var(--bg-card))",
+};
+
+const bankMiniCard = {
+  border: "1px solid rgba(212,175,55,.36)",
+  background: "linear-gradient(135deg, rgba(212,175,55,.08), var(--bg-card))",
+};
+
+const miniBadge = {
+  border: "1px solid var(--gold)",
+  borderRadius: "999px",
+  padding: "5px 8px",
+  color: "var(--gold)",
+  fontSize: "11px",
+  fontWeight: "900",
 };
 
 export default Accueil;

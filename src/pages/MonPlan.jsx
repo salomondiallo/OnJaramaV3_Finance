@@ -122,16 +122,30 @@ function MonPlan({
     <div className="native-page">
       <div style={pageHead}>
         <div>
-          <p style={eyebrow}>OnJarama Path V9.0</p>
-          <h1>Mon Plan Premium</h1>
+          <p style={eyebrow}>OnJarama Path V10.7</p>
+          <h1>Mon Plan</h1>
           <p style={muted}>
-            Le cerveau de votre parcours : une priorité claire, un score et une
-            prochaine action.
+            Le cerveau de votre parcours : situation, priorités, objectifs, prévisions et prochaines actions.
           </p>
         </div>
 
         <Sparkles color="var(--gold)" />
       </div>
+
+      <section style={foundationCard}>
+        <div style={header}>
+          <Gauge color="var(--green)" />
+          <h2>Fondation — Ma Situation</h2>
+        </div>
+
+        <p style={muted}>
+          Toute décision part de vos revenus, sorties, dettes et marges.
+        </p>
+
+        <button onClick={() => setCurrentPage("situation")} style={greenButton}>
+          Mettre à jour Ma Situation
+        </button>
+      </section>
 
       <section style={brainCard}>
         <div style={header}>
@@ -207,6 +221,10 @@ function MonPlan({
           value={formatMoney(monthlyAvailable, currency)}
           color={monthlyAvailable >= 0 ? "var(--green)" : "var(--red)"}
         />
+
+        <button onClick={() => setCurrentPage("simulateur")} style={blueButton}>
+          Tester une simulation
+        </button>
       </section>
 
       <section style={disciplineCard}>
@@ -536,7 +554,7 @@ function getNextAction({
       title: "Consolider vos victoires",
       description:
         "Vous avez déjà atteint un objectif. La prochaine étape est de choisir un nouveau cap.",
-      button: "Créer un objectif",
+      button: "Ouvrir Mon Plan",
       page: "objectifs",
     };
   }
@@ -545,7 +563,7 @@ function getNextAction({
     title: "Créer votre premier objectif",
     description:
       "Ajoutez un objectif pour que Mon Plan puisse construire une priorité automatique.",
-    button: "Créer un objectif",
+    button: "Ouvrir Mon Plan",
     page: "objectifs",
   };
 }
@@ -802,6 +820,14 @@ const card = {
   background: "var(--bg-card)",
   border: "1px solid var(--border)",
   borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const foundationCard = {
+  background: "linear-gradient(135deg, rgba(34,197,94,.16), var(--bg-card))",
+  border: "1px solid var(--green)",
+  borderRadius: "24px",
   padding: "20px",
   marginTop: "20px",
 };

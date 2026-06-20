@@ -1,11 +1,11 @@
 import {
+  BarChart3,
   Brain,
-  Calculator,
   ChevronDown,
   ChevronUp,
   Home,
   Route,
-  Target,
+  UserCircle,
 } from "lucide-react";
 
 function BottomNav({ currentPage, setCurrentPage, navHidden, setNavHidden }) {
@@ -47,10 +47,10 @@ function BottomNav({ currentPage, setCurrentPage, navHidden, setNavHidden }) {
         </button>
 
         <NavButton
-          active={currentPage === "parcours"}
-          icon={<Route size={20} />}
-          label="Parcours"
-          onClick={() => go("parcours")}
+          active={currentPage === "situation"}
+          icon={<BarChart3 size={20} />}
+          label="Situation"
+          onClick={() => go("situation")}
         />
 
         <button
@@ -68,17 +68,17 @@ function BottomNav({ currentPage, setCurrentPage, navHidden, setNavHidden }) {
         </button>
 
         <NavButton
-          active={currentPage === "objectifs"}
-          icon={<Target size={20} />}
-          label="Objectifs"
-          onClick={() => go("objectifs")}
+          active={currentPage === "parcours"}
+          icon={<Route size={20} />}
+          label="Parcours"
+          onClick={() => go("parcours")}
         />
 
         <NavButton
-          active={currentPage === "simulateur"}
-          icon={<Calculator size={20} />}
-          label="Simuler"
-          onClick={() => go("simulateur")}
+          active={currentPage === "profil"}
+          icon={<UserCircle size={20} />}
+          label="Profil"
+          onClick={() => go("profil")}
         />
       </nav>
     </>
