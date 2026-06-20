@@ -21,62 +21,49 @@ function BottomNav({ currentPage, setCurrentPage, navHidden, setNavHidden }) {
         aria-label={navHidden ? "Afficher la navigation" : "Masquer la navigation"}
         title={navHidden ? "Afficher la navigation" : "Masquer la navigation"}
       >
-        {navHidden ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        {navHidden ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
       </button>
 
       <nav
         className={`bottom-nav ${navHidden ? "bottom-nav-hidden" : ""}`}
         aria-label="Navigation principale OnJarama Path"
       >
-        <button
+        <NavButton
+          active={currentPage === "accueil"}
+          icon={<Home size={21} />}
+          label="Accueil"
           onClick={() => go("accueil")}
-          className={`bottom-logo-btn ${
-            currentPage === "accueil" ? "active-logo" : ""
-          }`}
-          aria-label="Accueil"
-          title="Accueil"
-        >
-          <img
-            src="/onjarama-path-logo.png"
-            alt="Accueil"
-            className="bottom-logo"
-          />
-          <span className="bottom-logo-fallback">
-            <Home size={18} />
-          </span>
-        </button>
+        />
 
         <NavButton
           active={currentPage === "situation"}
-          icon={<BarChart3 size={20} />}
+          icon={<BarChart3 size={21} />}
           label="Situation"
           onClick={() => go("situation")}
         />
 
         <button
           onClick={() => go("monplan")}
-          className={`bottom-center-plan ${
-            currentPage === "monplan" ? "active" : ""
-          }`}
+          className={`bottom-center-plan ${currentPage === "monplan" ? "active" : ""}`}
           aria-label="Mon Plan"
           title="Mon Plan"
         >
           <span className="bottom-center-icon">
-            <Brain size={24} />
+            <Brain size={21} />
           </span>
           <strong>Mon Plan</strong>
         </button>
 
         <NavButton
           active={currentPage === "parcours"}
-          icon={<Route size={20} />}
+          icon={<Route size={21} />}
           label="Parcours"
           onClick={() => go("parcours")}
         />
 
         <NavButton
           active={currentPage === "profil"}
-          icon={<UserCircle size={20} />}
+          icon={<UserCircle size={21} />}
           label="Profil"
           onClick={() => go("profil")}
         />

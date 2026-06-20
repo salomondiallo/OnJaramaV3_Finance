@@ -7,7 +7,9 @@ import {
   Globe,
   HelpCircle,
   Info,
+  KeyRound,
   Lightbulb,
+  LoaderCircle,
   Lock,
   LogOut,
   Mail,
@@ -23,13 +25,20 @@ import { getText } from "../data/translations";
 
 const pageText = {
   FR: {
-    subtitle: "Compte, sources, guide et informations OnJarama.",
+    subtitle: "Compte, cloud, guide et informations OnJarama.",
     user: "Utilisateur OnJarama",
     beta: "Version bêta locale",
     connected: "Compte connecté",
     guest: "Mode invité",
     cloudReady: "Cloud Supabase prêt",
     cloudNotReady: "Cloud non configuré",
+    connectionTitle: "Connexion & sauvegarde",
+    connectionLoading: "Vérification de la session...",
+    optionalConnection: "Connexion facultative",
+    secureLogin: "Connexion sécurisée",
+    cloudConfiguredText: "Le cloud est prêt. Vous pouvez vous connecter pour préparer la synchronisation future.",
+    cloudDisabledText: "La connexion sera disponible quand les clés Supabase seront configurées dans Vercel.",
+    continueGuest: "Continuer en mode invité",
     googleLogin: "Connexion Google",
     microsoftLogin: "Connexion Microsoft",
     signOut: "Déconnexion",
@@ -114,6 +123,13 @@ const pageText = {
     guest: "Guest mode",
     cloudReady: "Supabase cloud ready",
     cloudNotReady: "Cloud not configured",
+    connectionTitle: "Connection & backup",
+    connectionLoading: "Checking session...",
+    optionalConnection: "Optional sign-in",
+    secureLogin: "Secure sign-in",
+    cloudConfiguredText: "Cloud is ready. You can sign in to prepare future synchronization.",
+    cloudDisabledText: "Sign-in will be available when Supabase keys are configured in Vercel.",
+    continueGuest: "Continue as guest",
     googleLogin: "Sign in with Google",
     microsoftLogin: "Sign in with Microsoft",
     signOut: "Sign out",
@@ -198,6 +214,13 @@ const pageText = {
     guest: "Modo invitado",
     cloudReady: "Cloud Supabase listo",
     cloudNotReady: "Cloud no configurado",
+    connectionTitle: "Conexión y copia",
+    connectionLoading: "Verificando la sesión...",
+    optionalConnection: "Conexión opcional",
+    secureLogin: "Conexión segura",
+    cloudConfiguredText: "El cloud está listo. Puedes conectarte para preparar la sincronización futura.",
+    cloudDisabledText: "La conexión estará disponible cuando las claves Supabase estén configuradas en Vercel.",
+    continueGuest: "Continuar como invitado",
     googleLogin: "Conexión Google",
     microsoftLogin: "Conexión Microsoft",
     signOut: "Cerrar sesión",
@@ -304,6 +327,9 @@ function Profil({
 
   const isConfigured = Boolean(auth?.isConfigured);
   const isConnected = Boolean(auth?.isConnected);
+  const loadingAuth = Boolean(auth?.loadingAuth);
+  const providerLoading = auth?.providerLoading || null;
+  const authError = auth?.authError || "";
   const userEmail = auth?.user?.email || "";
 
   const monthlyIncome = Number(financeData?.overview?.monthlyIncome || 0);
@@ -345,61 +371,68 @@ function Profil({
         </button>
       </section>
 
-      <section style={sourceCard}>
-        <div style={header}>
-          <ShieldCheck color={sourceCount > 0 ? "var(--green)" : "var(--gold)"} />
-          <h2>{p.financialSources}</h2>
-        </div>
-
-        <InfoRow
-          label="Statut"
-          value={
-            sourceCount > 0
-              ? `${sourceCount} ${sourceCount > 1 ? p.sourcesReady : p.sourceReady}`
-              : p.noSource
-          }
-        />
-
-        <p style={muted}>{p.sourceText}</p>
-
-        <button onClick={() => setCurrentPage("situation")} style={primaryBtn}>
-          {p.configureSources}
-        </button>
-      </section>
-
       <section style={authCard(isConnected)}>
         <div style={header}>
           <Cloud color={isConnected ? "var(--green)" : "var(--gold)"} />
-          <h2>OnJarama Cloud</h2>
+          <h2>{p.connectionTitle}</h2>
+        </div>
+
+        <div style={connectionBadge(isConnected)}>
+          {loadingAuth ? (
+            <LoaderCircle size={18} />
+          ) : isConnected ? (
+            <CheckCircle size={18} />
+          ) : (
+            <KeyRound size={18} />
+          )}
+          <strong>
+            {loadingAuth
+              ? p.connectionLoading
+              : isConnected
+                ? p.connected
+                : p.optionalConnection}
+          </strong>
         </div>
 
         <InfoRow label="Statut" value={isConnected ? p.connected : p.guest} />
-        <InfoRow label="Supabase" value={isConfigured ? p.cloudReady : p.cloudNotReady} />
+        <InfoRow
+          label="Supabase"
+          value={isConfigured ? p.cloudReady : p.cloudNotReady}
+        />
 
         {isConnected && (
           <InfoRow label={p.accountEmail} value={userEmail || "Compte actif"} />
         )}
 
-        <p style={muted}>{isConnected ? p.connectedText : p.localModeText}</p>
+        <p style={muted}>
+          {isConnected
+            ? p.connectedText
+            : isConfigured
+              ? p.cloudConfiguredText
+              : p.cloudDisabledText}
+        </p>
+
+        {!isConnected && <p style={guestLine}>✓ {p.localModeText}</p>}
+        {authError && <p style={errorLine}>⚠️ {authError}</p>}
 
         {!isConnected ? (
           <div style={authActions}>
             <button
               onClick={auth?.signInWithGoogle}
-              disabled={!isConfigured}
-              style={googleBtn}
+              disabled={!isConfigured || loadingAuth || Boolean(providerLoading)}
+              style={authButtonStyle(googleBtn, !isConfigured || loadingAuth || Boolean(providerLoading))}
             >
               <Globe size={18} />
-              {p.googleLogin}
+              {providerLoading === "google" ? p.connectionLoading : p.googleLogin}
             </button>
 
             <button
               onClick={auth?.signInWithMicrosoft}
-              disabled={!isConfigured}
-              style={microsoftBtn}
+              disabled={!isConfigured || loadingAuth || Boolean(providerLoading)}
+              style={authButtonStyle(microsoftBtn, !isConfigured || loadingAuth || Boolean(providerLoading))}
             >
               <Cloud size={18} />
-              {p.microsoftLogin}
+              {providerLoading === "azure" ? p.connectionLoading : p.microsoftLogin}
             </button>
           </div>
         ) : (
@@ -703,14 +736,6 @@ const profileCard = {
   alignItems: "center",
 };
 
-const sourceCard = {
-  background: "linear-gradient(135deg, rgba(212,175,55,.14), rgba(34,197,94,.08), var(--bg-card))",
-  border: "1px solid var(--gold)",
-  borderRadius: "22px",
-  padding: "18px",
-  marginTop: "16px",
-};
-
 const guideCard = {
   background: "linear-gradient(135deg, rgba(56,189,248,.10), var(--bg-card))",
   border: "1px solid var(--blue)",
@@ -724,6 +749,41 @@ const guideGrid = {
   gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
   gap: "10px",
 };
+
+const connectionBadge = (connected) => ({
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "8px",
+  border: `1px solid ${connected ? "var(--green)" : "var(--gold)"}`,
+  background: connected ? "rgba(34,197,94,.12)" : "rgba(212,175,55,.12)",
+  color: connected ? "var(--green)" : "var(--gold)",
+  borderRadius: "999px",
+  padding: "8px 11px",
+  fontSize: "13px",
+  marginBottom: "10px",
+});
+
+const guestLine = {
+  color: "var(--green)",
+  fontSize: "13px",
+  fontWeight: "800",
+  marginTop: "10px",
+};
+
+const errorLine = {
+  color: "var(--red)",
+  fontSize: "13px",
+  fontWeight: "800",
+  marginTop: "10px",
+};
+
+function authButtonStyle(base, disabled) {
+  return {
+    ...base,
+    opacity: disabled ? 0.55 : 1,
+    cursor: disabled ? "not-allowed" : "pointer",
+  };
+}
 
 const actionTile = {
   background: "var(--bg-panel)",

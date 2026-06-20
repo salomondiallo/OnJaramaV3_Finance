@@ -1,16 +1,7 @@
 import "./App.css";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  BarChart3,
-  CreditCard,
-  PiggyBank,
-  Route,
-  Sparkles,
-  Target,
-  Trophy,
-  X,
-} from "lucide-react";
+import { Trophy, X } from "lucide-react";
 
 import useAppState from "./hooks/useAppState";
 import useNavigation from "./hooks/useNavigation";
@@ -51,6 +42,8 @@ function App() {
 
   const [navHidden, setNavHidden] = useState(false);
   const [showVictoryOverlay, setShowVictoryOverlay] = useState(false);
+  const [pendingAnchor, setPendingAnchor] = useState(null);
+  const pageScrollRef = useRef(null);
 
   const {
     currentPage,
@@ -60,6 +53,30 @@ function App() {
     goBackwardBySwipe,
     canGoBack,
   } = useNavigation();
+
+  function navigateTo(page, targetId = null) {
+    setPendingAnchor(targetId);
+    setCurrentPage(page);
+  }
+
+  useEffect(() => {
+    const shell = pageScrollRef.current;
+    if (!shell) return;
+
+    window.requestAnimationFrame(() => {
+      shell.scrollTo({ top: 0, behavior: "auto" });
+
+      if (!pendingAnchor) return;
+
+      window.setTimeout(() => {
+        const target = shell.querySelector(`#${pendingAnchor}`);
+        if (target) {
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        setPendingAnchor(null);
+      }, 90);
+    });
+  }, [currentPage, pendingAnchor]);
 
   useEffect(() => {
     document.body.classList.remove("theme-light", "theme-dark");
@@ -106,10 +123,10 @@ function App() {
     () => ({
       ...appState,
       auth,
-      setCurrentPage,
+      setCurrentPage: navigateTo,
       goBack,
     }),
-    [appState, auth, setCurrentPage, goBack]
+    [appState, auth, navigateTo, goBack]
   );
 
   const pages = {
@@ -213,18 +230,13 @@ function App() {
           currentPage={currentPage}
           goBack={goBack}
           canGoBack={canGoBack}
-          setCurrentPage={setCurrentPage}
+          setCurrentPage={navigateTo}
           notifications={appState.notifications}
           settings={appState.settings}
         />
 
-        <ContextualNavigation
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-        />
-
         <div className="page-stage">
-          <div className="page-scroll-shell">
+          <div className="page-scroll-shell" ref={pageScrollRef}>
             {pages[currentPage] || <Accueil {...pageProps} />}
           </div>
         </div>
@@ -264,114 +276,13 @@ function App() {
 
       <BottomNav
         currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
+        setCurrentPage={navigateTo}
         navHidden={navHidden}
         setNavHidden={setNavHidden}
       />
     </div>
   );
 }
-
-function ContextualNavigation({ currentPage, setCurrentPage }) {
-  const contextPages = ["situation", "dettes", "epargne", "objectifs", "paiements", "simulateur"];
-
-  if (!contextPages.includes(currentPage)) return null;
-
-  const actions = {
-    situation: {
-      backLabel: "Retour à l'accueil",
-      backPage: "accueil",
-      icon: <Sparkles size={16} />,
-      action: "Voir Mon Plan",
-      page: "monplan",
-    },
-    dettes: {
-      backLabel: "Retour à la Situation",
-      backPage: "situation",
-      icon: <CreditCard size={16} />,
-      action: "Simuler remboursement",
-      page: "simulateur",
-    },
-    epargne: {
-      backLabel: "Retour à la Situation",
-      backPage: "situation",
-      icon: <PiggyBank size={16} />,
-      action: "Voir Mon Plan",
-      page: "monplan",
-    },
-    objectifs: {
-      backLabel: "Retour à Mon Plan",
-      backPage: "monplan",
-      icon: <Target size={16} />,
-      action: "Voir Parcours",
-      page: "parcours",
-    },
-    paiements: {
-      backLabel: "Retour à la Situation",
-      backPage: "situation",
-      icon: <CreditCard size={16} />,
-      action: "Voir Dettes",
-      page: "dettes",
-    },
-    simulateur: {
-      backLabel: "Retour à Mon Plan",
-      backPage: "monplan",
-      icon: <BarChart3 size={16} />,
-      action: "Ma Situation",
-      page: "situation",
-    },
-  };
-
-  const context = actions[currentPage];
-
-  return (
-    <div style={contextBar}>
-      <button onClick={() => setCurrentPage(context.backPage)} style={contextBack}>
-        <Route size={16} />
-        {context.backLabel}
-      </button>
-
-      <button onClick={() => setCurrentPage(context.page)} style={contextAction}>
-        {context.icon}
-        {context.action}
-      </button>
-    </div>
-  );
-}
-
-const contextBar = {
-  display: "flex",
-  gap: "8px",
-  padding: "8px 14px 0",
-};
-
-const contextBack = {
-  flex: 1,
-  border: "1px solid var(--gold)",
-  background: "rgba(212,175,55,.12)",
-  color: "var(--gold)",
-  borderRadius: "999px",
-  padding: "10px 12px",
-  fontWeight: "800",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "7px",
-};
-
-const contextAction = {
-  flex: 1,
-  border: "1px solid var(--border)",
-  background: "var(--bg-card)",
-  color: "var(--text-main)",
-  borderRadius: "999px",
-  padding: "10px 12px",
-  fontWeight: "800",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "7px",
-};
 
 const victoryOverlay = {
   position: "fixed",

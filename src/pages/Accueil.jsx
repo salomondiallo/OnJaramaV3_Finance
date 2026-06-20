@@ -118,7 +118,7 @@ function Accueil({
       <section className="accueil-hero" />
 
       <section className="accueil-headline" style={premiumHero}>
-        <p className="accueil-eyebrow">OnJarama Path V10.7</p>
+        <p className="accueil-eyebrow">OnJarama Path V10.9</p>
 
         <h1 className="accueil-title">
           {t.heroTitle}
@@ -130,31 +130,38 @@ function Accueil({
           Votre situation d’abord. Votre plan ensuite. Votre parcours à votre rythme.
         </p>
       </section>
+      <section className="accueil-headline" style={quickActionsCard}>
+        <div style={sectionHead}>
+          <Sparkles size={20} color="var(--gold)" />
+          <strong>Actions rapides utiles</strong>
+        </div>
 
-      <section className="context-nav-row">
-        <ContextNavButton
-          icon={<BarChart3 size={18} />}
-          label="Situation"
-          onClick={() => setCurrentPage("situation")}
-        />
-
-        <ContextNavButton
-          icon={<Brain size={18} />}
-          label="Mon Plan"
-          onClick={() => setCurrentPage("monplan")}
-        />
-
-        <ContextNavButton
-          icon={<Route size={18} />}
-          label="Parcours"
-          onClick={() => setCurrentPage("parcours")}
-        />
-
-        <ContextNavButton
-          icon={<Calculator size={18} />}
-          label="Simuler"
-          onClick={() => setCurrentPage("simulateur")}
-        />
+        <div style={quickActionsGrid}>
+          <QuickActionButton
+            label="Ajouter revenu"
+            text="Origine des fonds"
+            color="var(--green)"
+            onClick={() => setCurrentPage("situation", "origine-fonds")}
+          />
+          <QuickActionButton
+            label="Ajouter dépense"
+            text="Destination des fonds"
+            color="var(--red)"
+            onClick={() => setCurrentPage("situation", "destination-fonds")}
+          />
+          <QuickActionButton
+            label="Ajouter dette"
+            text="Dettes modifiables"
+            color="var(--gold)"
+            onClick={() => setCurrentPage("situation", "dettes")}
+          />
+          <QuickActionButton
+            label="Nouvel objectif"
+            text="Objectifs"
+            color="var(--blue)"
+            onClick={() => setCurrentPage("objectifs")}
+          />
+        </div>
       </section>
 
       <section className="accueil-headline" style={situationCard}>
@@ -184,7 +191,7 @@ function Accueil({
         <p style={softText}>{situationScore.label}</p>
 
         <button
-          onClick={() => setCurrentPage("situation")}
+          onClick={() => setCurrentPage("situation", "origine-fonds")}
           className="primary-action"
           style={{ marginTop: 12 }}
         >
@@ -247,7 +254,7 @@ function Accueil({
         </p>
 
         <button
-          onClick={() => setCurrentPage("situation")}
+          onClick={() => setCurrentPage("situation", "origine-fonds")}
           className="ai-action"
           style={{ marginTop: 12 }}
         >
@@ -265,7 +272,7 @@ function Accueil({
           <CommandStat
             icon={<Gauge size={18} />}
             label="Score situation"
-            value={`${situationScore.score}%`}
+            value={situationScore.isReady ? `${situationScore.score}%` : "À compléter"}
             color={situationScore.color}
           />
 
@@ -345,15 +352,7 @@ function Accueil({
           <p style={softText}>{lastActivity.message}</p>
         </section>
       )}
-
-      <div className="accueil-actions">
-        <button
-          onClick={() => setCurrentPage("situation")}
-          className="primary-action"
-        >
-          Ma Situation
-        </button>
-
+      <div className="accueil-actions accueil-actions-single">
         <button onClick={() => setCurrentPage("assistant")} className="ai-action">
           <Bot size={18} />
           IA OnJarama
@@ -379,7 +378,7 @@ function Accueil({
           title="Dettes"
           text={money(totalDebt)}
           color="var(--red)"
-          onClick={() => setCurrentPage("situation")}
+          onClick={() => setCurrentPage("situation", "dettes")}
         />
 
         <QuickTile
@@ -387,7 +386,7 @@ function Accueil({
           title="Sources"
           text={hasSources ? `${sourceCount} enregistrée${sourceCount > 1 ? "s" : ""}` : "À votre rythme"}
           color={hasSources ? "var(--green)" : "var(--gold)"}
-          onClick={() => setCurrentPage("situation")}
+          onClick={() => setCurrentPage("situation", "origine-fonds")}
         />
 
         <QuickTile
@@ -415,6 +414,15 @@ function Accueil({
         </div>
       </section>
     </div>
+  );
+}
+
+function QuickActionButton({ label, text, color, onClick }) {
+  return (
+    <button onClick={onClick} style={{ ...quickActionBtn, borderColor: color }}>
+      <strong style={{ color }}>{label}</strong>
+      <small>{text}</small>
+    </button>
   );
 }
 
@@ -489,8 +497,16 @@ function getSituationScore({
   monthlyAvailable,
   totalDebt,
 }) {
-  let score = 50;
+  if (!monthlyIncome || monthlyIncome <= 0) {
+    return {
+      score: 0,
+      isReady: false,
+      color: "var(--gold)",
+      label: "Complétez vos sources et vos sorties pour générer un score fiable.",
+    };
+  }
 
+  let score = 50;
   if (monthlyIncome > 0) score += 15;
   if (monthlyAvailable > 0) score += 15;
   if (monthlySavings > 0) score += 10;
@@ -500,28 +516,9 @@ function getSituationScore({
   if (monthlyAvailable < 0) score -= 25;
 
   const safeScore = Math.max(0, Math.min(100, score));
-
-  if (safeScore >= 80) {
-    return {
-      score: safeScore,
-      color: "var(--green)",
-      label: "Base solide. Continuez à protéger votre marge.",
-    };
-  }
-
-  if (safeScore >= 55) {
-    return {
-      score: safeScore,
-      color: "var(--gold)",
-      label: "Situation stable, mais quelques ajustements peuvent aider.",
-    };
-  }
-
-  return {
-    score: safeScore,
-    color: "var(--red)",
-    label: "Priorité : reprendre du souffle mensuel.",
-  };
+  if (safeScore >= 80) return { score: safeScore, isReady: true, color: "var(--green)", label: "Base solide. Continuez à protéger votre marge." };
+  if (safeScore >= 55) return { score: safeScore, isReady: true, color: "var(--gold)", label: "Situation stable, mais quelques ajustements peuvent aider." };
+  return { score: safeScore, isReady: true, color: "var(--red)", label: "Priorité : reprendre du souffle mensuel." };
 }
 
 function getStartedLabel(createdAt) {
@@ -596,6 +593,29 @@ function QuickTile({ icon, title, text, color, onClick }) {
     </button>
   );
 }
+
+const quickActionsCard = {
+  border: "1px solid rgba(212,175,55,.45)",
+  background: "linear-gradient(135deg, rgba(212,175,55,.10), var(--bg-card))",
+};
+
+const quickActionsGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: "8px",
+  marginTop: "10px",
+};
+
+const quickActionBtn = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "12px",
+  color: "var(--text-main)",
+  textAlign: "left",
+  display: "grid",
+  gap: "4px",
+};
 
 const sectionHead = {
   display: "flex",
