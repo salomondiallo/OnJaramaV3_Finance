@@ -16,6 +16,11 @@ import {
   Wallet,
   CreditCard,
   Route,
+  Brain,
+  Calculator,
+  Lock,
+  CheckCircle,
+  AlertTriangle,
 } from "lucide-react";
 
 import { useState } from "react";
@@ -105,6 +110,13 @@ function Accueil({
     monthlyIncome,
   });
 
+  const fundingConfigured = monthlyIncome > 0;
+  const isCloudConnected =
+    settings?.cloudStatus === "connected" ||
+    settings?.cloudStatus === "synced" ||
+    settings?.isCloudConnected ||
+    settings?.user;
+
   function money(value) {
     if (!showAmounts) return "Chiffres masqués";
 
@@ -118,7 +130,7 @@ function Accueil({
       <section className="accueil-hero" />
 
       <section className="accueil-headline" style={premiumHero}>
-        <p className="accueil-eyebrow">OnJarama Path V8.8</p>
+        <p className="accueil-eyebrow">OnJarama Path V10.3</p>
 
         <h1 className="accueil-title">
           {t.heroTitle}
@@ -130,6 +142,89 @@ function Accueil({
           Votre compagnon financier premium pour comprendre, décider et avancer
           sans pression.
         </p>
+      </section>
+
+      <section className="accueil-headline" style={progressFlagCard}>
+        <div style={sectionHead}>
+          <Flag size={20} color="var(--gold)" />
+          <strong>Progression OnJarama</strong>
+        </div>
+
+        <p style={softText}>
+          {firstGoal
+            ? `🚩 Parcours démarré ${getStartedLabel(firstGoal.createdAt)}.`
+            : "🚩 Votre parcours commencera dès votre premier objectif actif."}
+        </p>
+      </section>
+
+      <section className="context-nav-row">
+        <ContextNavButton
+          icon={<Brain size={18} />}
+          label="Mon Plan"
+          onClick={() => setCurrentPage("monplan")}
+        />
+
+        <ContextNavButton
+          icon={<Target size={18} />}
+          label="Objectifs"
+          onClick={() => setCurrentPage("objectifs")}
+        />
+
+        <ContextNavButton
+          icon={<Route size={18} />}
+          label="Parcours"
+          onClick={() => setCurrentPage("parcours")}
+        />
+
+        <ContextNavButton
+          icon={<Calculator size={18} />}
+          label="Simuler"
+          onClick={() => setCurrentPage("simulateur")}
+        />
+      </section>
+
+      <section className="accueil-headline" style={fundingCard}>
+        <div style={sectionHead}>
+          <Wallet
+            size={20}
+            color={fundingConfigured ? "var(--green)" : "var(--gold)"}
+          />
+          <strong>Origine des fonds</strong>
+        </div>
+
+        <div style={fundingStatusRow}>
+          {fundingConfigured ? (
+            <CheckCircle size={18} color="var(--green)" />
+          ) : (
+            <AlertTriangle size={18} color="var(--gold)" />
+          )}
+
+          <strong
+            style={{
+              color: fundingConfigured ? "var(--green)" : "var(--gold)",
+            }}
+          >
+            {fundingConfigured ? "Configurée" : "À compléter"}
+          </strong>
+        </div>
+
+        <p style={softText}>
+          Les montants restent cachés sur l’accueil. Les détails sont accessibles
+          uniquement dans votre profil financier.
+        </p>
+
+        {isCloudConnected && (
+          <p style={syncLine}>✔ Synchronisée avec le profil connecté</p>
+        )}
+
+        <button
+          onClick={() => setCurrentPage("profil")}
+          className="ai-action"
+          style={{ marginTop: 12 }}
+        >
+          <Lock size={17} />
+          Ouvrir Profil / Finances
+        </button>
       </section>
 
       <section className="accueil-headline" style={commandCenter}>
@@ -265,7 +360,7 @@ function Accueil({
         <div style={situationGrid}>
           <SituationLine
             label="Revenus"
-            value={money(monthlyIncome)}
+            value={showAmounts ? money(monthlyIncome) : "Protégés"}
             color="var(--green)"
           />
           <SituationLine
@@ -311,22 +406,6 @@ function Accueil({
           >
             Voir les notifications
           </button>
-        </section>
-      )}
-
-      {firstGoal && (
-        <section className="accueil-headline" style={disciplineCard}>
-          <div style={sectionHead}>
-            <Flag size={20} color="var(--gold)" />
-            <strong>Parcours commencé</strong>
-          </div>
-
-          <p style={softText}>
-            🚩 Vous avez commencé votre parcours{" "}
-            {getStartedLabel(firstGoal.createdAt)}.
-          </p>
-
-          <p style={softText}>Chaque petit dépôt compte.</p>
         </section>
       )}
 
@@ -404,6 +483,14 @@ function Accueil({
         />
 
         <QuickTile
+          icon={<PiggyBank />}
+          title="Fonds"
+          text={fundingConfigured ? "Origine configurée" : "À compléter"}
+          color={fundingConfigured ? "var(--green)" : "var(--gold)"}
+          onClick={() => setCurrentPage("profil")}
+        />
+
+        <QuickTile
           icon={<Target />}
           title="Objectif"
           text={mainGoal ? mainGoal.title : "Créer un objectif"}
@@ -412,25 +499,9 @@ function Accueil({
         />
 
         <QuickTile
-          icon={<Trophy />}
-          title="Victoire"
-          text={
-            achievedGoals.length > 0
-              ? `${achievedGoals.length} atteinte${
-                  achievedGoals.length > 1 ? "s" : ""
-                }`
-              : totalDebt > 0
-                ? "Réduire la dette"
-                : "Bâtir le plan"
-          }
-          color="var(--gold)"
-          onClick={() => setCurrentPage("parcours")}
-        />
-
-        <QuickTile
           icon={<ShieldCheck />}
           title="Sécurité"
-          text="Données locales"
+          text="Données protégées"
           color="var(--purple)"
           onClick={() => setCurrentPage("profil")}
         />
@@ -472,10 +543,19 @@ function Accueil({
 
         <p>
           Situation Premium, Parcours Premium et Objectifs intelligents sont
-          maintenant connectés dans l’expérience V8.
+          maintenant connectés dans l’expérience V10.3.
         </p>
       </section>
     </div>
+  );
+}
+
+function ContextNavButton({ icon, label, onClick }) {
+  return (
+    <button onClick={onClick} className="context-nav-btn">
+      <span>{icon}</span>
+      <strong>{label}</strong>
+    </button>
   );
 }
 
@@ -743,6 +823,31 @@ const premiumHero = {
     "radial-gradient(circle at top right, rgba(212,175,55,.22), transparent 34%), var(--bg-card)",
 };
 
+const progressFlagCard = {
+  border: "1px solid rgba(212,175,55,.5)",
+  background: "linear-gradient(135deg, rgba(212,175,55,.13), var(--bg-card))",
+};
+
+const fundingCard = {
+  border: "1px solid rgba(212,175,55,.55)",
+  background:
+    "linear-gradient(135deg, rgba(212,175,55,.12), rgba(34,197,94,.06), var(--bg-card))",
+};
+
+const fundingStatusRow = {
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  marginBottom: "8px",
+};
+
+const syncLine = {
+  margin: "9px 0 0",
+  color: "var(--green)",
+  fontSize: "12px",
+  fontWeight: "800",
+};
+
 const commandCenter = {
   border: "1px solid rgba(212,175,55,.48)",
   background:
@@ -884,11 +989,6 @@ const alertLine = {
   margin: "6px 0 0",
   color: "var(--text-muted)",
   lineHeight: 1.4,
-};
-
-const disciplineCard = {
-  border: "1px solid var(--gold)",
-  background: "linear-gradient(135deg, rgba(212,175,55,.14), var(--bg-card))",
 };
 
 const nextActionCard = {
