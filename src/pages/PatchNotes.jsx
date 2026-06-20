@@ -6,6 +6,9 @@ import {
   Flag,
   BookOpen,
   ShieldCheck,
+  Brain,
+  Calculator,
+  Route,
 } from "lucide-react";
 
 const pageText = {
@@ -27,81 +30,105 @@ function PatchNotes({ settings }) {
 
   const notes = [
     {
+      version: "V11.1",
+      title: "Smart Planning & Simulateur Premium",
+      text:
+        language === "EN"
+          ? "Connect+ Discover, Next Victory, Smart Journey improvements, Premium Simulator and intelligent planning enhancements."
+          : "Connect+ Découvre, Prochaine Victoire, amélioration Smart Journey, Simulateur Premium et renforcement du plan intelligent.",
+      icon: <Brain />,
+      color: "var(--gold)",
+      current: true,
+    },
+    {
+      version: "V11.0",
+      title: "Navigation Premium",
+      text:
+        language === "EN"
+          ? "Premium navigation and central My Plan experience."
+          : "Navigation premium et expérience Mon Plan centrale.",
+      icon: <Trophy />,
+      color: "var(--gold)",
+    },
+    {
       version: "V10.3",
       title: "UX Premium Finalization",
       text:
         language === "EN"
-          ? "Funding source privacy, progress flag, smart shortcuts, improved guide and premium experience refinement."
-          : "Origine des fonds discrète, drapeau de progression, raccourcis intelligents, guide enrichi et amélioration générale de l'expérience premium.",
+          ? "Funding source privacy, progress flag and premium refinements."
+          : "Origine des fonds discrète, drapeau de progression et améliorations premium.",
       icon: <Flag />,
       color: "var(--gold)",
-      current: true,
     },
-
-    {
-      version: "V10.3",
-      title: "UX Premium Implementation",
-      text:
-        language === "EN"
-          ? "Mobile/desktop optimization, premium navigation, guide, patch notes and multilingual foundation."
-          : "Optimisation mobile/PC, navigation premium, guide utilisateur, patch notes et fondation multilingue.",
-      icon: <Sparkles />,
-      color: "var(--gold)",
-    },
-
     {
       version: "V10.2",
       title: "Cloud Foundation",
       text:
         language === "EN"
-          ? "Supabase preparation, cloud status and future synchronization architecture."
-          : "Préparation Supabase, statut cloud et architecture de synchronisation future.",
+          ? "Supabase preparation and cloud architecture."
+          : "Préparation Supabase et architecture cloud.",
       icon: <Cloud />,
       color: "var(--blue)",
     },
-
     {
       version: "V10.1",
       title: "Auth UI Supabase",
       text:
         language === "EN"
-          ? "Google and Microsoft sign-in interface prepared."
-          : "Interface de connexion Google et Microsoft préparée.",
+          ? "Google and Microsoft sign-in preparation."
+          : "Préparation des connexions Google et Microsoft.",
       icon: <CheckCircle />,
       color: "var(--green)",
     },
-
-    {
-      version: "V10.0",
-      title: "Navigation Premium",
-      text:
-        language === "EN"
-          ? "Premium navigation, central My Plan button and stronger application structure."
-          : "Navigation premium, bouton central Mon Plan et structure renforcée.",
-      icon: <Trophy />,
-      color: "var(--purple)",
-    },
-
     {
       version: "V9.0",
       title: "Mon Plan Premium",
       text:
         language === "EN"
-          ? "Priority engine, goals integration and financial roadmap."
-          : "Moteur de priorités, intégration des objectifs et feuille de route financière.",
+          ? "Priority engine and financial roadmap."
+          : "Moteur de priorités et feuille de route financière.",
       icon: <ShieldCheck />,
       color: "var(--green)",
     },
-
     {
       version: "V8.0",
-      title: "Guide & Learning Foundation",
+      title: "Guide Foundation",
       text:
         language === "EN"
-          ? "First educational experience and onboarding structure."
-          : "Première expérience pédagogique et structure d'accompagnement utilisateur.",
+          ? "Educational onboarding experience."
+          : "Première expérience pédagogique utilisateur.",
       icon: <BookOpen />,
       color: "var(--blue)",
+    },
+    {
+      version: "FUTUR",
+      title: "V11.2 Smart Allocation Engine",
+      text:
+        language === "EN"
+          ? "Automatic allocation, multi-goal planning and instant impact calculations."
+          : "Répartition automatique, multi-objectifs et calcul d'impact instantané.",
+      icon: <Calculator />,
+      color: "var(--purple)",
+    },
+    {
+      version: "FUTUR",
+      title: "V11.3 Cloud Sync",
+      text:
+        language === "EN"
+          ? "Profile, goals and settings synchronization."
+          : "Synchronisation profil, objectifs et paramètres.",
+      icon: <Cloud />,
+      color: "var(--blue)",
+    },
+    {
+      version: "FUTUR",
+      title: "V12 Banking Read Only",
+      text:
+        language === "EN"
+          ? "Real account balances without transactions."
+          : "Lecture des comptes bancaires sans transaction.",
+      icon: <Route />,
+      color: "var(--gold)",
     },
   ];
 

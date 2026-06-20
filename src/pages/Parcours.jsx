@@ -452,6 +452,8 @@ function Parcours({
         </p>
       </section>
 
+      <JourneyMilestones progress={globalGoalProgress} p={p} />
+
       <section style={insightsCard}>
         <div style={header}>
           <Sparkles color="var(--gold)" />
@@ -918,6 +920,73 @@ function InsightStat({ icon, label, start, current, change, color, p }) {
   );
 }
 
+function JourneyMilestones({ progress, p }) {
+  const safeProgress = Math.min(100, Math.max(0, Number(progress || 0)));
+
+  const steps = [
+    { value: 0, label: "🚩 0%" },
+    { value: 25, label: "🚩 25%" },
+    { value: 50, label: "🚩 50%" },
+    { value: 75, label: "🚩 75%" },
+    { value: 100, label: "🏆 100%" },
+  ];
+
+  return (
+    <section style={milestoneProgressCard}>
+      <div style={header}>
+        <Flag color="var(--gold)" />
+        <div>
+          <p style={eyebrow}>Smart Journey</p>
+          <h2>Jalons du parcours</h2>
+          <p style={muted}>{p.progressSinceStart}</p>
+        </div>
+      </div>
+
+      <div style={milestoneTrack}>
+        <div
+          style={{
+            ...milestoneTrackFill,
+            width: `${safeProgress}%`,
+          }}
+        />
+
+        {steps.map((step) => (
+          <span
+            key={step.value}
+            style={{
+              ...milestoneDot,
+              left: `${step.value}%`,
+              borderColor:
+                safeProgress >= step.value ? "var(--gold)" : "var(--border)",
+              background:
+                safeProgress >= step.value ? "var(--gold)" : "var(--bg-card)",
+            }}
+          />
+        ))}
+      </div>
+
+      <div style={milestoneLabelRow}>
+        {steps.map((step) => (
+          <span
+            key={step.label}
+            style={{
+              color:
+                safeProgress >= step.value ? "var(--gold)" : "var(--text-muted)",
+              fontWeight: safeProgress >= step.value ? 900 : 700,
+            }}
+          >
+            {step.label}
+          </span>
+        ))}
+      </div>
+
+      <p style={muted}>
+        {p.globalProgress} : <strong>{safeProgress}%</strong>
+      </p>
+    </section>
+  );
+}
+
 function Milestone({ icon, title, subtitle, active, color }) {
   return (
     <div
@@ -1354,6 +1423,51 @@ function getDebtProgress(balance) {
 
   return 90;
 }
+
+const milestoneProgressCard = {
+  background:
+    "radial-gradient(circle at top right, rgba(212,175,55,.24), transparent 34%), linear-gradient(135deg, rgba(212,175,55,.16), rgba(34,197,94,.08), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "24px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const milestoneTrack = {
+  position: "relative",
+  height: "14px",
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "999px",
+  marginTop: "18px",
+  marginLeft: "3px",
+  marginRight: "3px",
+};
+
+const milestoneTrackFill = {
+  height: "100%",
+  borderRadius: "999px",
+  background: "linear-gradient(90deg, var(--gold), var(--green))",
+};
+
+const milestoneDot = {
+  position: "absolute",
+  top: "50%",
+  width: "18px",
+  height: "18px",
+  borderRadius: "999px",
+  border: "2px solid var(--border)",
+  transform: "translate(-50%, -50%)",
+  boxShadow: "0 0 12px rgba(212,175,55,.18)",
+};
+
+const milestoneLabelRow = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: "6px",
+  marginTop: "12px",
+  fontSize: "11px",
+};
 
 const smartHeaderCard = {
   background:
