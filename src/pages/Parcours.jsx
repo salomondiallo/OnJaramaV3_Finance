@@ -24,7 +24,7 @@ import { getText } from "../data/translations";
 const pageText = {
   FR: {
     subtitle: "Votre chemin financier, étape par étape.",
-    smartJourney: "Smart Journey",
+    smartJourney: "Parcours intelligent",
     journeyStart: "Départ du parcours",
     journeyDays: "Jours de parcours",
     globalProgress: "Progression globale",
@@ -89,7 +89,7 @@ const pageText = {
     cloudReady: "Préparation V11 Cloud Journey",
     cloudText:
       "Historique, parcours cloud et assistant contextualisé sont préparés pour la prochaine fondation.",
-    journeyInsights: "Journey Insights",
+    journeyInsights: "Regards sur le parcours",
     realEvolution: "Évolution réelle",
     startedWith: "Départ",
     now: "Aujourd’hui",
@@ -97,7 +97,7 @@ const pageText = {
     debtReduced: "Dette réduite",
     savingsBuilt: "Épargne construite",
     goalFunded: "Objectifs financés",
-    nextWinSmart: "Prochaine victoire intelligente",
+    nextWinSmart: "Prochaine victoire",
     fundingOrigin: "Origine des fonds",
     fundingConfigured: "Configurée",
     fundingMissing: "À compléter",
@@ -111,7 +111,7 @@ const pageText = {
 
   EN: {
     subtitle: "Your financial path, step by step.",
-    smartJourney: "Smart Journey",
+    smartJourney: "Parcours intelligent",
     journeyStart: "Journey start",
     journeyDays: "Journey days",
     globalProgress: "Global progress",
@@ -173,7 +173,7 @@ const pageText = {
     cloudReady: "V11 Cloud Journey preparation",
     cloudText:
       "History, cloud journey and contextual assistant are prepared for the next foundation.",
-    journeyInsights: "Journey Insights",
+    journeyInsights: "Regards sur le parcours",
     realEvolution: "Real evolution",
     startedWith: "Start",
     now: "Today",
@@ -195,7 +195,7 @@ const pageText = {
 
   ES: {
     subtitle: "Tu camino financiero, paso a paso.",
-    smartJourney: "Smart Journey",
+    smartJourney: "Parcours intelligent",
     journeyStart: "Inicio del camino",
     journeyDays: "Días de camino",
     globalProgress: "Progreso global",
@@ -260,7 +260,7 @@ const pageText = {
     cloudReady: "Preparación V11 Cloud Journey",
     cloudText:
       "Historial, recorrido cloud y asistente contextual están preparados para la próxima base.",
-    journeyInsights: "Journey Insights",
+    journeyInsights: "Regards sur le parcours",
     realEvolution: "Evolución real",
     startedWith: "Inicio",
     now: "Hoy",
@@ -404,7 +404,7 @@ function Parcours({
 
   return (
     <div className="native-page">
-      <h1>{t.parcours}</h1>
+      <h1>Mon histoire financière</h1>
       <p style={muted}>{p.subtitle}</p>
 
       <section style={smartHeaderCard}>
@@ -515,12 +515,6 @@ function Parcours({
           />
         </div>
 
-        <button
-          onClick={() => setCurrentPage(nextVictoryInsight.page)}
-          style={greenBtn}
-        >
-          {nextVictoryInsight.button}
-        </button>
       </section>
 
       <section style={fundingOriginCard}>
@@ -558,9 +552,6 @@ function Parcours({
           ))}
         </div>
 
-        <button onClick={() => setCurrentPage(nextStep.page)} style={greenBtn}>
-          {nextStep.button}
-        </button>
       </section>
 
       <section style={heroCard}>
@@ -653,9 +644,6 @@ function Parcours({
           <h2>{p.nextStep}</h2>
           <p style={muted}>{nextStep.text}</p>
 
-          <button onClick={() => setCurrentPage(nextStep.page)} style={greenBtn}>
-            {nextStep.button}
-          </button>
         </div>
       </section>
 
@@ -711,7 +699,7 @@ function Parcours({
         <div style={header}>
           <Route color="var(--green)" />
           <div>
-            <h2>{p.timeline}</h2>
+            <h2>Timeline du parcours</h2>
             <p style={muted}>{p.story}</p>
           </div>
         </div>
@@ -776,7 +764,7 @@ function Parcours({
         <div style={header}>
           <Route color="var(--green)" />
           <div>
-            <h2>{p.buildGoals}</h2>
+            <h2>Étapes du parcours</h2>
             <p style={muted}>{p.story}</p>
           </div>
         </div>
@@ -901,23 +889,6 @@ function Parcours({
         </div>
       </section>
 
-      <section style={card}>
-        <h2>{t.quickActions}</h2>
-
-        <div style={actions}>
-          <button onClick={() => setCurrentPage("situation")} style={redBtn}>
-            {p.updateSituation}
-          </button>
-
-          <button onClick={() => setCurrentPage("objectifs")} style={goldBtn}>
-            {p.manageGoals}
-          </button>
-
-          <button onClick={() => setCurrentPage("simulateur")} style={blueBtn}>
-            {p.openSimulator}
-          </button>
-        </div>
-      </section>
     </div>
   );
 }
