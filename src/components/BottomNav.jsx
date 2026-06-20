@@ -34,6 +34,7 @@ function BottomNav({ currentPage, setCurrentPage, navHidden, setNavHidden }) {
             currentPage === "accueil" ? "active-logo" : ""
           }`}
           aria-label="Accueil"
+          title="Accueil"
         >
           <img
             src="/onjarama-path-logo.png"
@@ -58,8 +59,9 @@ function BottomNav({ currentPage, setCurrentPage, navHidden, setNavHidden }) {
             currentPage === "monplan" ? "active" : ""
           }`}
           aria-label="Mon Plan"
+          title="Mon Plan"
         >
-          <span>
+          <span className="bottom-center-icon">
             <Brain size={24} />
           </span>
           <strong>Mon Plan</strong>
@@ -92,7 +94,7 @@ function NavButton({ icon, label, active, onClick }) {
       title={label}
     >
       <span className="bottom-nav-icon">{icon}</span>
-      <span>{label}</span>
+      <span className="bottom-nav-label">{label}</span>
     </button>
   );
 }
