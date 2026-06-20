@@ -37,6 +37,8 @@ import Paiements from "./pages/Paiements";
 import Transactions from "./pages/Transactions";
 import Notifications from "./pages/Notifications";
 import Historique from "./pages/Historique";
+import Guide from "./pages/Guide";
+import PatchNotes from "./pages/PatchNotes";
 
 function App() {
   const appState = useAppState();
@@ -128,6 +130,8 @@ function App() {
     reglages: <Reglages {...pageProps} />,
     notifications: <Notifications {...pageProps} />,
     historique: <Historique {...pageProps} />,
+    guide: <Guide {...pageProps} />,
+    patchnotes: <PatchNotes {...pageProps} />,
   };
 
   function closeVictoryOverlay() {
@@ -210,6 +214,7 @@ function App() {
           canGoBack={canGoBack}
           setCurrentPage={setCurrentPage}
           notifications={appState.notifications}
+          settings={appState.settings}
         />
 
         <ContextualNavigation
