@@ -1,697 +1,274 @@
 import {
-  Bot,
-  Eye,
-  EyeOff,
-  Flag,
-  Flame,
-  Gauge,
-  Lightbulb,
+  Clock3,
+  CreditCard,
   PiggyBank,
-  ShieldCheck,
-  Target,
-  TrendingUp,
-  Landmark,
+  RefreshCcw,
+  Settings,
   Sparkles,
+  Target,
+  Trash2,
   Trophy,
 } from "lucide-react";
 
-import { useState } from "react";
-import { getText } from "../data/translations";
+const pageText = {
+  FR: {
+    title: "Historique",
+    subtitle: "Toutes les actions importantes de votre parcours OnJarama.",
+    clear: "Vider l’historique",
+    empty: "Aucune activité enregistrée pour le moment.",
+    latest: "Activités récentes",
+    total: "Total activités",
+    victories: "Victoires",
+    deposits: "Dépôts",
+    goals: "Objectifs",
+    finance: "Finance",
+    settings: "Réglages",
+    unknownDate: "Date inconnue",
+  },
+  EN: {
+    title: "History",
+    subtitle: "All important actions from your OnJarama journey.",
+    clear: "Clear history",
+    empty: "No activity recorded yet.",
+    latest: "Recent activities",
+    total: "Total activities",
+    victories: "Victories",
+    deposits: "Deposits",
+    goals: "Goals",
+    finance: "Finance",
+    settings: "Settings",
+    unknownDate: "Unknown date",
+  },
+  ES: {
+    title: "Historial",
+    subtitle: "Todas las acciones importantes de tu recorrido OnJarama.",
+    clear: "Vaciar historial",
+    empty: "No hay actividad registrada por ahora.",
+    latest: "Actividades recientes",
+    total: "Total actividades",
+    victories: "Victorias",
+    deposits: "Depósitos",
+    goals: "Objetivos",
+    finance: "Finanzas",
+    settings: "Ajustes",
+    unknownDate: "Fecha desconocida",
+  },
+};
 
-function Accueil({
-  financeData,
-  selectedGoals,
-  setCurrentPage,
-  settings,
-  activityHistory,
-  disciplineScore,
-}) {
-  const t = getText(settings);
-  const [showAmounts, setShowAmounts] = useState(false);
+function Historique({ activityHistory, clearActivityHistory, settings }) {
+  const language = settings?.language || "FR";
+  const p = pageText[language] || pageText.FR;
 
-  const debts = Array.isArray(financeData?.debts) ? financeData.debts : [];
-  const goals = Array.isArray(selectedGoals) ? selectedGoals : [];
   const history = Array.isArray(activityHistory) ? activityHistory : [];
 
-  const discipline = disciplineScore || {
-    score: 0,
-    label: "Départ",
-    hasActiveGoal: false,
-    hasRecentActivity: false,
-    hasRecentDeposit: false,
-    hasOverduePayment: false,
+  const deposits = history.filter((item) => item.type === "depot").length;
+  const victories = history.filter((item) => item.type === "victoire").length;
+  const goals = history.filter((item) => item.type === "objectif").length;
+
+  return (
+    <div className="native-page">
+      <h1>{p.title}</h1>
+      <p style={muted}>{p.subtitle}</p>
+
+      <section style={summaryCard}>
+        <div style={header}>
+          <Clock3 color="var(--gold)" />
+          <h2>{p.latest}</h2>
+        </div>
+
+        <div style={statsGrid}>
+          <Stat label={p.total} value={history.length} color="var(--gold)" />
+          <Stat label={p.deposits} value={deposits} color="var(--green)" />
+          <Stat label={p.victories} value={victories} color="var(--gold)" />
+          <Stat label={p.goals} value={goals} color="var(--blue)" />
+        </div>
+      </section>
+
+      {history.length > 0 && (
+        <button onClick={clearActivityHistory} style={clearBtn}>
+          <Trash2 size={17} />
+          {p.clear}
+        </button>
+      )}
+
+      <section style={card}>
+        {history.length === 0 && <p style={muted}>{p.empty}</p>}
+
+        {history.map((item) => {
+          const meta = getMeta(item.type);
+
+          return (
+            <div key={item.id || item.createdAt} style={historyItem(meta.color)}>
+              <span style={{ ...iconBox, color: meta.color }}>
+                {meta.icon}
+              </span>
+
+              <div>
+                <strong>{item.title || meta.label}</strong>
+                <p style={muted}>{item.message || meta.label}</p>
+                <small style={mutedSmall}>
+                  {formatDate(item.createdAt, language, p.unknownDate)}
+                </small>
+              </div>
+            </div>
+          );
+        })}
+      </section>
+    </div>
+  );
+}
+
+function Stat({ label, value, color }) {
+  return (
+    <div style={{ ...statCard, borderColor: color }}>
+      <strong style={{ color }}>{value}</strong>
+      <small>{label}</small>
+    </div>
+  );
+}
+
+function getMeta(type) {
+  const metas = {
+    objectif: {
+      label: "Objectif",
+      color: "var(--blue)",
+      icon: <Target size={18} />,
+    },
+    depot: {
+      label: "Dépôt",
+      color: "var(--green)",
+      icon: <PiggyBank size={18} />,
+    },
+    victoire: {
+      label: "Victoire",
+      color: "var(--gold)",
+      icon: <Trophy size={18} />,
+    },
+    finance: {
+      label: "Finance",
+      color: "var(--red)",
+      icon: <CreditCard size={18} />,
+    },
+    reglages: {
+      label: "Réglages",
+      color: "var(--purple)",
+      icon: <Settings size={18} />,
+    },
+    paiement: {
+      label: "Paiement",
+      color: "var(--gold)",
+      icon: <RefreshCcw size={18} />,
+    },
   };
 
-  const totalDebt = debts.reduce(
-    (sum, debt) => sum + Number(debt.balance || 0),
-    0
+  return (
+    metas[type] || {
+      label: "Action",
+      color: "var(--blue)",
+      icon: <Sparkles size={18} />,
+    }
   );
+}
 
-  const activeGoals = goals.filter((goal) => !goal.archived);
+function formatDate(value, language, fallback) {
+  if (!value) return fallback;
 
-  const mainGoal =
-    activeGoals.find((goal) => goal.highlighted) || activeGoals[0];
+  const date = new Date(value);
 
-  const firstGoal = [...activeGoals].sort(
-    (a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0)
-  )[0];
+  if (Number.isNaN(date.getTime())) return fallback;
 
-  const closestGoal = [...activeGoals]
-    .filter((goal) => Number(goal.targetAmount || 0) > 0)
-    .map((goal) => ({
-      ...goal,
-      progress: Math.min(
-        100,
-        Math.round(
-          (Number(goal.currentAmount || 0) / Number(goal.targetAmount || 0)) *
-            100
-        )
-      ),
-    }))
-    .sort((a, b) => b.progress - a.progress)[0];
+  const locale = language === "EN" ? "en-CA" : language === "ES" ? "es-ES" : "fr-CA";
 
-  const achievedGoals = activeGoals.filter(
-    (goal) =>
-      Number(goal.targetAmount || 0) > 0 &&
-      Number(goal.currentAmount || 0) >= Number(goal.targetAmount || 0)
-  );
-
-  const lastActivity = history[0];
-  const lastDeposit = history.find((item) => item.type === "depot");
-  const lastVictory =
-    history.find((item) => item.type === "victoire") || achievedGoals[0];
-
-  const smartAlerts = buildSmartAlerts({ activeGoals, debts });
-
-  const nextAction = getNextAction({
-    totalDebt,
-    mainGoal,
-    closestGoal,
+  return date.toLocaleString(locale, {
+    dateStyle: "medium",
+    timeStyle: "short",
   });
-
-  function money(value) {
-    if (!showAmounts) return "Chiffres masqués";
-
-    return `${Number(value || 0).toLocaleString("fr-CA", {
-      maximumFractionDigits: 2,
-    })} $`;
-  }
-
-  return (
-    <div className="native-page accueil-page">
-      <section className="accueil-hero" />
-
-      <section className="accueil-headline">
-        <p className="accueil-eyebrow">OnJarama Path V8</p>
-
-        <h1 className="accueil-title">
-          {t.heroTitle}
-          <br />
-          <span>{t.heroAccent}</span>
-        </h1>
-
-        <p className="accueil-subtitle">
-          Transformez vos objectifs en un plan concret, réaliste et motivant.
-        </p>
-      </section>
-
-      <div className="accueil-actions">
-        <button
-          onClick={() => setCurrentPage("situation")}
-          className="primary-action"
-        >
-          Commencer ma situation
-        </button>
-
-        <button onClick={() => setCurrentPage("assistant")} className="ai-action">
-          <Bot size={18} />
-          IA OnJarama
-        </button>
-      </div>
-
-      <section className="accueil-safe-row">
-        <span className="accueil-badge">🔒 Privé</span>
-
-        <span className="accueil-badge">🌍 Démo</span>
-
-        <button
-          onClick={() => setShowAmounts(!showAmounts)}
-          className="eye-action"
-        >
-          {showAmounts ? <EyeOff size={16} /> : <Eye size={16} />}
-          {showAmounts ? "Masquer" : "Afficher"}
-        </button>
-      </section>
-
-      <section className="accueil-headline" style={companionCard}>
-        <div style={sectionHead}>
-          <Sparkles size={20} color="var(--gold)" />
-          <strong>Compagnon financier</strong>
-        </div>
-
-        <div style={companionGrid}>
-          <CompanionLine
-            icon="🚩"
-            label="Parcours"
-            value={
-              firstGoal
-                ? `Commencé ${getStartedLabel(firstGoal.createdAt)}`
-                : "Pas encore commencé"
-            }
-          />
-
-          <CompanionLine
-            icon="🎯"
-            label="Objectifs actifs"
-            value={`${activeGoals.length}`}
-          />
-
-          <CompanionLine
-            icon="💰"
-            label="Dernier dépôt"
-            value={lastDeposit ? lastDeposit.message : "Aucun dépôt enregistré"}
-          />
-
-          <CompanionLine
-            icon="🏆"
-            label="Dernière victoire"
-            value={
-              lastVictory?.message ||
-              lastVictory?.title ||
-              "Aucune victoire enregistrée"
-            }
-          />
-
-          <CompanionLine
-            icon="➡️"
-            label="Action recommandée"
-            value={nextAction.title}
-          />
-        </div>
-
-        <button
-          onClick={() => setCurrentPage(nextAction.page)}
-          className="primary-action"
-          style={{ marginTop: 14 }}
-        >
-          {nextAction.button}
-        </button>
-      </section>
-
-      <section className="accueil-headline" style={disciplineGaugeCard}>
-        <div style={sectionHead}>
-          <Gauge size={20} color="var(--gold)" />
-          <strong>Discipline OnJarama</strong>
-        </div>
-
-        <div style={scoreRow}>
-          <strong style={scoreValue}>{discipline.score}%</strong>
-          <span style={scoreLabel}>{discipline.label}</span>
-        </div>
-
-        <div style={scoreBarBg}>
-          <div
-            style={{
-              ...scoreBarFill,
-              width: `${discipline.score}%`,
-              background: getDisciplineColor(discipline.score),
-            }}
-          />
-        </div>
-
-        <div style={disciplineChecklist}>
-          <DisciplineCheck ok={discipline.hasActiveGoal} text="Objectif actif" />
-          <DisciplineCheck
-            ok={discipline.hasRecentActivity}
-            text="Activité récente"
-          />
-          <DisciplineCheck
-            ok={!discipline.hasOverduePayment}
-            text="Aucun paiement en retard"
-          />
-          <DisciplineCheck
-            ok={discipline.hasRecentDeposit}
-            text="Dépôt récent"
-          />
-        </div>
-      </section>
-
-      {smartAlerts.length > 0 && (
-        <section className="accueil-headline" style={alertCard}>
-          <div style={sectionHead}>
-            <Flame size={20} color="var(--gold)" />
-            <strong>Alertes du jour</strong>
-          </div>
-
-          {smartAlerts.slice(0, 3).map((alert) => (
-            <p key={alert.id} style={alertLine}>
-              • {alert.message}
-            </p>
-          ))}
-
-          <button
-            onClick={() => setCurrentPage("notifications")}
-            className="ai-action"
-            style={{ marginTop: 12 }}
-          >
-            Voir les notifications
-          </button>
-        </section>
-      )}
-
-      {firstGoal && (
-        <section className="accueil-headline" style={disciplineCard}>
-          <div style={sectionHead}>
-            <Flag size={20} color="var(--gold)" />
-            <strong>Parcours commencé</strong>
-          </div>
-
-          <p style={softText}>
-            🚩 Vous avez commencé votre parcours{" "}
-            {getStartedLabel(firstGoal.createdAt)}.
-          </p>
-
-          <p style={softText}>Chaque petit dépôt compte.</p>
-        </section>
-      )}
-
-      <section className="accueil-headline" style={nextActionCard}>
-        <div style={sectionHead}>
-          <Target size={20} color="var(--green)" />
-          <strong>Prochaine action recommandée</strong>
-        </div>
-
-        <p style={softText}>
-          <strong>{nextAction.title}</strong>
-        </p>
-
-        <p style={softText}>{nextAction.text}</p>
-
-        <button
-          onClick={() => setCurrentPage(nextAction.page)}
-          className="primary-action"
-          style={{ marginTop: 12 }}
-        >
-          {nextAction.button}
-        </button>
-      </section>
-
-      {lastActivity && (
-        <section className="accueil-headline">
-          <div style={sectionHead}>
-            <Sparkles size={20} color="var(--blue)" />
-            <strong>Dernière activité</strong>
-          </div>
-
-          <p style={softText}>
-            <strong>{lastActivity.title}</strong>
-          </p>
-
-          <p style={softText}>{lastActivity.message}</p>
-        </section>
-      )}
-
-      <section className="accueil-grid">
-        <QuickTile
-          icon={<TrendingUp />}
-          title="Vue rapide"
-          text={money(totalDebt)}
-          color="var(--gold)"
-          onClick={() => setCurrentPage("situation")}
-        />
-
-        <QuickTile
-          icon={<Target />}
-          title="Objectif"
-          text={mainGoal ? mainGoal.title : "Créer un objectif"}
-          color="var(--green)"
-          onClick={() => setCurrentPage("objectifs")}
-        />
-
-        <QuickTile
-          icon={<Trophy />}
-          title="Victoire"
-          text={
-            achievedGoals.length > 0
-              ? `${achievedGoals.length} atteinte${
-                  achievedGoals.length > 1 ? "s" : ""
-                }`
-              : totalDebt > 0
-                ? "Réduire la dette"
-                : "Bâtir le plan"
-          }
-          color="var(--blue)"
-          onClick={() => setCurrentPage("parcours")}
-        />
-
-        <QuickTile
-          icon={<ShieldCheck />}
-          title="Sécurité"
-          text="Données locales"
-          color="var(--purple)"
-          onClick={() => setCurrentPage("profil")}
-        />
-      </section>
-
-      <section className="accueil-headline">
-        <div style={sectionHead}>
-          <Landmark size={20} color="var(--gold)" />
-          <strong>Connexion bancaire</strong>
-        </div>
-
-        <p style={softText}>
-          Bientôt disponible. Synchronisation lecture seule sécurisée de vos
-          comptes, dépenses, épargne et progression financière.
-        </p>
-      </section>
-
-      <section className="accueil-headline">
-        <div style={sectionHead}>
-          <Sparkles size={20} color="var(--blue)" />
-          <strong>Ce que peut faire OnJarama Path</strong>
-        </div>
-
-        <p style={softText}>
-          • Prioriser vos dettes automatiquement.
-          <br />
-          • Construire un plan financier personnalisé.
-          <br />
-          • Simuler plusieurs objectifs.
-          <br />
-          • Suivre votre progression dans une timeline claire.
-          <br />
-          • Recevoir des recommandations intelligentes.
-        </p>
-      </section>
-
-      <section className="accueil-hint">
-        <Lightbulb size={16} color="var(--gold)" />
-
-        <p>
-          V8 consolide les cartes interactives, la discipline, les alertes et le
-          compagnon financier.
-        </p>
-      </section>
-    </div>
-  );
 }
 
-function getNextAction({ totalDebt, mainGoal, closestGoal }) {
-  if (totalDebt > 0) {
-    return {
-      title: "Réduire la dette prioritaire",
-      text: "Votre plan gagne en force quand les dettes ralentissent moins vos projets.",
-      button: "Voir ma situation",
-      page: "situation",
-    };
-  }
+const summaryCard = {
+  background: "linear-gradient(135deg, rgba(212,175,55,.14), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+};
 
-  if (closestGoal && closestGoal.progress >= 80 && closestGoal.progress < 100) {
-    return {
-      title: `Finaliser ${closestGoal.title}`,
-      text: `Progression : ${closestGoal.progress} %. Vous êtes proche d’une victoire.`,
-      button: "Voir mes objectifs",
-      page: "objectifs",
-    };
-  }
+const card = {
+  background: "var(--bg-card)",
+  border: "1px solid var(--border)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "16px",
+};
 
-  if (mainGoal) {
-    return {
-      title: `Avancer ${mainGoal.title}`,
-      text: "Gardez le cap sur votre objectif principal.",
-      button: "Continuer",
-      page: "objectifs",
-    };
-  }
-
-  return {
-    title: "Créer votre premier objectif",
-    text: "Ajoutez un objectif pour que OnJarama Path construise votre parcours.",
-    button: "Créer un objectif",
-    page: "objectifs",
-  };
-}
-
-function buildSmartAlerts({ activeGoals, debts }) {
-  const alerts = [];
-
-  const priorityDebt = [...debts]
-    .filter((debt) => Number(debt.balance || 0) > 0)
-    .sort((a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0))[0];
-
-  if (priorityDebt) {
-    alerts.push({
-      id: "debt-priority",
-      message: `Dette prioritaire : ${priorityDebt.name || "dette"} à ${
-        priorityDebt.interestRate || 0
-      } %.`,
-    });
-  }
-
-  activeGoals.forEach((goal) => {
-    const target = Number(goal.targetAmount || 0);
-    const current = Number(goal.currentAmount || 0);
-
-    if (target <= 0) return;
-
-    const progress = Math.min(100, Math.round((current / target) * 100));
-
-    if (progress >= 100) {
-      alerts.push({
-        id: `goal-win-${goal.id}`,
-        message: `${goal.title} est atteint à 100 %.`,
-      });
-      return;
-    }
-
-    if (progress >= 90) {
-      alerts.push({
-        id: `goal-90-${goal.id}`,
-        message: `${goal.title} est atteint à ${progress} %.`,
-      });
-      return;
-    }
-
-    if (progress >= 80) {
-      alerts.push({
-        id: `goal-80-${goal.id}`,
-        message: `${goal.title} est presque atteint (${progress} %).`,
-      });
-    }
-
-    if (goal.lastDeposit?.date) {
-      const lastDate = new Date(goal.lastDeposit.date);
-      const now = new Date();
-
-      if (!Number.isNaN(lastDate.getTime())) {
-        const days = Math.floor(
-          (now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
-        );
-
-        if (days >= 14 && progress < 100) {
-          alerts.push({
-            id: `deposit-${goal.id}`,
-            message: `Aucun dépôt sur ${goal.title} depuis ${days} jours.`,
-          });
-        }
-      }
-    }
-  });
-
-  return alerts.slice(0, 5);
-}
-
-function getStartedLabel(createdAt) {
-  if (!createdAt) return "aujourd’hui";
-
-  const start = new Date(createdAt);
-  const now = new Date();
-
-  if (Number.isNaN(start.getTime())) return "aujourd’hui";
-
-  const days = Math.max(
-    0,
-    Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
-  );
-
-  if (days === 0) return "aujourd’hui";
-  if (days === 1) return "il y a 1 jour";
-
-  return `il y a ${days} jours`;
-}
-
-function getDisciplineColor(score) {
-  if (score <= 25) return "var(--red)";
-  if (score <= 50) return "var(--gold)";
-  if (score <= 75) return "var(--blue)";
-  return "var(--green)";
-}
-
-function CompanionLine({ icon, label, value }) {
-  return (
-    <div style={companionLine}>
-      <span>{icon}</span>
-      <div>
-        <small style={companionLabel}>{label}</small>
-        <strong style={companionValue}>{value}</strong>
-      </div>
-    </div>
-  );
-}
-
-function DisciplineCheck({ ok, text }) {
-  return (
-    <div
-      style={{
-        ...disciplineCheck,
-        borderColor: ok ? "var(--green)" : "var(--border)",
-      }}
-    >
-      <span>{ok ? "✅" : "○"}</span>
-      <small>{text}</small>
-    </div>
-  );
-}
-
-function QuickTile({ icon, title, text, color, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className="accueil-tile"
-      style={{ borderColor: color }}
-    >
-      <span className="accueil-tile-icon" style={{ color }}>
-        {icon}
-      </span>
-
-      <strong>{title}</strong>
-
-      <small>{text}</small>
-    </button>
-  );
-}
-
-const sectionHead = {
+const header = {
   display: "flex",
-  gap: 10,
   alignItems: "center",
-  marginBottom: 8,
-};
-
-const softText = {
-  margin: 0,
-  color: "var(--text-muted)",
-  lineHeight: 1.4,
-};
-
-const companionCard = {
-  border: "1px solid var(--gold)",
-  background: "linear-gradient(135deg, rgba(212,175,55,.16), var(--bg-card))",
-};
-
-const disciplineGaugeCard = {
-  border: "1px solid var(--gold)",
-  background: "linear-gradient(135deg, rgba(212,175,55,.12), var(--bg-card))",
-};
-
-const companionGrid = {
-  display: "grid",
   gap: "10px",
-  marginTop: "12px",
+  marginBottom: "14px",
 };
 
-const companionLine = {
+const statsGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(2, 1fr)",
+  gap: "10px",
+};
+
+const statCard = {
   background: "var(--bg-panel)",
   border: "1px solid var(--border)",
-  borderRadius: "14px",
-  padding: "11px",
+  borderRadius: "16px",
+  padding: "12px",
   display: "grid",
-  gridTemplateColumns: "28px 1fr",
-  gap: "8px",
-  alignItems: "center",
+  gap: "4px",
 };
 
-const companionLabel = {
-  color: "var(--text-muted)",
-  fontSize: "12px",
-  display: "block",
+const historyItem = (color) => ({
+  background: "var(--bg-panel)",
+  border: `1px solid ${color}`,
+  borderRadius: "18px",
+  padding: "14px",
+  marginTop: "12px",
+  display: "grid",
+  gridTemplateColumns: "38px 1fr",
+  gap: "12px",
+  alignItems: "flex-start",
+});
+
+const iconBox = {
+  width: "38px",
+  height: "38px",
+  borderRadius: "14px",
+  background: "var(--bg-card)",
+  display: "grid",
+  placeItems: "center",
 };
 
-const companionValue = {
-  color: "var(--text-main)",
-  display: "block",
-  marginTop: "2px",
-};
-
-const scoreRow = {
+const clearBtn = {
+  width: "100%",
+  marginTop: "16px",
+  padding: "14px",
+  borderRadius: "14px",
+  border: "1px solid var(--red)",
+  background: "rgba(239,68,68,.12)",
+  color: "var(--red)",
+  fontWeight: "bold",
   display: "flex",
-  justifyContent: "space-between",
-  alignItems: "baseline",
+  justifyContent: "center",
+  alignItems: "center",
+  gap: "8px",
+};
+
+const muted = {
+  color: "var(--text-muted)",
   marginTop: "8px",
 };
 
-const scoreValue = {
-  fontSize: "34px",
-  color: "var(--text-main)",
-};
-
-const scoreLabel = {
-  color: "var(--gold)",
-  fontWeight: "bold",
-};
-
-const scoreBarBg = {
-  height: "12px",
-  background: "var(--bg-panel)",
-  border: "1px solid var(--border)",
-  borderRadius: "999px",
-  marginTop: "12px",
-  overflow: "hidden",
-};
-
-const scoreBarFill = {
-  height: "100%",
-  borderRadius: "999px",
-  transition: "width .35s ease",
-};
-
-const disciplineChecklist = {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: "8px",
-  marginTop: "12px",
-};
-
-const disciplineCheck = {
-  background: "var(--bg-panel)",
-  border: "1px solid var(--border)",
-  borderRadius: "12px",
-  padding: "9px",
-  display: "flex",
-  gap: "6px",
-  alignItems: "center",
+const mutedSmall = {
   color: "var(--text-muted)",
+  fontSize: "12px",
+  marginTop: "6px",
+  display: "block",
 };
 
-const alertCard = {
-  border: "1px solid var(--gold)",
-  background: "linear-gradient(135deg, rgba(212,175,55,.12), var(--bg-card))",
-};
-
-const alertLine = {
-  margin: "6px 0 0",
-  color: "var(--text-muted)",
-  lineHeight: 1.4,
-};
-
-const disciplineCard = {
-  border: "1px solid var(--gold)",
-  background: "linear-gradient(135deg, rgba(212,175,55,.14), var(--bg-card))",
-};
-
-const nextActionCard = {
-  border: "1px solid var(--green)",
-  background: "linear-gradient(135deg, rgba(34,197,94,.12), var(--bg-card))",
-};
-
-export default Accueil;
+export default Historique;
