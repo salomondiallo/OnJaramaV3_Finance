@@ -11,6 +11,7 @@ import {
   TrendingUp,
   Wallet,
   CalendarClock,
+  Calculator,
   PiggyBank,
   Plane,
   Plus,
@@ -68,6 +69,14 @@ const pageText = {
     discreet: "Visible rapidement, mais discrètement.",
     nextAction: "Prochaine action",
     noMainGoalPilot: "Créez ou mettez en avant un objectif principal.",
+    customGoal: "Objectif libre",
+    customGoalHint: "Créer un objectif totalement personnalisé.",
+    rhythm: "Rythme souhaité",
+    priorityLevel: "Priorité",
+    monthlyContribution: "Contribution possible par mois",
+    motivation: "Motivation personnelle",
+    simulateGoal: "Simuler cet objectif",
+    planHint: "Configurez votre destination, simulez plusieurs chemins, puis validez le plan de match.",
   },
 };
 
@@ -370,6 +379,17 @@ const goalTemplates = {
       n(v.launch) + n(v.equipment) + n(v.marketing) + n(v.training) + n(v.cashflow),
   },
 
+
+  personnalise: {
+    label: "Objectif libre",
+    icon: <Target />,
+    color: "var(--gold)",
+    fields: [
+      ["target", "Montant cible"],
+    ],
+    calculate: (v) => n(v.target),
+  },
+
   securite: {
     label: "Épargne",
     icon: <Trophy />,
@@ -408,6 +428,10 @@ function Objectifs({
     currentAmount: "",
     targetDate: "",
     highlighted: false,
+    priority: "Moyenne",
+    rhythm: "Équilibré",
+    motivation: "",
+    monthlyContribution: "",
     values: {},
   });
 
@@ -468,6 +492,10 @@ function Objectifs({
       currentAmount: "",
       targetDate: "",
       highlighted: false,
+      priority: "Moyenne",
+      rhythm: "Équilibré",
+      motivation: "",
+      monthlyContribution: "",
       values: {},
     });
   }
@@ -479,6 +507,10 @@ function Objectifs({
       currentAmount: "",
       targetDate: "",
       highlighted: goals.length === 0,
+      priority: "Moyenne",
+      rhythm: "Équilibré",
+      motivation: "",
+      monthlyContribution: "",
       values: {},
     });
   }
@@ -504,6 +536,10 @@ function Objectifs({
       currentAmount: "",
       targetDate: "",
       highlighted: goals.length === 0,
+      priority: "Moyenne",
+      rhythm: "Équilibré",
+      motivation: "",
+      monthlyContribution: "",
       values: {},
     });
   }
@@ -517,6 +553,10 @@ function Objectifs({
       currentAmount: "",
       targetDate: "",
       highlighted: goals.length === 0,
+      priority: "Moyenne",
+      rhythm: "Équilibré",
+      motivation: "",
+      monthlyContribution: "",
       values: {},
     });
   }
@@ -547,6 +587,10 @@ function Objectifs({
       lastDeposit: null,
       journeyLinked: true,
       journeyMilestone: "goal_created",
+      priorityLevel: form.priority,
+      rhythm: form.rhythm,
+      motivation: form.motivation,
+      monthlyContribution: Number(form.monthlyContribution || 0),
       config: form.values,
     };
 
@@ -671,6 +715,11 @@ function Objectifs({
 
   function openJourney() {
     setCurrentPage?.("parcours");
+  }
+
+  function simulateGoal(goalId) {
+    localStorage.setItem("onjaramaSimulatorGoalId", String(goalId));
+    setCurrentPage?.("simulateur");
   }
 
   function celebrateGoal(id) {
@@ -899,6 +948,52 @@ function Objectifs({
                 style={input}
               />
 
+              <label>{p.priorityLevel}</label>
+              <select
+                value={form.priority}
+                onChange={(event) => setForm({ ...form, priority: event.target.value })}
+                style={input}
+              >
+                <option>Douce</option>
+                <option>Moyenne</option>
+                <option>Haute</option>
+                <option>Urgente</option>
+              </select>
+
+              <label>{p.rhythm}</label>
+              <select
+                value={form.rhythm}
+                onChange={(event) => setForm({ ...form, rhythm: event.target.value })}
+                style={input}
+              >
+                <option>Tranquille</option>
+                <option>Équilibré</option>
+                <option>Dynamique</option>
+                <option>Féroce</option>
+              </select>
+
+              <label>{p.monthlyContribution}</label>
+              <input
+                value={form.monthlyContribution}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    monthlyContribution: cleanMoneyInput(event.target.value),
+                  })
+                }
+                placeholder="0"
+                inputMode="decimal"
+                style={input}
+              />
+
+              <label>{p.motivation}</label>
+              <input
+                value={form.motivation}
+                onChange={(event) => setForm({ ...form, motivation: event.target.value })}
+                placeholder="Pourquoi cet objectif compte pour vous ?"
+                style={input}
+              />
+
               <label>{p.targetDate}</label>
               <input
                 type="date"
@@ -937,7 +1032,7 @@ function Objectifs({
                 {p.createGoal}
               </button>
 
-              <p style={mutedSmall}>{p.simulateLater}</p>
+              <p style={mutedSmall}>{p.planHint}</p>
             </>
           )}
         </div>
@@ -952,18 +1047,23 @@ function Objectifs({
         {rankedGoals.length === 0 && <p style={muted}>{p.noGoal}</p>}
 
         {rankedGoals.map((goal, index) => (
-          <GoalPremiumCard
-            key={goal.id}
-            goal={goal}
-            rank={index + 1}
-            template={goalTemplates[goal.category] || goalTemplates.securite}
-            currency={currency}
-            isCelebrating={celebratingGoalId === goal.id}
-            onDeposit={addDeposit}
-            onHighlight={highlightGoal}
-            onRemove={removeGoal}
-            onOpenJourney={openJourney}
-          />
+          <div key={goal.id} style={goalActionWrap}>
+            <GoalPremiumCard
+              goal={goal}
+              rank={index + 1}
+              template={goalTemplates[goal.category] || goalTemplates.personnalise}
+              currency={currency}
+              isCelebrating={celebratingGoalId === goal.id}
+              onDeposit={addDeposit}
+              onHighlight={highlightGoal}
+              onRemove={removeGoal}
+              onOpenJourney={openJourney}
+            />
+            <button onClick={() => simulateGoal(goal.id)} style={simulateButton}>
+              <Calculator size={17} />
+              {p.simulateGoal}
+            </button>
+          </div>
         ))}
       </section>
     </div>
@@ -1368,6 +1468,25 @@ const addButton = {
   background: "var(--green)",
   color: "white",
   fontWeight: "bold",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+};
+
+const goalActionWrap = {
+  marginTop: "14px",
+};
+
+const simulateButton = {
+  width: "100%",
+  marginTop: "8px",
+  padding: "13px",
+  borderRadius: "14px",
+  border: "1px solid var(--blue)",
+  background: "rgba(56,189,248,.13)",
+  color: "var(--blue)",
+  fontWeight: "900",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",

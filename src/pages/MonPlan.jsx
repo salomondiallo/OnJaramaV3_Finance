@@ -122,35 +122,44 @@ function MonPlan({
     <div className="native-page">
       <div style={pageHead}>
         <div>
-          <p style={eyebrow}>OnJarama Path V10.7</p>
-          <h1>Mon Plan</h1>
+          <p style={eyebrow}>OnJarama Path V11.1</p>
+          <h1>Plan de Match</h1>
           <p style={muted}>
-            Le cerveau de votre parcours : situation, priorités, objectifs, prévisions et prochaines actions.
+            La feuille de route choisie : objectif, simulation, action, destination et célébration.
           </p>
         </div>
 
         <Sparkles color="var(--gold)" />
       </div>
 
-      <section style={foundationCard}>
+      <section style={nextMoveCard}>
         <div style={header}>
-          <Gauge color="var(--green)" />
-          <h2>Fondation — Ma Situation</h2>
+          <Target color="var(--gold)" />
+          <h2>Mon prochain mouvement</h2>
         </div>
 
-        <p style={muted}>
-          Toute décision part de vos revenus, sorties, dettes et marges.
+        <p>
+          <strong>{nextAction.title}</strong>
         </p>
 
-        <button onClick={() => setCurrentPage("situation")} style={greenButton}>
-          Mettre à jour Ma Situation
+        <p style={muted}>{nextAction.description}</p>
+
+        {mainGoal && (
+          <div style={missionStrip}>
+            <span>🎯 Mission active</span>
+            <strong>{mainGoal.title}</strong>
+          </div>
+        )}
+
+        <button onClick={() => setCurrentPage(nextAction.page)} style={goldButton}>
+          {nextAction.button}
         </button>
       </section>
 
       <section style={brainCard}>
         <div style={header}>
           <Sparkles color="var(--gold)" />
-          <h2>Centre de décision</h2>
+          <h2>Résumé du plan de match</h2>
         </div>
 
         <p>
@@ -341,6 +350,15 @@ function MonPlan({
 
           <ProgressLine goal={mainGoal} currency={currency} />
 
+          {mainGoal.simulation && (
+            <div style={simulationPlanBox}>
+              <strong>Simulation retenue</strong>
+              <p style={mutedSmall}>
+                {formatMoney(mainGoal.simulation.monthlyAmount, currency)} / mois • Fin estimée : {mainGoal.simulation.estimatedEnd}
+              </p>
+            </div>
+          )}
+
           <button
             onClick={() => setCurrentPage("objectifs")}
             style={greenButton}
@@ -511,7 +529,7 @@ function getNextAction({
     return {
       title: `Finaliser ${closestGoal.title}`,
       description:
-        "Cet objectif est presque terminé. V9.0 recommande de le finaliser avant de revenir à la prochaine priorité.",
+        "Cet objectif est presque terminé. OnJarama recommande de le finaliser avant de revenir à la prochaine priorité.",
       button: "Voir mes objectifs",
       page: "objectifs",
     };
@@ -824,12 +842,23 @@ const card = {
   marginTop: "20px",
 };
 
-const foundationCard = {
-  background: "linear-gradient(135deg, rgba(34,197,94,.16), var(--bg-card))",
-  border: "1px solid var(--green)",
+const nextMoveCard = {
+  background:
+    "radial-gradient(circle at top right, rgba(212,175,55,.20), transparent 34%), linear-gradient(135deg, rgba(212,175,55,.14), var(--bg-card))",
+  border: "1px solid var(--gold)",
   borderRadius: "24px",
   padding: "20px",
   marginTop: "20px",
+};
+
+const missionStrip = {
+  marginTop: "14px",
+  background: "var(--bg-panel)",
+  border: "1px solid rgba(212,175,55,.45)",
+  borderRadius: "16px",
+  padding: "12px",
+  display: "grid",
+  gap: "4px",
 };
 
 const brainCard = {
@@ -902,6 +931,14 @@ const header = {
   alignItems: "center",
   gap: "10px",
   marginBottom: "12px",
+};
+
+const simulationPlanBox = {
+  marginTop: "12px",
+  background: "rgba(56,189,248,.10)",
+  border: "1px solid rgba(56,189,248,.40)",
+  borderRadius: "14px",
+  padding: "12px",
 };
 
 const scoreRow = {

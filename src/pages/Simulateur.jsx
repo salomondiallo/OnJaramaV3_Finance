@@ -2,16 +2,18 @@ import {
   Calculator,
   Car,
   ChevronRight,
+  CreditCard,
   Home,
   PiggyBank,
   Plane,
+  RefreshCw,
   ShieldCheck,
   Sparkles,
   Target,
   TrendingUp,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 function Simulateur({
   financeData,
@@ -20,33 +22,68 @@ function Simulateur({
   setCurrentPage,
   settings,
 }) {
+  const goals = Array.isArray(selectedGoals)
+    ? selectedGoals.filter((goal) => !goal.archived)
+    : [];
+  const debts = Array.isArray(financeData?.debts) ? financeData.debts : [];
+  const currency = settings?.currency || "CAD";
+
   const [monthlyAmount, setMonthlyAmount] = useState("500");
-  const [years, setYears] = useState("5");
+  const [years, setYears] = useState("1");
+  const [selectedGoalId, setSelectedGoalId] = useState(null);
   const [showGoalPicker, setShowGoalPicker] = useState(false);
   const [confirmMessage, setConfirmMessage] = useState("");
 
-  const currency = settings?.currency || "CAD";
+  useEffect(() => {
+    const storedGoalId = localStorage.getItem("onjaramaSimulatorGoalId");
+    if (!storedGoalId) return;
 
-  function cleanInput(value) {
-    return value.replace(/[^\d]/g, "");
-  }
+    const goal = goals.find((item) => String(item.id) === String(storedGoalId));
+    if (!goal) return;
 
-  function money(value) {
-    return Number(value || 0).toLocaleString("fr-CA", {
-      maximumFractionDigits: 0,
-    });
-  }
+    const remaining = getGoalRemaining(goal);
+    const monthlyHint =
+      Number(goal.monthlyContribution || 0) ||
+      estimateMonthlyNeed(goal) ||
+      Math.max(50, Math.ceil(remaining / 12));
+
+    setSelectedGoalId(goal.id);
+    setMonthlyAmount(String(monthlyHint));
+    setYears("1");
+    localStorage.removeItem("onjaramaSimulatorGoalId");
+  }, [goals]);
+
+  const selectedGoal = goals.find(
+    (goal) => String(goal.id) === String(selectedGoalId)
+  );
 
   const monthly = Number(monthlyAmount || 0);
   const durationYears = Number(years || 0);
-  const totalSaved = monthly * 12 * durationYears;
+  const months = Math.max(1, durationYears * 12);
+  const totalSaved = monthly * months;
 
-  const debtTotal = financeData.debts.reduce(
+  const debtTotal = debts.reduce(
     (sum, debt) => sum + Number(debt.balance || 0),
     0
   );
 
   const debtReduction = Math.min(totalSaved, debtTotal);
+  const selectedRemaining = selectedGoal ? getGoalRemaining(selectedGoal) : 0;
+  const selectedCoverage =
+    selectedGoal && selectedRemaining > 0
+      ? Math.min(100, Math.round((totalSaved / selectedRemaining) * 100))
+      : 0;
+
+  const scenarios = useMemo(() => {
+    if (!selectedGoal) return [];
+    const remaining = getGoalRemaining(selectedGoal);
+    return [
+      buildScenario("Tranquille", monthly * 0.75, remaining),
+      buildScenario("Équilibré", monthly, remaining),
+      buildScenario("Dynamique", monthly * 1.25, remaining),
+      buildScenario("Féroce", monthly * 1.5, remaining),
+    ];
+  }, [selectedGoal, monthly]);
 
   const goalOptions = [
     {
@@ -64,11 +101,11 @@ function Simulateur({
       color: "var(--blue)",
     },
     {
-      id: "liberte",
-      title: "Fonds d’urgence",
-      subtitle: "Sécuriser vos imprévus",
-      icon: <ShieldCheck />,
-      color: "var(--purple)",
+      id: "dette",
+      title: "Dette",
+      subtitle: "Neutraliser une dette ou un crédit",
+      icon: <CreditCard />,
+      color: "var(--red)",
     },
     {
       id: "auto",
@@ -78,20 +115,76 @@ function Simulateur({
       color: "var(--gold)",
     },
     {
-      id: "business",
-      title: "Projet personnel",
-      subtitle: "Un projet important à construire",
-      icon: <Sparkles />,
-      color: "var(--blue)",
+      id: "liberte",
+      title: "Fonds d’urgence",
+      subtitle: "Sécuriser vos imprévus",
+      icon: <ShieldCheck />,
+      color: "var(--purple)",
     },
     {
-      id: "securite",
-      title: "Épargne",
-      subtitle: "Transformer la simulation en objectif libre",
-      icon: <PiggyBank />,
-      color: "var(--green)",
+      id: "personnalise",
+      title: "Objectif libre",
+      subtitle: "Créer un objectif personnalisé",
+      icon: <Target />,
+      color: "var(--gold)",
     },
   ];
+
+  function cleanInput(value) {
+    return value.replace(/[^\d]/g, "");
+  }
+
+  function money(value) {
+    return Number(value || 0).toLocaleString("fr-CA", {
+      maximumFractionDigits: 0,
+    });
+  }
+
+  function selectGoal(goal) {
+    const remaining = getGoalRemaining(goal);
+    const monthlyHint =
+      Number(goal.monthlyContribution || 0) ||
+      estimateMonthlyNeed(goal) ||
+      Math.max(50, Math.ceil(remaining / 12));
+
+    setSelectedGoalId(goal.id);
+    setMonthlyAmount(String(monthlyHint));
+    setYears("1");
+    setShowGoalPicker(false);
+  }
+
+  function saveSimulationToGoal() {
+    if (!selectedGoal || totalSaved <= 0) return;
+
+    setSelectedGoals(
+      selectedGoals.map((goal) => {
+        if (goal.id !== selectedGoal.id) {
+          return { ...goal, highlighted: false };
+        }
+
+        return {
+          ...goal,
+          highlighted: true,
+          monthlyContribution: monthly,
+          simulation: {
+            monthlyAmount: monthly,
+            years: durationYears,
+            months,
+            totalSaved,
+            coverage: selectedCoverage,
+            estimatedEnd: selectedRemaining > 0 ? estimateCompletionDate(selectedRemaining, monthly) : "Atteint",
+            createdAt: new Date().toISOString(),
+          },
+        };
+      })
+    );
+
+    setConfirmMessage(`Simulation enregistrée pour ${selectedGoal.title}.`);
+
+    window.setTimeout(() => {
+      setConfirmMessage("");
+    }, 2200);
+  }
 
   function addSimulationToGoal(option) {
     if (totalSaved <= 0) return;
@@ -107,7 +200,7 @@ function Simulateur({
       id: Date.now(),
       title: option.title,
       category: option.id,
-      option: `Simulation : ${money(monthly)} $ / mois pendant ${durationYears} ans`,
+      option: `Simulation : ${money(monthly)} $ / mois pendant ${durationYears} an${durationYears > 1 ? "s" : ""}`,
       targetAmount: totalSaved,
       currentAmount: 0,
       targetDate: "",
@@ -115,15 +208,17 @@ function Simulateur({
       archived: false,
       source: "simulateur",
       monthlyAmount: monthly,
+      monthlyContribution: monthly,
       years: durationYears,
       createdAt: new Date().toISOString(),
     };
 
     setSelectedGoals([...updatedGoals, newGoal]);
+    setSelectedGoalId(newGoal.id);
     setShowGoalPicker(false);
     setConfirmMessage(`${option.title} ajouté à vos objectifs.`);
 
-    setTimeout(() => {
+    window.setTimeout(() => {
       setConfirmMessage("");
     }, 2200);
   }
@@ -133,22 +228,67 @@ function Simulateur({
       <h1>Simulateur</h1>
 
       <p style={muted}>
-        Visualisez l’impact de vos décisions financières.
+        Testez plusieurs chemins avant de valider votre plan de match.
       </p>
 
+      {selectedGoal && (
+        <section style={selectedGoalCard}>
+          <div style={header}>
+            <Target color="var(--gold)" />
+            <div>
+              <p style={eyebrow}>Objectif en simulation</p>
+              <h2>{selectedGoal.title}</h2>
+              <p style={muted}>
+                Reste : {money(selectedRemaining)} {currency}
+              </p>
+            </div>
+          </div>
+
+          <div style={miniBarBg}>
+            <div
+              style={{
+                ...miniBarFill,
+                width: `${getGoalProgress(selectedGoal)}%`,
+                background: "var(--green)",
+              }}
+            />
+          </div>
+
+          <button onClick={() => setShowGoalPicker(true)} style={ghostButton}>
+            <RefreshCw size={17} />
+            Changer d’objectif
+          </button>
+        </section>
+      )}
+
+      {!selectedGoal && (
+        <button onClick={() => setShowGoalPicker(true)} style={addToGoalBtn}>
+          <span style={{ color: "var(--gold)" }}>
+            <Target />
+          </span>
+
+          <div>
+            <strong>Choisir un objectif à simuler</strong>
+            <small>Objectifs et Simulateur travaillent ensemble.</small>
+          </div>
+
+          <ChevronRight />
+        </button>
+      )}
+
       <section style={miniIntro}>
-        <Mini icon={<Target />} title="Décidez mieux" color="var(--green)" />
-        <Mini icon={<TrendingUp />} title="Projetez l’avenir" color="var(--blue)" />
-        <Mini icon={<ShieldCheck />} title="Atteignez vos objectifs" color="var(--purple)" />
+        <Mini icon={<Target />} title="Destination" color="var(--green)" />
+        <Mini icon={<Calculator />} title="Scénarios" color="var(--blue)" />
+        <Mini icon={<ShieldCheck />} title="Plan de match" color="var(--purple)" />
       </section>
 
       <section style={card}>
         <div style={header}>
           <Calculator color="var(--blue)" />
-          <h2>Simulation d’épargne</h2>
+          <h2>{selectedGoal ? "Simulation de l’objectif" : "Simulation libre"}</h2>
         </div>
 
-        <label>Montant mensuel</label>
+        <label>Contribution mensuelle</label>
 
         <div style={inputWrap}>
           <input
@@ -160,7 +300,7 @@ function Simulateur({
           <span style={suffix}>$</span>
         </div>
 
-        <label>Nombre d’années</label>
+        <label>Durée de simulation</label>
 
         <div style={inputWrap}>
           <input
@@ -169,30 +309,36 @@ function Simulateur({
             style={input}
             inputMode="numeric"
           />
-          <span style={suffix}>ans</span>
+          <span style={suffix}>an{durationYears > 1 ? "s" : ""}</span>
         </div>
 
         <div style={result}>
-          <p style={muted}>Capital estimé</p>
+          <p style={muted}>Capital projeté</p>
 
           <h1 style={{ color: "var(--green)" }}>
             {money(totalSaved)} $
           </h1>
         </div>
+
+        {selectedGoal && (
+          <>
+            <Info
+              label="Couverture de l’objectif"
+              value={`${selectedCoverage}%`}
+              color={selectedCoverage >= 100 ? "var(--green)" : "var(--gold)"}
+            />
+            <Info
+              label="Date estimée"
+              value={estimateCompletionDate(selectedRemaining, monthly)}
+              color="var(--blue)"
+            />
+
+            <button onClick={saveSimulationToGoal} style={saveButton}>
+              Enregistrer dans le Plan de Match
+            </button>
+          </>
+        )}
       </section>
-
-      <button onClick={() => setShowGoalPicker(true)} style={addToGoalBtn}>
-        <span style={{ color: "var(--gold)" }}>
-          <Target />
-        </span>
-
-        <div>
-          <strong>Ajouter à mes objectifs</strong>
-          <small>Transformez cette simulation en objectif.</small>
-        </div>
-
-        <ChevronRight />
-      </button>
 
       {confirmMessage && (
         <section style={confirmBox} className="action-confirm">
@@ -201,10 +347,29 @@ function Simulateur({
         </section>
       )}
 
+      {selectedGoal && (
+        <section style={card}>
+          <div style={header}>
+            <TrendingUp color="var(--green)" />
+            <h2>Comparaison des rythmes</h2>
+          </div>
+
+          <div style={scenarioGrid}>
+            {scenarios.map((scenario) => (
+              <div key={scenario.label} style={{ ...scenarioCard, borderColor: scenario.color }}>
+                <strong style={{ color: scenario.color }}>{scenario.label}</strong>
+                <small style={muted}>Contribution : {money(scenario.monthly)} $ / mois</small>
+                <small style={muted}>Fin estimée : {scenario.end}</small>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section style={card}>
         <div style={header}>
           <TrendingUp color="var(--green)" />
-          <h2>Projection</h2>
+          <h2>Projection générale</h2>
         </div>
 
         <Info label="Épargne totale" value={`${money(totalSaved)} $`} />
@@ -220,10 +385,28 @@ function Simulateur({
         <h2>Lecture OnJarama</h2>
 
         <p style={muted}>
-          Avec {money(monthly)} $ par mois pendant {durationYears} ans,
-          vous pourriez accumuler environ {money(totalSaved)} {currency}.
+          {selectedGoal
+            ? `Avec ${money(monthly)} $ par mois, ${selectedGoal.title} devient un objectif mesurable et comparable.`
+            : `Avec ${money(monthly)} $ par mois pendant ${durationYears} an${durationYears > 1 ? "s" : ""}, vous pourriez accumuler environ ${money(totalSaved)} ${currency}.`}
         </p>
+
+        <button onClick={() => setCurrentPage("monplan")} style={planButton}>
+          Voir le Plan de Match
+        </button>
       </section>
+
+      <button onClick={() => setShowGoalPicker(true)} style={addToGoalBtn}>
+        <span style={{ color: "var(--gold)" }}>
+          <Target />
+        </span>
+
+        <div>
+          <strong>Ajouter ou choisir un objectif</strong>
+          <small>Transformer cette simulation en destination concrète.</small>
+        </div>
+
+        <ChevronRight />
+      </button>
 
       {showGoalPicker && (
         <div style={modalOverlay}>
@@ -236,28 +419,35 @@ function Simulateur({
               <X />
             </button>
 
-            <h2>Ajouter à mes objectifs</h2>
+            <h2>Choisir un objectif</h2>
 
-            <div style={simulationSummary}>
-              <ShieldCheck color="var(--green)" />
+            {goals.length > 0 && (
+              <>
+                <p style={muted}>Objectifs existants</p>
+                <div style={goalList}>
+                  {goals.map((goal) => (
+                    <button
+                      key={goal.id}
+                      onClick={() => selectGoal(goal)}
+                      style={goalOption}
+                    >
+                      <span style={{ ...goalIcon, color: "var(--gold)" }}>
+                        <Target />
+                      </span>
 
-              <p>
-                Votre simulation :
-                <br />
-                <strong>
-                  {money(monthly)} $ / mois pendant {durationYears} ans
-                </strong>
-                <br />
-                Capital estimé :{" "}
-                <strong style={{ color: "var(--green)" }}>
-                  {money(totalSaved)} $
-                </strong>
-              </p>
-            </div>
+                      <div>
+                        <strong>{goal.title}</strong>
+                        <small>{money(getGoalRemaining(goal))} $ restants</small>
+                      </div>
 
-            <p style={muted}>
-              Choisissez ou créez un objectif pour suivre votre progression.
-            </p>
+                      <ChevronRight size={20} />
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <p style={muted}>Créer depuis la simulation</p>
 
             <div style={goalList}>
               {goalOptions.map((option) => (
@@ -287,7 +477,7 @@ function Simulateur({
               }}
               style={viewGoalsBtn}
             >
-              Voir mes objectifs
+              Configurer dans Objectifs
             </button>
           </section>
         </div>
@@ -296,11 +486,11 @@ function Simulateur({
   );
 }
 
-function Info({ label, value }) {
+function Info({ label, value, color = "var(--text-main)" }) {
   return (
     <div style={row}>
       <span style={muted}>{label}</span>
-      <strong>{value}</strong>
+      <strong style={{ color }}>{value}</strong>
     </div>
   );
 }
@@ -312,6 +502,80 @@ function Mini({ icon, title, color }) {
       <strong>{title}</strong>
     </div>
   );
+}
+
+function getGoalRemaining(goal) {
+  return Math.max(
+    0,
+    Number(goal?.targetAmount || 0) - Number(goal?.currentAmount || 0)
+  );
+}
+
+function getGoalProgress(goal) {
+  const target = Number(goal?.targetAmount || 0);
+  if (target <= 0) return 0;
+
+  return Math.min(
+    100,
+    Math.round((Number(goal?.currentAmount || 0) / target) * 100)
+  );
+}
+
+function estimateMonthlyNeed(goal) {
+  const remaining = getGoalRemaining(goal);
+  if (remaining <= 0) return 0;
+
+  if (!goal.targetDate) return 0;
+
+  const months = monthsUntil(goal.targetDate);
+  if (months <= 0) return remaining;
+
+  return Math.ceil(remaining / months);
+}
+
+function monthsUntil(dateValue) {
+  const target = new Date(dateValue);
+  if (Number.isNaN(target.getTime())) return 0;
+
+  const now = new Date();
+  const years = target.getFullYear() - now.getFullYear();
+  const months = target.getMonth() - now.getMonth();
+
+  return Math.max(1, years * 12 + months + 1);
+}
+
+function estimateCompletionDate(remaining, monthly) {
+  const amount = Number(remaining || 0);
+  const payment = Number(monthly || 0);
+
+  if (amount <= 0) return "Atteint";
+  if (payment <= 0) return "À définir";
+
+  const months = Math.ceil(amount / payment);
+  const date = new Date();
+  date.setMonth(date.getMonth() + months);
+
+  return date.toLocaleDateString("fr-CA", {
+    year: "numeric",
+    month: "short",
+  });
+}
+
+function buildScenario(label, monthly, remaining) {
+  const rounded = Math.max(0, Math.round(monthly || 0));
+  const colors = {
+    Tranquille: "var(--green)",
+    Équilibré: "var(--gold)",
+    Dynamique: "var(--blue)",
+    Féroce: "var(--red)",
+  };
+
+  return {
+    label,
+    monthly: rounded,
+    end: estimateCompletionDate(remaining, rounded),
+    color: colors[label] || "var(--gold)",
+  };
 }
 
 const miniIntro = {
@@ -335,6 +599,15 @@ const card = {
   marginTop: "20px",
 };
 
+const selectedGoalCard = {
+  background:
+    "linear-gradient(135deg, rgba(212,175,55,.18), rgba(56,189,248,.08), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "14px",
+};
+
 const goalCard = {
   background: "linear-gradient(135deg,#2a210b,var(--bg-card))",
   border: "1px solid var(--gold)",
@@ -348,6 +621,14 @@ const header = {
   alignItems: "center",
   gap: "10px",
   marginBottom: "14px",
+};
+
+const eyebrow = {
+  margin: 0,
+  color: "var(--gold)",
+  fontSize: "12px",
+  fontWeight: "900",
+  textTransform: "uppercase",
 };
 
 const inputWrap = {
@@ -384,6 +665,7 @@ const result = {
 const row = {
   display: "flex",
   justifyContent: "space-between",
+  gap: "12px",
   padding: "12px 0",
   borderBottom: "1px solid rgba(255,255,255,.08)",
 };
@@ -403,6 +685,43 @@ const addToGoalBtn = {
   textAlign: "left",
 };
 
+const saveButton = {
+  width: "100%",
+  marginTop: "14px",
+  padding: "14px",
+  borderRadius: "14px",
+  border: "none",
+  background: "var(--green)",
+  color: "white",
+  fontWeight: "900",
+};
+
+const planButton = {
+  width: "100%",
+  marginTop: "14px",
+  padding: "14px",
+  borderRadius: "14px",
+  border: "1px solid var(--gold)",
+  background: "rgba(212,175,55,.14)",
+  color: "var(--gold)",
+  fontWeight: "900",
+};
+
+const ghostButton = {
+  width: "100%",
+  marginTop: "12px",
+  padding: "12px",
+  borderRadius: "14px",
+  border: "1px solid var(--border)",
+  background: "var(--bg-panel)",
+  color: "var(--text-main)",
+  fontWeight: "900",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+};
+
 const confirmBox = {
   background: "rgba(34,197,94,.14)",
   border: "1px solid var(--green)",
@@ -412,6 +731,32 @@ const confirmBox = {
   display: "flex",
   gap: "10px",
   alignItems: "center",
+};
+
+const scenarioGrid = {
+  display: "grid",
+  gap: "10px",
+};
+
+const scenarioCard = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "12px",
+  display: "grid",
+  gap: "5px",
+};
+
+const miniBarBg = {
+  height: "10px",
+  background: "var(--bg-panel)",
+  borderRadius: "999px",
+  overflow: "hidden",
+};
+
+const miniBarFill = {
+  height: "100%",
+  borderRadius: "999px",
 };
 
 const modalOverlay = {
@@ -450,20 +795,10 @@ const closeBtn = {
   placeItems: "center",
 };
 
-const simulationSummary = {
-  background: "var(--bg-card)",
-  border: "1px solid var(--border)",
-  borderRadius: "18px",
-  padding: "16px",
-  display: "flex",
-  gap: "12px",
-  marginTop: "16px",
-};
-
 const goalList = {
   display: "grid",
   gap: "10px",
-  marginTop: "16px",
+  marginTop: "12px",
 };
 
 const goalOption = {

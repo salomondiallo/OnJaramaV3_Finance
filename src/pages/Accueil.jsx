@@ -118,7 +118,7 @@ function Accueil({
       <section className="accueil-hero" />
 
       <section className="accueil-headline" style={premiumHero}>
-        <p className="accueil-eyebrow">OnJarama Path V11.0</p>
+        <p className="accueil-eyebrow">OnJarama Path V11.1</p>
 
         <h1 className="accueil-title">
           {t.heroTitle}
@@ -127,7 +127,7 @@ function Accueil({
         </h1>
 
         <p className="accueil-subtitle">
-          Votre situation d’abord. Votre plan ensuite. Votre parcours à votre rythme.
+          Situation, objectifs, simulation, plan de match : votre parcours à votre rythme.
         </p>
       </section>
       <section className="accueil-headline" style={quickActionsCard}>
@@ -164,38 +164,31 @@ function Accueil({
         </div>
       </section>
 
-      <section className="accueil-headline" style={situationCard}>
+      <section className="accueil-headline" style={pathStartCard}>
         <div style={sectionHead}>
-          <Wallet size={20} color={situationScore.color} />
-          <strong>Ma situation</strong>
+          <Route size={20} color={situationScore.color} />
+          <strong>Point de départ</strong>
         </div>
 
-        <div style={situationGrid}>
-          <SituationLine
-            label="Revenus"
-            value={showAmounts ? money(monthlyIncome) : "Protégés"}
-            color="var(--green)"
-          />
-          <SituationLine
-            label="Sorties"
-            value={money(monthlyExpenses + monthlySavings)}
-            color="var(--red)"
-          />
-          <SituationLine
-            label="Disponible"
-            value={money(monthlyAvailable)}
-            color={monthlyAvailable >= 0 ? "var(--green)" : "var(--red)"}
-          />
-        </div>
+        <p style={softText}>
+          {monthlyIncome > 0
+            ? "Situation renseignée. La prochaine étape est de cibler une destination."
+            : "Ajoutez votre situation pour activer les objectifs et simulations."}
+        </p>
 
-        <p style={softText}>{situationScore.label}</p>
+        <div style={miniPathGrid}>
+          <MiniPathStep label="1" text="Situation" active={monthlyIncome > 0} />
+          <MiniPathStep label="2" text="Objectifs" active={activeGoals.length > 0} />
+          <MiniPathStep label="3" text="Simulation" active={Boolean(mainGoal?.simulation)} />
+          <MiniPathStep label="4" text="Plan" active={Boolean(mainGoal)} />
+        </div>
 
         <button
-          onClick={() => setCurrentPage("situation", "origine-fonds")}
+          onClick={() => setCurrentPage(monthlyIncome > 0 ? "objectifs" : "situation", monthlyIncome > 0 ? null : "origine-fonds")}
           className="primary-action"
           style={{ marginTop: 12 }}
         >
-          Ouvrir Ma Situation
+          {monthlyIncome > 0 ? "Choisir ma destination" : "Ouvrir Ma Situation"}
         </button>
       </section>
 
@@ -217,48 +210,6 @@ function Accueil({
           style={{ marginTop: 12 }}
         >
           {nextAction.button}
-        </button>
-      </section>
-
-      <section className="accueil-headline" style={fundingCard}>
-        <div style={sectionHead}>
-          <PiggyBank
-            size={20}
-            color={hasSources ? "var(--green)" : "var(--gold)"}
-          />
-          <strong>Mes sources financières</strong>
-        </div>
-
-        <div style={fundingStatusRow}>
-          {hasSources ? (
-            <CheckCircle size={18} color="var(--green)" />
-          ) : (
-            <Sparkles size={18} color="var(--gold)" />
-          )}
-
-          <strong
-            style={{
-              color: hasSources ? "var(--green)" : "var(--gold)",
-            }}
-          >
-            {hasSources
-              ? `${sourceCount} source${sourceCount > 1 ? "s" : ""} enregistrée${
-                  sourceCount > 1 ? "s" : ""
-                }`
-              : "Aucune source enregistrée"}
-          </strong>
-        </div>
-
-        <p style={softText}>
-          Vos montants restent masqués sur l’accueil. Ajoutez vos revenus lorsque vous serez prêt.
-        </p>
-
-        <button
-          onClick={() => setCurrentPage("situation", "origine-fonds")}
-          className="ai-action"
-          style={{ marginTop: 12 }}
-        >
-          Configurer
         </button>
       </section>
 
@@ -339,8 +290,8 @@ function Accueil({
         <div style={companionGrid}>
           <CompanionLine
             icon="📊"
-            label="Fondation"
-            value={monthlyIncome > 0 ? "Situation renseignée" : "Situation à démarrer"}
+            label="Destination"
+            value={mainGoal ? mainGoal.title : "Objectif à choisir"}
           />
           <CompanionLine
             icon="💰"
@@ -435,6 +386,15 @@ function Accueil({
   );
 }
 
+function MiniPathStep({ label, text, active }) {
+  return (
+    <div style={{ ...miniPathStep, borderColor: active ? "var(--gold)" : "var(--border)" }}>
+      <strong style={{ color: active ? "var(--gold)" : "var(--text-muted)" }}>{label}</strong>
+      <small>{text}</small>
+    </div>
+  );
+}
+
 function QuickActionButton({ label, text, color, onClick }) {
   return (
     <button onClick={onClick} style={{ ...quickActionBtn, borderColor: color }}>
@@ -473,12 +433,21 @@ function getNextAction({ totalDebt, mainGoal, closestGoal, monthlyIncome }) {
     };
   }
 
+  if (totalDebt > 0 && !mainGoal) {
+    return {
+      title: "Créer un objectif dette",
+      text: "Votre dette existe déjà dans Situation. L’étape suivante est d’en faire une destination mesurable.",
+      button: "Ouvrir Objectifs",
+      page: "objectifs",
+    };
+  }
+
   if (totalDebt > 0) {
     return {
-      title: "Réduire la dette prioritaire",
-      text: "Votre plan gagne en force quand les dettes ralentissent moins vos projets.",
-      button: "Voir ma situation",
-      page: "situation",
+      title: "Simuler le meilleur chemin",
+      text: "Comparez les rythmes pour avancer sans perdre votre cap.",
+      button: "Ouvrir Simulateur",
+      page: "simulateur",
     };
   }
 
@@ -502,9 +471,9 @@ function getNextAction({ totalDebt, mainGoal, closestGoal, monthlyIncome }) {
 
   return {
     title: "Créer votre premier objectif",
-    text: "Ajoutez un objectif pour que OnJarama Path construise votre parcours.",
-    button: "Ouvrir Mon Plan",
-    page: "monplan",
+    text: "Ajoutez une destination pour que OnJarama Path construise votre parcours.",
+    button: "Ouvrir Objectifs",
+    page: "objectifs",
   };
 }
 
@@ -712,9 +681,27 @@ const companionCard = {
   background: "linear-gradient(135deg, rgba(212,175,55,.16), var(--bg-card))",
 };
 
-const situationCard = {
-  border: "1px solid var(--green)",
-  background: "linear-gradient(135deg, rgba(34,197,94,.12), var(--bg-card))",
+const pathStartCard = {
+  border: "1px solid var(--gold)",
+  background:
+    "linear-gradient(135deg, rgba(212,175,55,.14), rgba(34,197,94,.06), var(--bg-card))",
+};
+
+const miniPathGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+  gap: "7px",
+  marginTop: "12px",
+};
+
+const miniPathStep = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "13px",
+  padding: "9px 6px",
+  display: "grid",
+  gap: "3px",
+  textAlign: "center",
 };
 
 const situationGrid = {
