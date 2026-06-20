@@ -12,6 +12,11 @@ import {
   Star,
   Target,
   Trophy,
+  Wallet,
+  TrendingDown,
+  PiggyBank,
+  History,
+  Lock,
 } from "lucide-react";
 import { formatMoney } from "../utils/formatters";
 import { getText } from "../data/translations";
@@ -84,6 +89,24 @@ const pageText = {
     cloudReady: "Préparation V11 Cloud Journey",
     cloudText:
       "Historique, parcours cloud et assistant contextualisé sont préparés pour la prochaine fondation.",
+    journeyInsights: "Journey Insights",
+    realEvolution: "Évolution réelle",
+    startedWith: "Départ",
+    now: "Aujourd’hui",
+    changed: "Changement",
+    debtReduced: "Dette réduite",
+    savingsBuilt: "Épargne construite",
+    goalFunded: "Objectifs financés",
+    nextWinSmart: "Prochaine victoire intelligente",
+    fundingOrigin: "Origine des fonds",
+    fundingConfigured: "Configurée",
+    fundingMissing: "À compléter",
+    fundingPrivate: "Visible ici de façon discrète. Les montants détaillés restent protégés dans le profil financier.",
+    openFinancialProfile: "Ouvrir Profil / Finances",
+    historyVictories: "Historique des victoires",
+    firstDebtAdded: "Première dette ajoutée",
+    progressSinceStart: "Progression depuis le départ",
+    underThreshold: "sous le prochain palier",
   },
 
   EN: {
@@ -150,6 +173,24 @@ const pageText = {
     cloudReady: "V11 Cloud Journey preparation",
     cloudText:
       "History, cloud journey and contextual assistant are prepared for the next foundation.",
+    journeyInsights: "Journey Insights",
+    realEvolution: "Real evolution",
+    startedWith: "Start",
+    now: "Today",
+    changed: "Change",
+    debtReduced: "Debt reduced",
+    savingsBuilt: "Savings built",
+    goalFunded: "Goals funded",
+    nextWinSmart: "Smart next win",
+    fundingOrigin: "Funding source",
+    fundingConfigured: "Configured",
+    fundingMissing: "To complete",
+    fundingPrivate: "Shown here discreetly. Detailed amounts stay protected in the financial profile.",
+    openFinancialProfile: "Open Profile / Finances",
+    historyVictories: "Victory history",
+    firstDebtAdded: "First debt added",
+    progressSinceStart: "Progress since start",
+    underThreshold: "under the next threshold",
   },
 
   ES: {
@@ -219,6 +260,24 @@ const pageText = {
     cloudReady: "Preparación V11 Cloud Journey",
     cloudText:
       "Historial, recorrido cloud y asistente contextual están preparados para la próxima base.",
+    journeyInsights: "Journey Insights",
+    realEvolution: "Evolución real",
+    startedWith: "Inicio",
+    now: "Hoy",
+    changed: "Cambio",
+    debtReduced: "Deuda reducida",
+    savingsBuilt: "Ahorro construido",
+    goalFunded: "Objetivos financiados",
+    nextWinSmart: "Próxima victoria inteligente",
+    fundingOrigin: "Origen de los fondos",
+    fundingConfigured: "Configurada",
+    fundingMissing: "Por completar",
+    fundingPrivate: "Visible aquí de forma discreta. Los montos detallados siguen protegidos en el perfil financiero.",
+    openFinancialProfile: "Abrir Perfil / Finanzas",
+    historyVictories: "Historial de victorias",
+    firstDebtAdded: "Primera deuda agregada",
+    progressSinceStart: "Progreso desde el inicio",
+    underThreshold: "bajo el próximo nivel",
   },
 };
 
@@ -319,6 +378,30 @@ function Parcours({
 
   const nextVictory = priorityDebt || highlightedGoal || simulatorGoal;
 
+  const monthlyIncome = Number(financeData?.overview?.monthlyIncome || 0);
+  const fundingConfigured = monthlyIncome > 0;
+
+  const startingDebt = getStartingDebt(debts);
+  const debtReduced = Math.max(0, startingDebt - totalDebt);
+  const savingsBuilt = totalGoalCurrent;
+  const nextVictoryInsight = getNextVictoryInsight({
+    priorityDebt,
+    highlightedGoal,
+    currency,
+    p,
+  });
+
+  const victoryHistory = buildVictoryHistory({
+    debts,
+    firstGoal,
+    lastDepositGoal,
+    achievedGoals,
+    p,
+    currency,
+  });
+
+  const disciplineV2 = getDisciplineLevelV2(disciplineValue, language);
+
   return (
     <div className="native-page">
       <h1>{t.parcours}</h1>
@@ -345,7 +428,7 @@ function Parcours({
             label={p.journeyDays}
             value={firstGoal ? `${daysSinceStart}` : "0"}
             color="var(--blue)"
-          />
+                      />
           <JourneyStat
             icon={<Target size={18} />}
             label={p.mainGoal}
@@ -367,6 +450,93 @@ function Parcours({
               }.`
             : p.notStarted}
         </p>
+      </section>
+
+      <section style={insightsCard}>
+        <div style={header}>
+          <Sparkles color="var(--gold)" />
+          <div>
+            <p style={eyebrow}>{p.journeyInsights}</p>
+            <h2>{p.realEvolution}</h2>
+            <p style={muted}>{p.progressSinceStart}</p>
+          </div>
+        </div>
+
+        <div style={insightsGrid}>
+          <InsightStat
+            icon={<TrendingDown size={18} />}
+            label={p.debtReduced}
+            start={formatMoney(startingDebt, currency)}
+            current={formatMoney(totalDebt, currency)}
+            change={`-${formatMoney(debtReduced, currency)}`}
+            color="var(--green)"
+            p={p}
+          />
+
+          <InsightStat
+            icon={<PiggyBank size={18} />}
+            label={p.savingsBuilt}
+            start={formatMoney(0, currency)}
+            current={formatMoney(savingsBuilt, currency)}
+            change={`+${formatMoney(savingsBuilt, currency)}`}
+            color="var(--blue)"
+            p={p}
+          />
+
+          <InsightStat
+            icon={<Target size={18} />}
+            label={p.goalFunded}
+            start={formatMoney(0, currency)}
+            current={formatMoney(totalGoalCurrent, currency)}
+            change={`${globalGoalProgress}%`}
+            color="var(--gold)"
+            p={p}
+          />
+        </div>
+      </section>
+
+      <section style={nextVictorySmartCard}>
+        <div style={header}>
+          <Trophy color="var(--gold)" />
+          <div>
+            <p style={eyebrow}>{p.nextWinSmart}</p>
+            <h2>{nextVictoryInsight.title}</h2>
+            <p style={muted}>{nextVictoryInsight.text}</p>
+          </div>
+        </div>
+
+        <div style={miniBarBg}>
+          <div
+            style={{
+              ...miniBarFill,
+              width: `${nextVictoryInsight.progress}%`,
+              background: nextVictoryInsight.color,
+            }}
+          />
+        </div>
+
+        <button
+          onClick={() => setCurrentPage(nextVictoryInsight.page)}
+          style={greenBtn}
+        >
+          {nextVictoryInsight.button}
+        </button>
+      </section>
+
+      <section style={fundingOriginCard}>
+        <div style={header}>
+          <Wallet color={fundingConfigured ? "var(--green)" : "var(--gold)"} />
+          <div>
+            <p style={eyebrow}>{p.fundingOrigin}</p>
+            <h2>{fundingConfigured ? p.fundingConfigured : p.fundingMissing}</h2>
+            <p style={muted}>{p.fundingPrivate}</p>
+          </div>
+        </div>
+
+        <button onClick={() => setCurrentPage("profil")} style={blueBtn}>
+          <Lock size={17} />
+          {p.openFinancialProfile}
+        </button>
       </section>
 
       <section style={todayCard}>
@@ -426,18 +596,18 @@ function Parcours({
       </section>
 
       <section style={disciplineCard}>
-        <Flag color="var(--gold)" />
+        <Flag color={disciplineV2.color} />
 
         <div>
-          <h2>{p.rhythm}</h2>
+          <h2>{p.discipline}</h2>
 
           <p style={muted}>
             {journeyStats.activeDays} {p.activeDays} • {p.lastUpdate} :{" "}
             {journeyStats.lastUpdate}
           </p>
 
-          <strong style={{ color: getDisciplineColor(disciplineValue) }}>
-            {disciplineValue}% • {disciplineLabel}
+          <strong style={{ color: disciplineV2.color }}>
+            {disciplineValue}% • {disciplineV2.label}
           </strong>
 
           <div style={miniBarBg}>
@@ -445,13 +615,35 @@ function Parcours({
               style={{
                 ...miniBarFill,
                 width: `${disciplineValue}%`,
-                background: getDisciplineColor(disciplineValue),
+                background: disciplineV2.color,
               }}
             />
           </div>
 
-          <p style={muted}>{p.continueRhythm}</p>
+          <p style={muted}>{disciplineV2.message}</p>
         </div>
+      </section>
+
+      <section style={historyCard}>
+        <div style={header}>
+          <History color="var(--gold)" />
+          <div>
+            <p style={eyebrow}>{p.historyVictories}</p>
+            <h2>{p.victories}</h2>
+            <p style={muted}>{p.story}</p>
+          </div>
+        </div>
+
+        {victoryHistory.map((victory) => (
+          <Milestone
+            key={victory.id}
+            icon={victory.icon}
+            title={victory.title}
+            subtitle={victory.subtitle}
+            active={victory.active}
+            color={victory.color}
+          />
+        ))}
       </section>
 
       <section style={nextStepCard}>
@@ -574,11 +766,7 @@ function Parcours({
         <Milestone
           icon={<Trophy />}
           title={p.firstVictory}
-          subtitle={
-            achievedGoals[0]
-              ? achievedGoals[0].title
-              : p.noVictory
-          }
+          subtitle={achievedGoals[0] ? achievedGoals[0].title : p.noVictory}
           active={achievedGoals.length > 0}
           color="var(--gold)"
         />
@@ -695,11 +883,11 @@ function Parcours({
           <h2>{p.aiReading}</h2>
           <p style={muted}>
             {priorityDebt
-              ? `${p.debtAdvice} ${p.rhythm} : ${disciplineValue}% (${disciplineLabel}).`
+              ? `${p.debtAdvice} ${p.rhythm} : ${disciplineValue}% (${disciplineV2.label}).`
               : goals.length > 0
                 ? simulatorGoal
                   ? p.simulatorAdvice
-                  : `${p.goalAdvice} ${p.rhythm} : ${disciplineValue}% (${disciplineLabel}).`
+                  : `${p.goalAdvice} ${p.rhythm} : ${disciplineValue}% (${disciplineV2.label}).`
                 : p.startAdvice}
           </p>
         </div>
@@ -740,6 +928,21 @@ function JourneyStat({ icon, label, value, color }) {
       <span style={{ color }}>{icon}</span>
       <small>{label}</small>
       <strong>{value}</strong>
+    </div>
+  );
+}
+
+function InsightStat({ icon, label, start, current, change, color, p }) {
+  return (
+    <div style={{ ...insightStat, borderColor: color }}>
+      <span style={{ color }}>{icon}</span>
+      <strong>{label}</strong>
+
+      <div style={insightRows}>
+        <SmallStat label={p.startedWith} value={start} />
+        <SmallStat label={p.now} value={current} />
+        <SmallStat label={p.changed} value={change} />
+      </div>
     </div>
   );
 }
@@ -842,10 +1045,57 @@ function formatDate(dateValue, language) {
 }
 
 function getDisciplineColor(score) {
-  if (score <= 25) return "var(--red)";
-  if (score <= 50) return "var(--gold)";
-  if (score <= 75) return "var(--blue)";
+  if (score <= 20) return "var(--red)";
+  if (score <= 40) return "var(--gold)";
+  if (score <= 60) return "var(--blue)";
+  if (score <= 80) return "var(--purple)";
   return "var(--green)";
+}
+
+function getDisciplineLevelV2(score, language) {
+  const value = Number(score || 0);
+  const labels = {
+    FR: ["Départ", "Régulier", "Constant", "Déterminé", "Exemplaire"],
+    EN: ["Starting", "Regular", "Consistent", "Determined", "Exemplary"],
+    ES: ["Inicio", "Regular", "Constante", "Determinado", "Ejemplar"],
+  };
+  const messages = {
+    FR: [
+      "Le parcours commence tranquillement.",
+      "Le rythme se construit.",
+      "La constance devient visible.",
+      "Vous avancez avec intention.",
+      "Discipline forte, sans pression.",
+    ],
+    EN: [
+      "The journey is starting gently.",
+      "The rhythm is building.",
+      "Consistency is becoming visible.",
+      "You are moving with intention.",
+      "Strong discipline, without pressure.",
+    ],
+    ES: [
+      "El camino empieza con calma.",
+      "El ritmo se está construyendo.",
+      "La constancia se vuelve visible.",
+      "Avanzas con intención.",
+      "Disciplina fuerte, sin presión.",
+    ],
+  };
+
+  const key = labels[language] ? language : "FR";
+  let index = 0;
+
+  if (value > 80) index = 4;
+  else if (value > 60) index = 3;
+  else if (value > 40) index = 2;
+  else if (value > 20) index = 1;
+
+  return {
+    label: labels[key][index],
+    message: messages[key][index],
+    color: getDisciplineColor(value),
+  };
 }
 
 function getNextStep({ priorityDebt, highlightedGoal, simulatorGoal, goals, p }) {
@@ -886,6 +1136,111 @@ function getNextStep({ priorityDebt, highlightedGoal, simulatorGoal, goals, p })
     button: p.openPlan,
     page: "monplan",
   };
+}
+
+function getNextVictoryInsight({ priorityDebt, highlightedGoal, currency, p }) {
+  if (priorityDebt) {
+    const balance = Number(priorityDebt.balance || 0);
+    const nextThreshold = Math.max(0, Math.floor((balance - 1) / 1000) * 1000);
+    const amountToThreshold = Math.max(0, balance - nextThreshold);
+    const progress = balance > 0
+      ? Math.min(100, Math.max(5, Math.round(((1000 - amountToThreshold) / 1000) * 100)))
+      : 100;
+
+    return {
+      title: `${priorityDebt.name} ${p.underThreshold}`,
+      text: `${formatMoney(amountToThreshold, currency)} avant le prochain palier.`,
+      button: p.updateSituation,
+      page: "situation",
+      progress,
+      color: "var(--gold)",
+    };
+  }
+
+  if (highlightedGoal) {
+    const current = Number(highlightedGoal.currentAmount || 0);
+    const target = Number(highlightedGoal.targetAmount || 0);
+    const remaining = getRemaining(current, target);
+    const progress = getGoalProgress(current, target);
+
+    return {
+      title: highlightedGoal.title,
+      text: `${formatMoney(remaining, currency)} ${p.remaining.toLowerCase()}.`,
+      button: p.manageGoals,
+      page: "objectifs",
+      progress,
+      color: progress >= 80 ? "var(--green)" : "var(--blue)",
+    };
+  }
+
+  return {
+    title: p.recommendedAction,
+    text: p.addDebtGoal,
+    button: p.manageGoals,
+    page: "objectifs",
+    progress: 0,
+    color: "var(--gold)",
+  };
+}
+
+function buildVictoryHistory({ debts, firstGoal, lastDepositGoal, achievedGoals, p, currency }) {
+  const firstDebt = debts.find((debt) => Number(debt.balance || 0) > 0);
+
+  return [
+    {
+      id: "first-debt",
+      icon: <CreditCard />,
+      title: p.firstDebtAdded,
+      subtitle: firstDebt ? firstDebt.name : p.noDebt,
+      active: Boolean(firstDebt),
+      color: "var(--red)",
+    },
+    {
+      id: "first-goal",
+      icon: <Target />,
+      title: p.createdGoal,
+      subtitle: firstGoal?.title || p.addDebtGoal,
+      active: Boolean(firstGoal),
+      color: "var(--gold)",
+    },
+    {
+      id: "first-deposit",
+      icon: <PiggyBank />,
+      title: p.firstDeposit,
+      subtitle: lastDepositGoal
+        ? `${lastDepositGoal.title} • +${formatMoney(lastDepositGoal.lastDeposit.amount, currency)}`
+        : p.emergencySubtitle,
+      active: Boolean(lastDepositGoal),
+      color: "var(--green)",
+    },
+    {
+      id: "first-victory",
+      icon: <Trophy />,
+      title: p.firstVictory,
+      subtitle: achievedGoals[0]?.title || p.noVictory,
+      active: achievedGoals.length > 0,
+      color: "var(--gold)",
+    },
+  ];
+}
+
+function getStartingDebt(debts) {
+  const totalCurrent = debts.reduce((sum, debt) => sum + Number(debt.balance || 0), 0);
+  const explicitStart = debts.reduce(
+    (sum, debt) =>
+      sum +
+      Number(
+        debt.startingBalance ||
+          debt.initialBalance ||
+          debt.originalBalance ||
+          debt.startBalance ||
+          debt.balance ||
+          0
+      ),
+    0
+  );
+
+  return Math.max(totalCurrent, explicitStart);
 }
 
 function GoalStep({
@@ -1036,6 +1391,64 @@ const smartHeaderCard = {
   borderRadius: "24px",
   padding: "20px",
   marginTop: "20px",
+};
+
+const insightsCard = {
+  background:
+    "linear-gradient(135deg, rgba(212,175,55,.16), rgba(34,197,94,.08), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "24px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const nextVictorySmartCard = {
+  background:
+    "linear-gradient(135deg, rgba(212,175,55,.18), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const fundingOriginCard = {
+  background:
+    "linear-gradient(135deg, rgba(212,175,55,.12), rgba(34,197,94,.06), var(--bg-card))",
+  border: "1px solid rgba(212,175,55,.55)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const historyCard = {
+  background:
+    "linear-gradient(135deg, rgba(212,175,55,.12), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const insightsGrid = {
+  display: "grid",
+  gridTemplateColumns: "1fr",
+  gap: "10px",
+  marginTop: "14px",
+};
+
+const insightStat = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "12px",
+  display: "grid",
+  gap: "10px",
+};
+
+const insightRows = {
+  display: "grid",
+  gridTemplateColumns: "repeat(3, 1fr)",
+  gap: "8px",
 };
 
 const journeyGrid = {
@@ -1331,6 +1744,10 @@ const blueBtn = {
   background: "linear-gradient(90deg,var(--purple),var(--blue))",
   color: "white",
   fontWeight: "bold",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  gap: "8px",
 };
 
 const muted = {
