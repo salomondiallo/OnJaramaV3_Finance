@@ -3,6 +3,7 @@ import {
   Calculator,
   ChevronDown,
   ChevronUp,
+  Home,
   Route,
   Target,
 } from "lucide-react";
@@ -18,11 +19,15 @@ function BottomNav({ currentPage, setCurrentPage, navHidden, setNavHidden }) {
         onClick={() => setNavHidden(!navHidden)}
         className="bottom-nav-handle"
         aria-label={navHidden ? "Afficher la navigation" : "Masquer la navigation"}
+        title={navHidden ? "Afficher la navigation" : "Masquer la navigation"}
       >
         {navHidden ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
       </button>
 
-      <nav className={`bottom-nav ${navHidden ? "bottom-nav-hidden" : ""}`}>
+      <nav
+        className={`bottom-nav ${navHidden ? "bottom-nav-hidden" : ""}`}
+        aria-label="Navigation principale OnJarama Path"
+      >
         <button
           onClick={() => go("accueil")}
           className={`bottom-logo-btn ${
@@ -35,6 +40,9 @@ function BottomNav({ currentPage, setCurrentPage, navHidden, setNavHidden }) {
             alt="Accueil"
             className="bottom-logo"
           />
+          <span className="bottom-logo-fallback">
+            <Home size={18} />
+          </span>
         </button>
 
         <NavButton
@@ -81,6 +89,7 @@ function NavButton({ icon, label, active, onClick }) {
       onClick={onClick}
       className={`bottom-nav-btn ${active ? "active" : ""}`}
       aria-label={label}
+      title={label}
     >
       <span className="bottom-nav-icon">{icon}</span>
       <span>{label}</span>
