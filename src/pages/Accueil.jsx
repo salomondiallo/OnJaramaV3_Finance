@@ -118,7 +118,7 @@ function Accueil({
       <section className="accueil-hero" />
 
       <section className="accueil-headline" style={premiumHero}>
-        <p className="accueil-eyebrow">OnJarama Path V10.9</p>
+        <p className="accueil-eyebrow">OnJarama Path V11.0</p>
 
         <h1 className="accueil-title">
           {t.heroTitle}
@@ -299,6 +299,24 @@ function Accueil({
         </div>
       </section>
 
+      {mainGoal && (
+        <section className="accueil-headline" style={mainGoalHomeCard}>
+          <div style={sectionHead}>
+            <Target size={20} color="var(--gold)" />
+            <strong>Objectif favori</strong>
+          </div>
+          <p style={softText}><strong>{mainGoal.title}</strong></p>
+          <p style={softText}>Accessible sans exposer les montants sur l’accueil.</p>
+          <button
+            onClick={() => setCurrentPage("objectifs")}
+            className="ai-action"
+            style={{ marginTop: 12 }}
+          >
+            Ouvrir Objectifs Premium
+          </button>
+        </section>
+      )}
+
       <section className="accueil-headline" style={progressFlagCard}>
         <div style={sectionHead}>
           <Flag size={20} color="var(--gold)" />
@@ -394,7 +412,7 @@ function Accueil({
           title="Objectif"
           text={mainGoal ? mainGoal.title : "Créer un objectif"}
           color="var(--green)"
-          onClick={() => setCurrentPage("monplan")}
+          onClick={() => setCurrentPage("objectifs")}
         />
 
         <QuickTile
@@ -641,6 +659,12 @@ const premiumHero = {
   border: "1px solid var(--gold)",
   background:
     "radial-gradient(circle at top right, rgba(212,175,55,.22), transparent 34%), var(--bg-card)",
+};
+
+const mainGoalHomeCard = {
+  border: "1px solid var(--gold)",
+  background:
+    "linear-gradient(135deg, rgba(212,175,55,.16), rgba(34,197,94,.08), var(--bg-card))",
 };
 
 const progressFlagCard = {

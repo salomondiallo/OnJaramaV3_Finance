@@ -7,6 +7,10 @@ import {
   CreditCard,
   HeartHandshake,
   Home,
+  Layers,
+  TrendingUp,
+  Wallet,
+  CalendarClock,
   PiggyBank,
   Plane,
   Plus,
@@ -54,6 +58,16 @@ const pageText = {
     journeyHint:
       "Chaque objectif est maintenant connecté à votre parcours global.",
     seeJourney: "Voir dans mon parcours",
+    premiumVersion: "Objectifs Premium V11.0",
+    pilotTitle: "Centre de pilotage Objectifs",
+    pilotText: "L’application ne liste plus seulement vos objectifs : elle aide à choisir quoi avancer en premier.",
+    priorityAuto: "Priorisation automatique",
+    ifContinue: "Si je continue ainsi",
+    connectedGoals: "Objectifs connectés",
+    fundingOrigin: "Origine des fonds",
+    discreet: "Visible rapidement, mais discrètement.",
+    nextAction: "Prochaine action",
+    noMainGoalPilot: "Créez ou mettez en avant un objectif principal.",
   },
 };
 
@@ -429,17 +443,22 @@ function Objectifs({
         const progress = getProgress(goal);
         const remaining = getRemaining(goal);
         const status = getGoalStatus(progress);
+        const priority = getGoalPriority(goal, progress, remaining);
         const priorityScore =
+          priority.score +
           (goal.highlighted ? 40 : 0) +
           (progress >= 80 && progress < 100 ? 30 : 0) +
           (progress >= 100 ? 20 : 0) +
           (goal.targetDate ? 10 : 0) -
           Math.min(20, Math.round(remaining / 1000));
 
-        return { ...goal, progress, remaining, status, priorityScore };
+        return { ...goal, progress, remaining, status, priority, priorityScore };
       })
       .sort((a, b) => b.priorityScore - a.priorityScore);
   }, [goals]);
+
+  const mainGoal = rankedGoals.find((goal) => goal.highlighted) || rankedGoals[0];
+  const connectedGoal = rankedGoals.find((goal) => ["maison", "voyage", "business"].includes(goal.category));
 
   function resetForm() {
     setSelectedType(null);
@@ -669,6 +688,58 @@ function Objectifs({
         onOpenJourney={openJourney}
       />
 
+      <section style={pilotCard}>
+        <div style={header}>
+          <SparklesIcon />
+          <div>
+            <p style={eyebrow}>{p.premiumVersion}</p>
+            <h2>{p.pilotTitle}</h2>
+            <p style={muted}>{p.pilotText}</p>
+          </div>
+        </div>
+
+        <div style={pilotGrid}>
+          <PilotStat
+            icon={<Target size={18} />}
+            label={p.mainGoal}
+            value={mainGoal?.title || p.noMainGoalPilot}
+            color="var(--gold)"
+          />
+          <PilotStat
+            icon={<TrendingUp size={18} />}
+            label={p.priorityAuto}
+            value={mainGoal?.priority?.label || "À définir"}
+            color={mainGoal?.priority?.color || "var(--gold)"}
+          />
+          <PilotStat
+            icon={<CalendarClock size={18} />}
+            label={p.ifContinue}
+            value={mainGoal ? estimateGoalDate(mainGoal) : "—"}
+            color="var(--blue)"
+          />
+          <PilotStat
+            icon={<Wallet size={18} />}
+            label={p.fundingOrigin}
+            value={"Profil financier"}
+            color="var(--green)"
+          />
+        </div>
+      </section>
+
+      {connectedGoal && (
+        <section style={connectedCard}>
+          <div style={header}>
+            <Layers color="var(--green)" />
+            <div>
+              <p style={eyebrow}>{p.connectedGoals}</p>
+              <h2>{connectedGoal.title}</h2>
+              <p style={muted}>{p.discreet}</p>
+            </div>
+          </div>
+          <ConnectedGoalMini goal={connectedGoal} currency={currency} />
+        </section>
+      )}
+
       <section style={journeyNotice}>
         <Route color="var(--gold)" />
         <div>
@@ -696,7 +767,7 @@ function Objectifs({
               <div style={header}>
                 <Target color="var(--gold)" />
                 <div>
-                  <p style={eyebrow}>Objectifs Premium+ V10.5</p>
+                  <p style={eyebrow}>{p.premiumVersion}</p>
                   <h1>{t.objectifs || p.smartCategories}</h1>
                 </div>
               </div>
@@ -899,6 +970,48 @@ function Objectifs({
   );
 }
 
+
+function SparklesIcon() {
+  return (
+    <span style={sparklesIcon}>
+      <Trophy size={20} />
+    </span>
+  );
+}
+
+function PilotStat({ icon, label, value, color }) {
+  return (
+    <div style={{ ...pilotStat, borderColor: color }}>
+      <span style={{ color }}>{icon}</span>
+      <small>{label}</small>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function ConnectedGoalMini({ goal, currency }) {
+  const steps = getConnectedSteps(goal);
+  return (
+    <div style={connectedList}>
+      {steps.map((step, index) => (
+        <div key={step.label} style={connectedLine}>
+          <span style={connectedDot}>{index + 1}</span>
+          <div style={{ flex: 1 }}>
+            <strong>{step.label}</strong>
+            <p style={mutedSmall}>{step.text}</p>
+          </div>
+          <small style={{ color: step.done ? "var(--green)" : "var(--text-muted)", fontWeight: 900 }}>
+            {step.done ? "✓" : "○"}
+          </small>
+        </div>
+      ))}
+      <p style={mutedSmall}>
+        Reste global : {formatMoney(goal.remaining || getRemaining(goal), currency)}
+      </p>
+    </div>
+  );
+}
+
 function Preview({ targetAmount, currentAmount, currency, text }) {
   const current = Number(currentAmount || 0);
   const remaining = Math.max(0, targetAmount - current);
@@ -949,7 +1062,137 @@ function getGoalStatus(progress) {
   return "Début";
 }
 
+
+function getGoalPriority(goal, progress, remaining) {
+  const hasCloseDate = goal.targetDate && daysUntil(goal.targetDate) <= 90;
+  const isDebt = goal.category === "dette";
+  const nearVictory = progress >= 80 && progress < 100;
+
+  if (isDebt || hasCloseDate || nearVictory) {
+    return { label: "Priorité élevée", color: "var(--red)", score: 70 };
+  }
+
+  if (goal.highlighted || remaining <= 1500 || progress >= 35) {
+    return { label: "Priorité moyenne", color: "var(--gold)", score: 45 };
+  }
+
+  return { label: "Priorité douce", color: "var(--green)", score: 20 };
+}
+
+function daysUntil(dateValue) {
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return 9999;
+  return Math.ceil((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+}
+
+function estimateGoalDate(goal) {
+  if (goal.targetDate) return goal.targetDate;
+  if (goal.progress >= 100) return "Atteint";
+  if (goal.progress >= 80) return "Très bientôt";
+  if (goal.progress >= 40) return "En bonne voie";
+  return "À votre rythme";
+}
+
+function getConnectedSteps(goal) {
+  if (goal.category === "maison") {
+    return [
+      { label: "Base", text: goal.option || "Projet maison", done: goal.progress >= 20 },
+      { label: "Travaux", text: "Crépi, électricité, solaire ou finition", done: goal.progress >= 50 },
+      { label: "Installation", text: "Mobilier, sécurité et confort", done: goal.progress >= 80 },
+      { label: "Victoire", text: "Objectif maison complété", done: goal.progress >= 100 },
+    ];
+  }
+
+  if (goal.category === "voyage") {
+    return [
+      { label: "Billet", text: "Préparer le transport principal", done: goal.progress >= 25 },
+      { label: "Séjour", text: "Prévoir dépenses sur place", done: goal.progress >= 50 },
+      { label: "Marge", text: "Garder une sécurité", done: goal.progress >= 75 },
+      { label: "Départ", text: "Voyage prêt", done: goal.progress >= 100 },
+    ];
+  }
+
+  return [
+    { label: "Départ", text: "Objectif créé", done: true },
+    { label: "Premier cap", text: "25 % atteint", done: goal.progress >= 25 },
+    { label: "Milieu", text: "50 % atteint", done: goal.progress >= 50 },
+    { label: "Victoire", text: "100 % atteint", done: goal.progress >= 100 },
+  ];
+}
+
 const page = { paddingTop: "0" };
+
+
+const pilotCard = {
+  background:
+    "radial-gradient(circle at top right, rgba(212,175,55,.22), transparent 34%), linear-gradient(135deg, rgba(15,23,42,.98), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "24px",
+  padding: "20px",
+};
+
+const pilotGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: "10px",
+  marginTop: "14px",
+};
+
+const pilotStat = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "12px",
+  display: "grid",
+  gap: "6px",
+  minHeight: "92px",
+};
+
+const sparklesIcon = {
+  width: "42px",
+  height: "42px",
+  borderRadius: "15px",
+  border: "1px solid var(--gold)",
+  background: "rgba(212,175,55,.14)",
+  color: "var(--gold)",
+  display: "grid",
+  placeItems: "center",
+};
+
+const connectedCard = {
+  background: "linear-gradient(135deg, rgba(34,197,94,.14), var(--bg-card))",
+  border: "1px solid var(--green)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "16px",
+};
+
+const connectedList = {
+  display: "grid",
+  gap: "10px",
+};
+
+const connectedLine = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "14px",
+  padding: "11px",
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
+};
+
+const connectedDot = {
+  width: "26px",
+  height: "26px",
+  borderRadius: "999px",
+  border: "1px solid var(--gold)",
+  color: "var(--gold)",
+  display: "grid",
+  placeItems: "center",
+  fontWeight: 900,
+  fontSize: "12px",
+};
 
 const journeyNotice = {
   background: "linear-gradient(135deg, rgba(212,175,55,.16), var(--bg-card))",
