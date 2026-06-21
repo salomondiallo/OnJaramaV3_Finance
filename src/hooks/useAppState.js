@@ -54,12 +54,24 @@ const defaultSettings = {
   privacyMode: true,
   demoMode: false,
   showAmounts: false,
+  aiAssistantMode: "auto",
+  cloudBackup: true,
+  cloudSyncStatus: "local",
 };
 
 function readStorage(key, fallback) {
   try {
     const saved = localStorage.getItem(key);
-    return saved ? JSON.parse(saved) : fallback;
+    if (!saved) return fallback;
+
+    if (key === "onjaramaSettings") {
+      return {
+        ...fallback,
+        ...JSON.parse(saved),
+      };
+    }
+
+    return JSON.parse(saved);
   } catch {
     return fallback;
   }
@@ -273,7 +285,6 @@ function buildSmartAllocation({ financeData, selectedGoals }) {
         "Avancer un projet secondaire sans disperser le plan.",
         "var(--blue)"
       );
-      remaining = 0;
     }
 
     if (!priorityDebt && !highlightedGoal && !emergencyGoal && remaining > 0) {

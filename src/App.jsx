@@ -1,7 +1,7 @@
 import "./App.css";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Trophy, X } from "lucide-react";
+import { Bot, Trophy, X } from "lucide-react";
 
 import useAppState from "./hooks/useAppState";
 import useNavigation from "./hooks/useNavigation";
@@ -126,7 +126,7 @@ function App() {
       setCurrentPage: navigateTo,
       goBack,
     }),
-    [appState, auth, navigateTo, goBack]
+    [appState, auth, goBack]
   );
 
   const pages = {
@@ -207,6 +207,17 @@ function App() {
     goBackwardBySwipe();
   }
 
+  function shouldShowFloatingAssistant() {
+    const mode = appState.settings?.aiAssistantMode || "auto";
+
+    if (mode === "disabled") return false;
+    if (mode === "always") return currentPage !== "assistant";
+
+    return ["accueil", "parcours", "monplan", "simulateur"].includes(
+      currentPage
+    );
+  }
+
   const victoryCount = Array.isArray(appState.unseenVictories)
     ? appState.unseenVictories.length
     : 0;
@@ -233,6 +244,8 @@ function App() {
           setCurrentPage={navigateTo}
           notifications={appState.notifications}
           settings={appState.settings}
+          setSettings={appState.setSettings}
+          auth={auth}
         />
 
         <div className="page-stage">
@@ -241,6 +254,18 @@ function App() {
           </div>
         </div>
       </main>
+
+      {shouldShowFloatingAssistant() && (
+        <button
+          onClick={() => navigateTo("assistant")}
+          className="floating-ai-button"
+          aria-label="Assistant IA"
+          title="Assistant IA"
+        >
+          <Bot size={24} />
+          <span>IA</span>
+        </button>
+      )}
 
       {showVictoryOverlay && victoryCount > 0 && (
         <div style={victoryOverlay}>
@@ -279,6 +304,7 @@ function App() {
         setCurrentPage={navigateTo}
         navHidden={navHidden}
         setNavHidden={setNavHidden}
+        settings={appState.settings}
       />
     </div>
   );

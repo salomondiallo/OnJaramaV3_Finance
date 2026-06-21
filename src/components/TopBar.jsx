@@ -2,15 +2,20 @@ import {
   ArrowLeft,
   Bell,
   BookOpen,
+  CheckCircle2,
   ChevronRight,
   Clock3,
+  Cloud,
   FileText,
   Globe2,
   Home,
   Languages,
+  LogOut,
+  Menu,
   Settings,
   ShieldCheck,
   UserCircle,
+  Wifi,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -22,10 +27,18 @@ function TopBar({
   setCurrentPage,
   notifications,
   settings,
+  setSettings,
+  auth,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const language = settings?.language || "FR";
+  const isConnected = Boolean(auth?.user || auth?.session?.user);
+  const userEmail =
+    auth?.user?.email ||
+    auth?.session?.user?.email ||
+    auth?.profile?.email ||
+    "";
 
   const unreadCount = Array.isArray(notifications)
     ? notifications.filter((item) => !item.read).length
@@ -48,6 +61,22 @@ function TopBar({
     if (!keepOpen) {
       setMenuOpen(false);
     }
+  }
+
+  function updateLanguage(nextLanguage) {
+    if (typeof setSettings !== "function") {
+      openPage("reglages", true);
+      return;
+    }
+
+    setSettings({
+      ...settings,
+      language: nextLanguage,
+    });
+  }
+
+  function toggleQuickLanguage() {
+    updateLanguage(language === "EN" ? "FR" : "EN");
   }
 
   return (
@@ -81,9 +110,9 @@ function TopBar({
 
       <div style={topActions}>
         <button
-          onClick={() => openPage("reglages", true)}
+          onClick={toggleQuickLanguage}
           className="topbar-menu-btn"
-          aria-label="Langue"
+          aria-label={language === "EN" ? "Switch to French" : "Passer en anglais"}
           style={languageButton}
         >
           {language}
@@ -107,9 +136,9 @@ function TopBar({
         <button
           onClick={() => setMenuOpen(true)}
           className="topbar-menu-btn"
-          aria-label="Profil"
+          aria-label="Menu"
         >
-          <UserCircle size={21} />
+          <Menu size={22} />
         </button>
       </div>
 
@@ -123,8 +152,73 @@ function TopBar({
 
           <div className="topbar-menu-panel" style={slidePanel}>
             <div className="topbar-menu-head">
-              <strong>OnJarama Path V10.3</strong>
-              <span>UX Premium Finalization</span>
+              <strong>OnJarama Path V11.3</strong>
+              <span>
+                {language === "EN"
+                  ? "Cloud & Multilingual Finalization"
+                  : "Cloud & Multilingual Finalization"}
+              </span>
+            </div>
+
+            <div style={accountCard}>
+              <div style={accountTop}>
+                <UserCircle size={26} color="var(--gold)" />
+                <div>
+                  <strong>
+                    {isConnected
+                      ? language === "EN"
+                        ? "Connected account"
+                        : "Compte connecté"
+                      : language === "EN"
+                        ? "Guest mode"
+                        : "Mode invité"}
+                  </strong>
+                  <small>{userEmail || "OnJarama Path"}</small>
+                </div>
+              </div>
+
+              <div style={cloudGrid}>
+                <CloudStatus
+                  icon={<Cloud size={16} />}
+                  title={language === "EN" ? "Cloud" : "Cloud"}
+                  value={
+                    isConnected
+                      ? language === "EN"
+                        ? "Ready"
+                        : "Prêt"
+                      : language === "EN"
+                        ? "Guest"
+                        : "Invité"
+                  }
+                  color="var(--gold)"
+                />
+
+                <CloudStatus
+                  icon={<Wifi size={16} />}
+                  title={language === "EN" ? "Sync" : "Synchro"}
+                  value={
+                    isConnected
+                      ? language === "EN"
+                        ? "Prepared"
+                        : "Préparée"
+                      : language === "EN"
+                        ? "Local"
+                        : "Locale"
+                  }
+                  color="var(--blue)"
+                />
+
+                <CloudStatus
+                  icon={<CheckCircle2 size={16} />}
+                  title={language === "EN" ? "Backup" : "Sauvegarde"}
+                  value={
+                    language === "EN"
+                      ? "Local active"
+                      : "Locale active"
+                  }
+                  color="var(--green)"
+                />
+              </div>
             </div>
 
             <div style={languagePanel}>
@@ -135,24 +229,22 @@ function TopBar({
 
               <div style={languageGrid}>
                 <button
-                  onClick={() => openPage("reglages", true)}
+                  onClick={() => updateLanguage("FR")}
                   style={languageChoice(language === "FR")}
                 >
-                  Français
+                  FR — Français
                 </button>
 
                 <button
-                  onClick={() => openPage("reglages", true)}
+                  onClick={() => updateLanguage("EN")}
                   style={languageChoice(language === "EN")}
                 >
-                  English
+                  EN — English
                 </button>
 
                 <button disabled style={languageDisabled}>
                   中文
-                  <small>
-                    {language === "EN" ? "Soon" : "Bientôt"}
-                  </small>
+                  <small>{language === "EN" ? "Soon" : "Bientôt"}</small>
                 </button>
               </div>
             </div>
@@ -167,16 +259,6 @@ function TopBar({
               {getPageLabel("profil", language)}
             </button>
 
-            <button onClick={() => openPage("guide")}>
-              <BookOpen size={18} />
-              {language === "EN" ? "Guide & Tips" : "Guide & Astuces"}
-            </button>
-
-            <button onClick={() => openPage("patchnotes")}>
-              <FileText size={18} />
-              Patch Notes
-            </button>
-
             <button onClick={() => openPage("reglages")}>
               <Settings size={18} />
               {getPageLabel("reglages", language)}
@@ -184,7 +266,7 @@ function TopBar({
 
             <button onClick={() => openPage("reglages", true)}>
               <Globe2 size={18} />
-              {language === "EN" ? "Language" : "Langue"}
+              {language === "EN" ? "Language settings" : "Paramètres de langue"}
             </button>
 
             <button onClick={() => openPage("notifications")}>
@@ -193,6 +275,16 @@ function TopBar({
               {unreadCount > 0 && (
                 <span style={notificationBadge}>{unreadCount}</span>
               )}
+            </button>
+
+            <button onClick={() => openPage("guide")}>
+              <BookOpen size={18} />
+              {language === "EN" ? "Guide & Tips" : "Guide & Astuces"}
+            </button>
+
+            <button onClick={() => openPage("patchnotes")}>
+              <FileText size={18} />
+              Patch Notes
             </button>
 
             <button onClick={() => openPage("historique")}>
@@ -205,6 +297,11 @@ function TopBar({
               {language === "EN"
                 ? "Security & privacy"
                 : "Sécurité & confidentialité"}
+            </button>
+
+            <button disabled style={disabledMenuButton}>
+              <LogOut size={18} />
+              {language === "EN" ? "Sign out soon" : "Déconnexion bientôt"}
             </button>
 
             <div className="topbar-credit">
@@ -232,6 +329,16 @@ function TopBar({
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+function CloudStatus({ icon, title, value, color }) {
+  return (
+    <div style={{ ...cloudStatus, borderColor: color }}>
+      <span style={{ color }}>{icon}</span>
+      <small>{title}</small>
+      <strong>{value}</strong>
     </div>
   );
 }
@@ -355,6 +462,40 @@ const notificationBadge = {
   padding: "0 6px",
 };
 
+const accountCard = {
+  border: "1px solid rgba(212,175,55,.35)",
+  background:
+    "linear-gradient(135deg, rgba(212,175,55,.10), rgba(56,189,248,.06), var(--bg-panel))",
+  borderRadius: "16px",
+  padding: "12px",
+  marginBottom: "10px",
+};
+
+const accountTop = {
+  display: "grid",
+  gridTemplateColumns: "34px 1fr",
+  gap: "10px",
+  alignItems: "center",
+  marginBottom: "10px",
+};
+
+const cloudGrid = {
+  display: "grid",
+  gridTemplateColumns: "1fr",
+  gap: "8px",
+};
+
+const cloudStatus = {
+  border: "1px solid var(--border)",
+  background: "rgba(0,0,0,.10)",
+  borderRadius: "13px",
+  padding: "9px",
+  display: "grid",
+  gridTemplateColumns: "24px 1fr",
+  gap: "3px 8px",
+  alignItems: "center",
+};
+
 const languagePanel = {
   border: "1px solid rgba(212,175,55,.35)",
   background: "rgba(212,175,55,.08)",
@@ -403,6 +544,11 @@ const languageDisabled = {
   opacity: 0.7,
   display: "grid",
   gap: "2px",
+};
+
+const disabledMenuButton = {
+  opacity: 0.62,
+  cursor: "not-allowed",
 };
 
 export default TopBar;
