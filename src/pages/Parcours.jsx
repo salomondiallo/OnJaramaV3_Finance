@@ -3,7 +3,6 @@ import {
   CheckCircle,
   Circle,
   Flag,
-  History,
   Route,
   Target,
   Trophy,
@@ -73,11 +72,14 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
   const language = settings?.language || "FR";
   const p = pageText[language] || pageText.FR;
   const currency = settings?.currency || "CAD";
-  const goals = Array.isArray(selectedGoals) ? selectedGoals.filter((goal) => !goal.archived) : [];
+  const goals = Array.isArray(selectedGoals)
+    ? selectedGoals.filter((goal) => !goal.archived)
+    : [];
   const [focusedGoalId, setFocusedGoalId] = useState(null);
 
   useEffect(() => {
     const storedGoalId = localStorage.getItem("onjaramaPathGoalId");
+
     if (storedGoalId) {
       setFocusedGoalId(storedGoalId);
       localStorage.removeItem("onjaramaPathGoalId");
@@ -115,6 +117,7 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
               }
             : step
         );
+
         const doneCount = nextSteps.filter((step) => step.done).length;
         const nextProgress = Math.round((doneCount / nextSteps.length) * 100);
         const completed = nextProgress >= 100;
@@ -127,7 +130,9 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
           ...goal,
           pathSteps: nextSteps,
           currentAmount: completed ? Number(goal.targetAmount || 0) : goal.currentAmount,
-          completedAt: completed ? goal.completedAt || new Date().toISOString() : goal.completedAt,
+          completedAt: completed
+            ? goal.completedAt || new Date().toISOString()
+            : goal.completedAt,
           status: completed ? "completed" : "active",
         };
       })
@@ -143,11 +148,13 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
         <section style={emptyCard}>
           <Target color="var(--gold)" size={36} />
           <h2>{p.noGoal}</h2>
+
           <div style={buttonGrid}>
             <button onClick={() => setCurrentPage?.("objectifs")} style={goldButton}>
               <Target size={17} />
               {p.goGoals}
             </button>
+
             <button onClick={() => setCurrentPage?.("simulateur")} style={greenButton}>
               <Route size={17} />
               {p.goSimulator}
@@ -162,7 +169,11 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
               <div>
                 <p style={eyebrow}>{p.activeGoal}</p>
                 <h2>{focusedGoal.title}</h2>
-                <p style={mutedSmall}>{focusedGoal.option || focusedGoal.categoryLabel || focusedGoal.category}</p>
+                <p style={mutedSmall}>
+                  {focusedGoal.option ||
+                    focusedGoal.categoryLabel ||
+                    focusedGoal.category}
+                </p>
               </div>
             </div>
 
@@ -196,6 +207,7 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
                 <Target color="var(--blue)" />
                 <h2>{p.chooseGoal}</h2>
               </div>
+
               <div style={goalSwitcher}>
                 {activeGoals.map((goal) => (
                   <button
@@ -222,7 +234,11 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
 
             <div style={stepList}>
               {ensureSteps(focusedGoal, language).map((step, index) => (
-                <button key={step.id} onClick={() => toggleStep(step.id)} style={stepButton}>
+                <button
+                  key={step.id}
+                  onClick={() => toggleStep(step.id)}
+                  style={stepButton}
+                >
                   <span style={stepIcon}>
                     {step.done ? (
                       <CheckCircle color="var(--green)" />
@@ -230,6 +246,7 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
                       <Circle color="var(--text-muted)" />
                     )}
                   </span>
+
                   <div style={{ flex: 1 }}>
                     <strong>
                       {index + 1}. {step.label}
@@ -243,18 +260,20 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
 
           <section style={nextCard}>
             <div style={header}>
-              {progress >= 100 ? <Trophy color="var(--green)" /> : <Flag color="var(--gold)" />}
+              {progress >= 100 ? (
+                <Trophy color="var(--green)" />
+              ) : (
+                <Flag color="var(--gold)" />
+              )}
+
               <div>
-                <p style={eyebrow}>{progress >= 100 ? p.completed : p.nextAction}</p>
-                <h2>{progress >= 100 ? "🏆" : nextStep}</h2>
+                <p style={eyebrow}>
+                  {progress >= 100 ? p.completed : p.nextAction}
+                </p>
+                <h2>{progress >= 100 ? p.completed : nextStep}</h2>
                 <p style={muted}>{p.historyHint}</p>
               </div>
             </div>
-          </section>
-
-          <section style={historyNotice}>
-            <History color="var(--gold)" />
-            <p style={muted}>{p.historyHint}</p>
           </section>
         </>
       )}
@@ -265,24 +284,73 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
 function getDefaultSteps(language) {
   const labels = {
     FR: {
-      voyage: ["Passeport / documents", "Billet", "Bagages", "Séjour et dépenses", "Marge de sécurité"],
+      voyage: [
+        "Passeport / documents",
+        "Billet",
+        "Bagages",
+        "Séjour et dépenses",
+        "Marge de sécurité",
+      ],
       maison: ["Plan du projet", "Matériaux", "Travaux", "Équipement", "Finition"],
-      dette: ["Solde confirmé", "Taux identifié", "Paiement mensuel fixé", "Premier palier atteint", "Solde à zéro"],
-      libre: ["Objectif défini", "Plan de financement", "Premier palier", "Milieu du parcours", "Objectif atteint"],
+      dette: [
+        "Solde confirmé",
+        "Taux identifié",
+        "Paiement mensuel fixé",
+        "Premier palier atteint",
+        "Solde à zéro",
+      ],
+      libre: [
+        "Objectif défini",
+        "Plan de financement",
+        "Premier palier",
+        "Milieu du parcours",
+        "Objectif atteint",
+      ],
     },
     EN: {
       voyage: ["Passport / documents", "Ticket", "Bags", "Stay and expenses", "Safety margin"],
       maison: ["Project plan", "Materials", "Work", "Equipment", "Finishing"],
-      dette: ["Balance confirmed", "Rate identified", "Monthly payment set", "First milestone reached", "Zero balance"],
-      libre: ["Goal defined", "Funding plan", "First milestone", "Mid-path", "Goal reached"],
+      dette: [
+        "Balance confirmed",
+        "Rate identified",
+        "Monthly payment set",
+        "First milestone reached",
+        "Zero balance",
+      ],
+      libre: [
+        "Goal defined",
+        "Funding plan",
+        "First milestone",
+        "Mid-path",
+        "Goal reached",
+      ],
     },
     ES: {
-      voyage: ["Pasaporte / documentos", "Boleto", "Equipaje", "Estadía y gastos", "Margen de seguridad"],
+      voyage: [
+        "Pasaporte / documentos",
+        "Boleto",
+        "Equipaje",
+        "Estadía y gastos",
+        "Margen de seguridad",
+      ],
       maison: ["Plan del proyecto", "Materiales", "Trabajos", "Equipamiento", "Finalización"],
-      dette: ["Saldo confirmado", "Tasa identificada", "Pago mensual fijado", "Primer hito alcanzado", "Saldo en cero"],
-      libre: ["Objetivo definido", "Plan de financiación", "Primer hito", "Mitad del recorrido", "Objetivo alcanzado"],
+      dette: [
+        "Saldo confirmado",
+        "Tasa identificada",
+        "Pago mensual fijado",
+        "Primer hito alcanzado",
+        "Saldo en cero",
+      ],
+      libre: [
+        "Objetivo definido",
+        "Plan de financiación",
+        "Primer hito",
+        "Mitad del recorrido",
+        "Objetivo alcanzado",
+      ],
     },
   };
+
   return labels[language] || labels.FR;
 }
 
@@ -292,7 +360,13 @@ function ensureSteps(goal, language = "FR") {
   }
 
   const labels = getDefaultSteps(language);
-  const category = goal?.category === "voyage" || goal?.category === "maison" || goal?.category === "dette" ? goal.category : "libre";
+  const category =
+    goal?.category === "voyage" ||
+    goal?.category === "maison" ||
+    goal?.category === "dette"
+      ? goal.category
+      : "libre";
+
   const ids = {
     voyage: ["passport", "ticket", "bags", "stay", "security"],
     maison: ["plan", "materials", "work", "equipment", "finish"],
@@ -309,25 +383,36 @@ function ensureSteps(goal, language = "FR") {
 
 function getProgress(goal, language = "FR") {
   if (!goal) return 0;
+
   const steps = ensureSteps(goal, language);
+
   if (steps.length > 0) {
     return Math.round((steps.filter((step) => step.done).length / steps.length) * 100);
   }
 
   const target = Number(goal.targetAmount || 0);
   if (target <= 0) return 0;
+
   return Math.min(100, Math.round((Number(goal.currentAmount || 0) / target) * 100));
 }
 
 function getRemaining(goal, language = "FR") {
   if (!goal) return 0;
   if (getProgress(goal, language) >= 100) return 0;
+
   return Math.max(0, Number(goal.targetAmount || 0) - Number(goal.currentAmount || 0));
 }
 
 function getNextStep(goal, language = "FR") {
   const step = ensureSteps(goal, language).find((item) => !item.done);
-  const fallback = language === "EN" ? "Goal reached" : language === "ES" ? "Objetivo alcanzado" : "Objectif atteint";
+
+  const fallback =
+    language === "EN"
+      ? "Goal reached"
+      : language === "ES"
+        ? "Objetivo alcanzado"
+        : "Objectif atteint";
+
   return step?.label || fallback;
 }
 
@@ -341,28 +426,170 @@ function Small({ label, value }) {
 }
 
 const page = { display: "flex", flexDirection: "column", gap: "16px" };
-const card = { background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "22px", padding: "18px" };
-const heroCard = { ...card, borderColor: "var(--gold)", background: "linear-gradient(135deg, rgba(212,175,55,.16), var(--bg-card))" };
-const emptyCard = { ...card, borderColor: "var(--gold)", textAlign: "center", display: "grid", gap: "14px", justifyItems: "center" };
-const nextCard = { ...card, borderColor: "var(--green)", background: "linear-gradient(135deg, rgba(34,197,94,.14), var(--bg-card))" };
-const historyNotice = { ...card, display: "flex", gap: "10px", alignItems: "center" };
-const header = { display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" };
-const eyebrow = { color: "var(--gold)", fontSize: "12px", fontWeight: 900, margin: 0, textTransform: "uppercase" };
-const progressBg = { height: "12px", background: "var(--bg-panel)", borderRadius: "999px", overflow: "hidden", marginTop: "14px" };
-const progressFill = { height: "100%", borderRadius: "999px" };
-const statGrid = { display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "8px", marginTop: "14px" };
-const smallStat = { background: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "14px", padding: "10px", display: "grid", gap: "4px", fontSize: "12px" };
-const goalSwitcher = { display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "2px" };
-const goalButton = { border: "1px solid var(--border)", background: "var(--bg-panel)", color: "var(--text-main)", borderRadius: "999px", padding: "10px 12px", whiteSpace: "nowrap", fontWeight: 800 };
-const selectedGoalButton = { ...goalButton, borderColor: "var(--gold)", color: "var(--gold)", background: "rgba(212,175,55,.12)" };
-const stepList = { display: "grid", gap: "10px" };
-const stepButton = { width: "100%", background: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "16px", color: "var(--text-main)", padding: "14px", display: "flex", gap: "10px", alignItems: "center", textAlign: "left" };
-const stepIcon = { width: "30px", display: "grid", placeItems: "center", flex: "0 0 auto" };
-const buttonGrid = { display: "grid", gridTemplateColumns: "1fr", gap: "10px", width: "100%" };
-const goldButton = { width: "100%", padding: "14px", borderRadius: "14px", border: "1px solid var(--gold)", background: "rgba(212,175,55,.13)", color: "var(--gold)", fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" };
-const greenButton = { ...goldButton, borderColor: "var(--green)", color: "var(--green)", background: "rgba(34,197,94,.13)" };
-const doneText = { color: "var(--green)", fontSize: "13px", marginTop: "5px", fontWeight: 800 };
+
+const card = {
+  background: "var(--bg-card)",
+  border: "1px solid var(--border)",
+  borderRadius: "22px",
+  padding: "18px",
+};
+
+const heroCard = {
+  ...card,
+  borderColor: "var(--gold)",
+  background: "linear-gradient(135deg, rgba(212,175,55,.16), var(--bg-card))",
+};
+
+const emptyCard = {
+  ...card,
+  borderColor: "var(--gold)",
+  textAlign: "center",
+  display: "grid",
+  gap: "14px",
+  justifyItems: "center",
+};
+
+const nextCard = {
+  ...card,
+  borderColor: "var(--green)",
+  background: "linear-gradient(135deg, rgba(34,197,94,.14), var(--bg-card))",
+};
+
+const header = {
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
+  marginBottom: "14px",
+};
+
+const eyebrow = {
+  color: "var(--gold)",
+  fontSize: "12px",
+  fontWeight: 900,
+  margin: 0,
+  textTransform: "uppercase",
+};
+
+const progressBg = {
+  height: "12px",
+  background: "var(--bg-panel)",
+  borderRadius: "999px",
+  overflow: "hidden",
+  marginTop: "14px",
+};
+
+const progressFill = {
+  height: "100%",
+  borderRadius: "999px",
+};
+
+const statGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  gap: "8px",
+  marginTop: "14px",
+};
+
+const smallStat = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "14px",
+  padding: "10px",
+  display: "grid",
+  gap: "4px",
+  fontSize: "12px",
+};
+
+const goalSwitcher = {
+  display: "flex",
+  gap: "8px",
+  overflowX: "auto",
+  paddingBottom: "2px",
+};
+
+const goalButton = {
+  border: "1px solid var(--border)",
+  background: "var(--bg-panel)",
+  color: "var(--text-main)",
+  borderRadius: "999px",
+  padding: "10px 12px",
+  whiteSpace: "nowrap",
+  fontWeight: 800,
+};
+
+const selectedGoalButton = {
+  ...goalButton,
+  borderColor: "var(--gold)",
+  color: "var(--gold)",
+  background: "rgba(212,175,55,.12)",
+};
+
+const stepList = {
+  display: "grid",
+  gap: "10px",
+};
+
+const stepButton = {
+  width: "100%",
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  color: "var(--text-main)",
+  padding: "14px",
+  display: "flex",
+  gap: "10px",
+  alignItems: "center",
+  textAlign: "left",
+};
+
+const stepIcon = {
+  width: "30px",
+  display: "grid",
+  placeItems: "center",
+  flex: "0 0 auto",
+};
+
+const buttonGrid = {
+  display: "grid",
+  gridTemplateColumns: "1fr",
+  gap: "10px",
+  width: "100%",
+};
+
+const goldButton = {
+  width: "100%",
+  padding: "14px",
+  borderRadius: "14px",
+  border: "1px solid var(--gold)",
+  background: "rgba(212,175,55,.13)",
+  color: "var(--gold)",
+  fontWeight: 900,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+};
+
+const greenButton = {
+  ...goldButton,
+  borderColor: "var(--green)",
+  color: "var(--green)",
+  background: "rgba(34,197,94,.13)",
+};
+
+const doneText = {
+  color: "var(--green)",
+  fontSize: "13px",
+  marginTop: "5px",
+  fontWeight: 800,
+};
+
 const muted = { color: "var(--text-muted)", marginTop: "8px" };
-const mutedSmall = { color: "var(--text-muted)", fontSize: "13px", marginTop: "5px" };
+
+const mutedSmall = {
+  color: "var(--text-muted)",
+  fontSize: "13px",
+  marginTop: "5px",
+};
 
 export default Parcours;

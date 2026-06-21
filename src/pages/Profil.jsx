@@ -37,8 +37,10 @@ const pageText = {
     connectionLoading: "Vérification de la session...",
     optionalConnection: "Connexion facultative",
     secureLogin: "Connexion sécurisée",
-    cloudConfiguredText: "Le cloud est prêt. Vous pouvez vous connecter pour préparer la synchronisation future.",
-    cloudDisabledText: "La connexion sera disponible quand les clés Supabase seront configurées dans Vercel.",
+    cloudConfiguredText:
+      "Le cloud est prêt. Vous pouvez vous connecter pour préparer la synchronisation future.",
+    cloudDisabledText:
+      "La connexion sera disponible quand les clés Supabase seront configurées dans Vercel.",
     continueGuest: "Continuer en mode invité",
     googleLogin: "Connexion Google",
     microsoftLogin: "Connexion Microsoft",
@@ -62,6 +64,7 @@ const pageText = {
     activeGoals: "Objectifs actifs",
     achievedGoals: "Objectifs atteints",
     discipline: "Discipline",
+    disciplineFallback: "Départ",
     sinceStart: "Depuis le départ",
     days: "jours",
     progress: "Progression personnelle",
@@ -83,13 +86,6 @@ const pageText = {
     visionTitle: "Vision",
     vision:
       "Développer des solutions numériques simples, accessibles et utiles pour accompagner les utilisateurs dans leurs projets financiers, professionnels et personnels.",
-    financialSources: "Mes sources financières",
-    noSource: "Aucune source enregistrée pour le moment.",
-    sourceReady: "source enregistrée",
-    sourcesReady: "sources enregistrées",
-    sourceText:
-      "Les sources financières servent à comprendre votre situation. Les montants restent protégés et ne s’affichent pas sur l’accueil.",
-    configureSources: "Configurer dans Ma Situation",
     guideHub: "Guide & aide",
     guide: "Guide utilisateur",
     guideText: "Comprendre chaque page et savoir quoi faire étape par étape.",
@@ -120,11 +116,14 @@ const pageText = {
     privacyText:
       "Aucune transaction bancaire n’est possible dans cette version. Les données restent locales tant que la synchronisation n’est pas activée.",
     openSettings: "Ouvrir les réglages",
-    status: "Statut", activeAccount: "Compte actif", goalFallback: "Objectif", shareTitle: "Découvre OnJarama Path, un coach financier intelligent.",
+    status: "Statut",
+    activeAccount: "Compte actif",
+    goalFallback: "Objectif",
+    shareTitle: "Découvre OnJarama Path, un coach financier intelligent.",
   },
 
   EN: {
-    subtitle: "Account, sources, guide and OnJarama information.",
+    subtitle: "Account, cloud, guide and OnJarama information.",
     user: "OnJarama User",
     beta: "Local beta version",
     connected: "Connected account",
@@ -135,8 +134,10 @@ const pageText = {
     connectionLoading: "Checking session...",
     optionalConnection: "Optional sign-in",
     secureLogin: "Secure sign-in",
-    cloudConfiguredText: "Cloud is ready. You can sign in to prepare future synchronization.",
-    cloudDisabledText: "Sign-in will be available when Supabase keys are configured in Vercel.",
+    cloudConfiguredText:
+      "Cloud is ready. You can sign in to prepare future synchronization.",
+    cloudDisabledText:
+      "Sign-in will be available when Supabase keys are configured in Vercel.",
     continueGuest: "Continue as guest",
     googleLogin: "Sign in with Google",
     microsoftLogin: "Sign in with Microsoft",
@@ -160,6 +161,7 @@ const pageText = {
     activeGoals: "Active goals",
     achievedGoals: "Achieved goals",
     discipline: "Discipline",
+    disciplineFallback: "Start",
     sinceStart: "Since start",
     days: "days",
     progress: "Personal progress",
@@ -181,13 +183,6 @@ const pageText = {
     visionTitle: "Vision",
     vision:
       "Develop simple, accessible and useful digital solutions to support users in their financial, professional and personal projects.",
-    financialSources: "My financial sources",
-    noSource: "No source recorded yet.",
-    sourceReady: "source recorded",
-    sourcesReady: "sources recorded",
-    sourceText:
-      "Financial sources help understand your situation. Amounts stay protected and are not shown on the home screen.",
-    configureSources: "Configure in My Situation",
     guideHub: "Guide & help",
     guide: "User guide",
     guideText: "Understand each page and know what to do step by step.",
@@ -218,11 +213,14 @@ const pageText = {
     privacyText:
       "No banking transaction is possible in this version. Data stays local until synchronization is enabled.",
     openSettings: "Open settings",
-    status: "Status", activeAccount: "Active account", goalFallback: "Goal", shareTitle: "Discover OnJarama Path, a smart financial coach.",
+    status: "Status",
+    activeAccount: "Active account",
+    goalFallback: "Goal",
+    shareTitle: "Discover OnJarama Path, a smart financial coach.",
   },
 
   ES: {
-    subtitle: "Cuenta, fuentes, guía e información OnJarama.",
+    subtitle: "Cuenta, cloud, guía e información OnJarama.",
     user: "Usuario OnJarama",
     beta: "Versión beta local",
     connected: "Cuenta conectada",
@@ -233,8 +231,10 @@ const pageText = {
     connectionLoading: "Verificando la sesión...",
     optionalConnection: "Conexión opcional",
     secureLogin: "Conexión segura",
-    cloudConfiguredText: "El cloud está listo. Puedes conectarte para preparar la sincronización futura.",
-    cloudDisabledText: "La conexión estará disponible cuando las claves Supabase estén configuradas en Vercel.",
+    cloudConfiguredText:
+      "El cloud está listo. Puedes conectarte para preparar la sincronización futura.",
+    cloudDisabledText:
+      "La conexión estará disponible cuando las claves Supabase estén configuradas en Vercel.",
     continueGuest: "Continuar como invitado",
     googleLogin: "Conexión Google",
     microsoftLogin: "Conexión Microsoft",
@@ -258,6 +258,7 @@ const pageText = {
     activeGoals: "Objetivos activos",
     achievedGoals: "Objetivos logrados",
     discipline: "Disciplina",
+    disciplineFallback: "Inicio",
     sinceStart: "Desde el inicio",
     days: "días",
     progress: "Progreso personal",
@@ -279,13 +280,6 @@ const pageText = {
     visionTitle: "Visión",
     vision:
       "Desarrollar soluciones digitales simples, accesibles y útiles para acompañar a los usuarios en sus proyectos financieros, profesionales y personales.",
-    financialSources: "Mis fuentes financieras",
-    noSource: "No hay fuente registrada por ahora.",
-    sourceReady: "fuente registrada",
-    sourcesReady: "fuentes registradas",
-    sourceText:
-      "Las fuentes financieras ayudan a entender tu situación. Los montos permanecen protegidos y no se muestran en el inicio.",
-    configureSources: "Configurar en Mi Situación",
     guideHub: "Guía y ayuda",
     guide: "Guía de usuario",
     guideText: "Entender cada página y saber qué hacer paso a paso.",
@@ -316,7 +310,10 @@ const pageText = {
     privacyText:
       "No es posible realizar transacciones bancarias en esta versión. Los datos permanecen locales hasta activar la sincronización.",
     openSettings: "Abrir ajustes",
-    status: "Estado", activeAccount: "Cuenta activa", goalFallback: "Objetivo", shareTitle: "Descubre OnJarama Path, un coach financiero inteligente.",
+    status: "Estado",
+    activeAccount: "Cuenta activa",
+    goalFallback: "Objetivo",
+    shareTitle: "Descubre OnJarama Path, un coach financiero inteligente.",
   },
 };
 
@@ -329,24 +326,21 @@ function Profil({
   financeData,
 }) {
   const t = getText(settings);
-  const p = pageText[settings?.language || "FR"] || pageText.FR;
+  const language = settings?.language || "FR";
+  const p = pageText[language] || pageText.FR;
 
   const goals = Array.isArray(selectedGoals)
     ? selectedGoals.filter((goal) => !goal.archived)
     : [];
 
-  const achievedGoals = goals.filter(
-    (goal) =>
-      Number(goal.targetAmount || 0) > 0 &&
-      Number(goal.currentAmount || 0) >= Number(goal.targetAmount || 0)
-  );
-
+  const achievedGoals = goals.filter((goal) => isGoalAchieved(goal));
   const activeGoals = goals.filter((goal) => !isGoalAchieved(goal));
+
   const activeGoalsCount = activeGoals.length;
   const achievedGoalsCount = achievedGoals.length;
   const daysSinceStart = getDaysSinceStart(goals);
   const disciplineValue = disciplineScore?.score || 0;
-  const disciplineLabel = disciplineScore?.label || "Départ";
+  const disciplineLabel = disciplineScore?.label || p.disciplineFallback;
 
   const isConfigured = Boolean(auth?.isConfigured);
   const isConnected = Boolean(auth?.isConnected);
@@ -354,9 +348,6 @@ function Profil({
   const providerLoading = auth?.providerLoading || null;
   const authError = auth?.authError || "";
   const userEmail = auth?.user?.email || "";
-
-  const monthlyIncome = Number(financeData?.overview?.monthlyIncome || 0);
-  const sourceCount = getFinancialSourceCount({ monthlyIncome, financeData });
 
   function shareApp() {
     const link = window.location.origin;
@@ -408,6 +399,7 @@ function Profil({
           ) : (
             <KeyRound size={18} />
           )}
+
           <strong>
             {loadingAuth
               ? p.connectionLoading
@@ -443,7 +435,10 @@ function Profil({
             <button
               onClick={auth?.signInWithGoogle}
               disabled={!isConfigured || loadingAuth || Boolean(providerLoading)}
-              style={authButtonStyle(googleBtn, !isConfigured || loadingAuth || Boolean(providerLoading))}
+              style={authButtonStyle(
+                googleBtn,
+                !isConfigured || loadingAuth || Boolean(providerLoading)
+              )}
             >
               <Globe size={18} />
               {providerLoading === "google" ? p.connectionLoading : p.googleLogin}
@@ -452,10 +447,15 @@ function Profil({
             <button
               onClick={auth?.signInWithMicrosoft}
               disabled={!isConfigured || loadingAuth || Boolean(providerLoading)}
-              style={authButtonStyle(microsoftBtn, !isConfigured || loadingAuth || Boolean(providerLoading))}
+              style={authButtonStyle(
+                microsoftBtn,
+                !isConfigured || loadingAuth || Boolean(providerLoading)
+              )}
             >
               <Cloud size={18} />
-              {providerLoading === "azure" ? p.connectionLoading : p.microsoftLogin}
+              {providerLoading === "azure"
+                ? p.connectionLoading
+                : p.microsoftLogin}
             </button>
           </div>
         ) : (
@@ -504,6 +504,7 @@ function Profil({
         </div>
 
         <h3 style={historyTitle}>{p.activeHistory}</h3>
+
         {activeGoals.length > 0 ? (
           activeGoals.map((goal) => (
             <HistoryItem
@@ -512,6 +513,8 @@ function Profil({
               label={p.startedOn}
               date={goal.createdAt}
               color="var(--gold)"
+              language={language}
+              fallback={p.goalFallback}
             />
           ))
         ) : (
@@ -519,6 +522,7 @@ function Profil({
         )}
 
         <h3 style={historyTitle}>{p.completedHistory}</h3>
+
         {achievedGoals.length > 0 ? (
           achievedGoals.map((goal) => (
             <HistoryItem
@@ -527,6 +531,8 @@ function Profil({
               label={p.completedOn}
               date={goal.completedAt || goal.updatedAt || goal.createdAt}
               color="var(--green)"
+              language={language}
+              fallback={p.goalFallback}
             />
           ))
         ) : (
@@ -590,7 +596,7 @@ function Profil({
       </Section>
 
       <Section icon={<CheckCircle />} title={p.app} color="var(--green)">
-        <InfoRow label={p.version} value="V12.3 Polish & Consistency" />
+        <InfoRow label={p.version} value="V13.2 Polish & Consistency Final" />
         <InfoRow label={p.testerMode} value="ON" />
         <InfoRow label={p.pwa} value="ON" />
         <InfoRow label={p.localBackup} value="ON" />
@@ -687,6 +693,10 @@ function Profil({
 }
 
 function isGoalAchieved(goal) {
+  if (Array.isArray(goal?.pathSteps) && goal.pathSteps.length > 0) {
+    return goal.pathSteps.every((step) => step.done);
+  }
+
   return (
     Number(goal?.targetAmount || 0) > 0 &&
     Number(goal?.currentAmount || 0) >= Number(goal?.targetAmount || 0)
@@ -695,38 +705,35 @@ function isGoalAchieved(goal) {
 
 function formatHistoryDate(dateValue, language = "FR") {
   if (!dateValue) return "—";
+
   const date = new Date(dateValue);
   if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleDateString(language === "EN" ? "en-CA" : language === "ES" ? "es-CA" : "fr-CA", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+
+  return date.toLocaleDateString(
+    language === "EN" ? "en-CA" : language === "ES" ? "es-CA" : "fr-CA",
+    {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }
+  );
 }
 
-function HistoryItem({ goal, label, date, color }) {
+function HistoryItem({ goal, label, date, color, language, fallback }) {
   return (
     <div style={{ ...historyItem, borderColor: color }}>
       <CheckCircle size={18} color={color} />
       <div>
         <strong>{goal.title}</strong>
         <p style={mutedSmall}>
-          {goal.categoryLabel || goal.option || goal.category || pageText.FR.goalFallback}
+          {goal.categoryLabel || goal.option || goal.category || fallback}
         </p>
         <p style={mutedSmall}>
-          {label} : {formatHistoryDate(date)}
+          {label} : {formatHistoryDate(date, language)}
         </p>
       </div>
     </div>
   );
-}
-
-function getFinancialSourceCount({ monthlyIncome, financeData }) {
-  const sources = financeData?.fundingSources || financeData?.incomeSources;
-  if (Array.isArray(sources)) {
-    return sources.filter((source) => source && !source.archived).length;
-  }
-  return monthlyIncome > 0 ? 1 : 0;
 }
 
 function getDaysSinceStart(goals) {

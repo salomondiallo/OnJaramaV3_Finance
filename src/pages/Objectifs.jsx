@@ -34,8 +34,8 @@ const pageText = {
     progress: "Progression",
     remaining: "Reste",
     target: "Objectif",
-    steps: "étapes",
-    flowTitle: "Flux V12.2",
+    steps: "Étapes",
+    flowTitle: "Flux V13.2",
     flowText: "Objectif → Simulation → Activation → Parcours → Progression → Historique.",
   },
   EN: {
@@ -55,8 +55,8 @@ const pageText = {
     progress: "Progress",
     remaining: "Remaining",
     target: "Target",
-    steps: "steps",
-    flowTitle: "V12.2 flow",
+    steps: "Steps",
+    flowTitle: "V13.2 flow",
     flowText: "Goal → Simulation → Activation → Path → Progress → History.",
   },
   ES: {
@@ -76,8 +76,8 @@ const pageText = {
     progress: "Progreso",
     remaining: "Restante",
     target: "Objetivo",
-    steps: "etapas",
-    flowTitle: "Flujo V12.2",
+    steps: "Etapas",
+    flowTitle: "Flujo V13.2",
     flowText: "Objetivo → Simulación → Activación → Recorrido → Progreso → Historial.",
   },
 };
@@ -119,14 +119,78 @@ function getGoalCatalog(language) {
   const text = catalogText[language] || catalogText.FR;
 
   return [
-    { id: "voyage", title: text.voyage[0], subtitle: text.voyage[1], icon: <Plane />, color: "var(--gold)", defaultAmount: 3500, defaultMonthly: 500 },
-    { id: "maison", title: text.maison[0], subtitle: text.maison[1], icon: <Home />, color: "var(--green)", defaultAmount: 10000, defaultMonthly: 700 },
-    { id: "auto", title: text.auto[0], subtitle: text.auto[1], icon: <Car />, color: "var(--blue)", defaultAmount: 8000, defaultMonthly: 450 },
-    { id: "dette", title: text.dette[0], subtitle: text.dette[1], icon: <CreditCard />, color: "var(--red)", defaultAmount: 5000, defaultMonthly: 500 },
-    { id: "epargne", title: text.epargne[0], subtitle: text.epargne[1], icon: <PiggyBank />, color: "var(--green)", defaultAmount: 3000, defaultMonthly: 250 },
-    { id: "famille", title: text.famille[0], subtitle: text.famille[1], icon: <Users />, color: "var(--purple)", defaultAmount: 2500, defaultMonthly: 300 },
-    { id: "business", title: text.business[0], subtitle: text.business[1], icon: <Briefcase />, color: "var(--blue)", defaultAmount: 4000, defaultMonthly: 350 },
-    { id: "libre", title: text.libre[0], subtitle: text.libre[1], icon: <Target />, color: "var(--gold)", defaultAmount: 1000, defaultMonthly: 150 },
+    {
+      id: "voyage",
+      title: text.voyage[0],
+      subtitle: text.voyage[1],
+      icon: <Plane />,
+      color: "var(--gold)",
+      defaultAmount: 3500,
+      defaultMonthly: 500,
+    },
+    {
+      id: "maison",
+      title: text.maison[0],
+      subtitle: text.maison[1],
+      icon: <Home />,
+      color: "var(--green)",
+      defaultAmount: 10000,
+      defaultMonthly: 700,
+    },
+    {
+      id: "auto",
+      title: text.auto[0],
+      subtitle: text.auto[1],
+      icon: <Car />,
+      color: "var(--blue)",
+      defaultAmount: 8000,
+      defaultMonthly: 450,
+    },
+    {
+      id: "dette",
+      title: text.dette[0],
+      subtitle: text.dette[1],
+      icon: <CreditCard />,
+      color: "var(--red)",
+      defaultAmount: 5000,
+      defaultMonthly: 500,
+    },
+    {
+      id: "epargne",
+      title: text.epargne[0],
+      subtitle: text.epargne[1],
+      icon: <PiggyBank />,
+      color: "var(--green)",
+      defaultAmount: 3000,
+      defaultMonthly: 250,
+    },
+    {
+      id: "famille",
+      title: text.famille[0],
+      subtitle: text.famille[1],
+      icon: <Users />,
+      color: "var(--purple)",
+      defaultAmount: 2500,
+      defaultMonthly: 300,
+    },
+    {
+      id: "business",
+      title: text.business[0],
+      subtitle: text.business[1],
+      icon: <Briefcase />,
+      color: "var(--blue)",
+      defaultAmount: 4000,
+      defaultMonthly: 350,
+    },
+    {
+      id: "libre",
+      title: text.libre[0],
+      subtitle: text.libre[1],
+      icon: <Target />,
+      color: "var(--gold)",
+      defaultAmount: 1000,
+      defaultMonthly: 150,
+    },
   ];
 }
 
@@ -166,6 +230,7 @@ function Objectifs({ selectedGoals, settings, setCurrentPage }) {
         startedAt: new Date().toISOString(),
       })
     );
+
     setCurrentPage?.("simulateur");
   }
 
@@ -173,6 +238,7 @@ function Objectifs({ selectedGoals, settings, setCurrentPage }) {
     if (goalId) {
       localStorage.setItem("onjaramaPathGoalId", String(goalId));
     }
+
     setCurrentPage?.("parcours");
   }
 
@@ -205,11 +271,15 @@ function Objectifs({ selectedGoals, settings, setCurrentPage }) {
               onClick={() => simulateTemplate(template)}
               style={{ ...catalogTile, borderColor: template.color }}
             >
-              <span style={{ ...iconBox, color: template.color }}>{template.icon}</span>
+              <span style={{ ...iconBox, color: template.color }}>
+                {template.icon}
+              </span>
+
               <div>
                 <strong>{template.title}</strong>
                 <p style={mutedSmall}>{template.subtitle}</p>
               </div>
+
               <span style={{ ...statusPill, color: template.color }}>
                 {p.simulate}
                 <ChevronRight size={16} />
@@ -288,9 +358,15 @@ function GoalRow({ goal, currency, text, onOpen, completed = false }) {
     <div style={goalRow}>
       <div style={goalRowTop}>
         <div>
-          <strong>{completed ? "✓ " : ""}{goal.title}</strong>
-          <p style={mutedSmall}>{goal.option || goal.categoryLabel || goal.category}</p>
+          <strong>
+            {completed ? "✓ " : ""}
+            {goal.title}
+          </strong>
+          <p style={mutedSmall}>
+            {goal.option || goal.categoryLabel || goal.category}
+          </p>
         </div>
+
         <span style={completed ? completedPill : activePill}>
           {completed ? text.statusCompleted : text.statusActive}
         </span>
@@ -309,7 +385,10 @@ function GoalRow({ goal, currency, text, onOpen, completed = false }) {
       <div style={miniStats}>
         <Small label={text.progress} value={`${progress}%`} />
         <Small label={text.remaining} value={formatMoney(remaining, currency)} />
-        <Small label={text.target} value={formatMoney(goal.targetAmount || 0, currency)} />
+        <Small
+          label={text.target}
+          value={formatMoney(goal.targetAmount || 0, currency)}
+        />
         <Small label={text.steps} value={`${doneSteps}/${steps.length || 0}`} />
       </div>
 
@@ -372,8 +451,7 @@ const flowCard = {
   display: "flex",
   gap: "12px",
   borderColor: "var(--gold)",
-  background:
-    "linear-gradient(135deg, rgba(212,175,55,.15), var(--bg-card))",
+  background: "linear-gradient(135deg, rgba(212,175,55,.15), var(--bg-card))",
 };
 
 const header = {

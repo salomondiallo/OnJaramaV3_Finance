@@ -10,13 +10,10 @@ import {
   Landmark,
   Sparkles,
   Trophy,
-  Wallet,
   CreditCard,
   Route,
   Brain,
   Calculator,
-  CheckCircle,
-  BarChart3,
   BookOpen,
   Cloud,
 } from "lucide-react";
@@ -24,15 +21,18 @@ import {
 import { useState } from "react";
 import { getText } from "../data/translations";
 
-
 const homeText = {
   FR: {
+    version: "OnJarama Path V13.2",
     start: "Départ",
     amountsHidden: "Chiffres masqués",
-    heroSubtitle: "Situation, objectif, simulation, activation, parcours : votre chemin reste clair.",
+    heroSubtitle:
+      "Situation, objectif, simulation, activation, parcours : votre chemin reste clair.",
     startPoint: "Point de départ",
-    situationReady: "Situation renseignée. La prochaine étape est de cibler une destination.",
-    situationEmpty: "Ajoutez votre situation pour activer les objectifs et simulations.",
+    situationReady:
+      "Situation renseignée. La prochaine étape est de cibler une destination.",
+    situationEmpty:
+      "Ajoutez votre situation pour activer les objectifs et simulations.",
     situation: "Situation",
     objectives: "Objectifs",
     simulation: "Simulation",
@@ -46,10 +46,16 @@ const homeText = {
     toComplete: "À compléter",
     discipline: "Discipline",
     victories: "Victoires",
-    discoverText: "Les nouveautés OnJarama Path sont regroupées ici pour ne rien manquer.",
+    connectDiscover: "Connect+ Découvre",
+    discoverText:
+      "Les nouveautés OnJarama Path sont regroupées ici pour ne rien manquer.",
+    smartPlanningTitle: "Plan intelligent",
     smartPlanning: "Mon Plan recommande l’action principale.",
+    simulatorPremiumTitle: "Simulateur Premium",
     premiumSimulator: "Rythmes Tranquille, Équilibré, Dynamique et Féroce.",
+    smartJourneyTitle: "Parcours intelligent",
     smartJourney: "Votre parcours devient une histoire claire.",
+    cloudSyncTitle: "Synchronisation cloud",
     cloudSync: "Synchronisation Supabase bientôt disponible.",
     viewPatchNotes: "Voir Patch Notes",
     guideTips: "Guide & Astuces",
@@ -64,7 +70,8 @@ const homeText = {
     goalSimulation: "Objectif → Simulation",
     progressTitle: "Progression OnJarama",
     pathStarted: "🚩 Parcours démarré",
-    pathWillStart: "🚩 Votre parcours commencera dès votre première situation ou objectif.",
+    pathWillStart:
+      "🚩 Votre parcours commencera dès votre première situation ou objectif.",
     companion: "Compagnon financier",
     destination: "Destination",
     goalToChoose: "Objectif à choisir",
@@ -90,15 +97,17 @@ const homeText = {
     protectedData: "Données protégées",
     bankConnection: "Connexion bancaire",
     soon: "Bientôt disponible",
-    connectDiscover: "Connect+ Découvre",
-    simulatorPremiumTitle: "Simulateur Premium",
+    assistant: "IA OnJarama",
   },
   EN: {
+    version: "OnJarama Path V13.2",
     start: "Start",
     amountsHidden: "Amounts hidden",
-    heroSubtitle: "Situation, goal, simulation, activation, path: your direction stays clear.",
+    heroSubtitle:
+      "Situation, goal, simulation, activation, path: your direction stays clear.",
     startPoint: "Starting point",
-    situationReady: "Situation completed. The next step is to choose a destination.",
+    situationReady:
+      "Situation completed. The next step is to choose a destination.",
     situationEmpty: "Add your situation to activate goals and simulations.",
     situation: "Situation",
     objectives: "Goals",
@@ -113,10 +122,16 @@ const homeText = {
     toComplete: "To complete",
     discipline: "Discipline",
     victories: "Victories",
-    discoverText: "OnJarama Path updates are grouped here so you do not miss anything.",
+    connectDiscover: "Connect+ Discover",
+    discoverText:
+      "OnJarama Path updates are grouped here so you do not miss anything.",
+    smartPlanningTitle: "Smart Planning",
     smartPlanning: "My Plan recommends the main action.",
+    simulatorPremiumTitle: "Premium Simulator",
     premiumSimulator: "Calm, Balanced, Dynamic and Fierce rhythms.",
+    smartJourneyTitle: "Smart Journey",
     smartJourney: "Your path becomes a clear story.",
+    cloudSyncTitle: "Cloud Sync",
     cloudSync: "Supabase sync coming soon.",
     viewPatchNotes: "View Patch Notes",
     guideTips: "Guide & Tips",
@@ -157,15 +172,17 @@ const homeText = {
     protectedData: "Protected data",
     bankConnection: "Bank connection",
     soon: "Coming soon",
-    connectDiscover: "Connect+ Discover",
-    simulatorPremiumTitle: "Premium Simulator",
+    assistant: "OnJarama AI",
   },
   ES: {
+    version: "OnJarama Path V13.2",
     start: "Inicio",
     amountsHidden: "Montos ocultos",
-    heroSubtitle: "Situación, objetivo, simulación, activación, recorrido: tu camino queda claro.",
+    heroSubtitle:
+      "Situación, objetivo, simulación, activación, recorrido: tu camino queda claro.",
     startPoint: "Punto de partida",
-    situationReady: "Situación completada. El siguiente paso es elegir un destino.",
+    situationReady:
+      "Situación completada. El siguiente paso es elegir un destino.",
     situationEmpty: "Agrega tu situación para activar objetivos y simulaciones.",
     situation: "Situación",
     objectives: "Objetivos",
@@ -180,10 +197,16 @@ const homeText = {
     toComplete: "Por completar",
     discipline: "Disciplina",
     victories: "Victorias",
-    discoverText: "Las novedades de OnJarama Path están reunidas aquí para no perder nada.",
+    connectDiscover: "Connect+ Descubre",
+    discoverText:
+      "Las novedades de OnJarama Path están reunidas aquí para no perder nada.",
+    smartPlanningTitle: "Plan inteligente",
     smartPlanning: "Mi Plan recomienda la acción principal.",
+    simulatorPremiumTitle: "Simulador Premium",
     premiumSimulator: "Ritmos Tranquilo, Equilibrado, Dinámico y Feroz.",
+    smartJourneyTitle: "Recorrido inteligente",
     smartJourney: "Tu recorrido se convierte en una historia clara.",
+    cloudSyncTitle: "Sincronización cloud",
     cloudSync: "Sincronización Supabase próximamente.",
     viewPatchNotes: "Ver Patch Notes",
     guideTips: "Guía y consejos",
@@ -198,7 +221,8 @@ const homeText = {
     goalSimulation: "Objetivo → Simulación",
     progressTitle: "Progreso OnJarama",
     pathStarted: "🚩 Recorrido iniciado",
-    pathWillStart: "🚩 Tu recorrido comenzará con tu primera situación u objetivo.",
+    pathWillStart:
+      "🚩 Tu recorrido comenzará con tu primera situación u objetivo.",
     companion: "Compañero financiero",
     destination: "Destino",
     goalToChoose: "Objetivo por elegir",
@@ -224,11 +248,9 @@ const homeText = {
     protectedData: "Datos protegidos",
     bankConnection: "Conexión bancaria",
     soon: "Próximamente",
-    connectDiscover: "Connect+ Descubre",
-    simulatorPremiumTitle: "Simulador Premium",
+    assistant: "IA OnJarama",
   },
 };
-
 
 function Accueil({
   financeData,
@@ -268,12 +290,11 @@ function Accueil({
 
   const priorityDebt = [...debts]
     .filter((debt) => Number(debt.balance || 0) > 0)
-    .sort(
-      (a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0)
-    )[0];
+    .sort((a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0))[0];
 
   const activeGoals = goals.filter((goal) => !goal.archived);
-  const mainGoal = activeGoals.find((goal) => goal.highlighted) || activeGoals[0];
+  const mainGoal =
+    activeGoals.find((goal) => goal.highlighted) || activeGoals[0];
 
   const firstGoal = [...activeGoals].sort(
     (a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0)
@@ -283,13 +304,7 @@ function Accueil({
     .filter((goal) => Number(goal.targetAmount || 0) > 0)
     .map((goal) => ({
       ...goal,
-      progress: Math.min(
-        100,
-        Math.round(
-          (Number(goal.currentAmount || 0) / Number(goal.targetAmount || 0)) *
-            100
-        )
-      ),
+      progress: getGoalProgress(goal),
       remaining: Math.max(
         0,
         Number(goal.targetAmount || 0) - Number(goal.currentAmount || 0)
@@ -297,11 +312,7 @@ function Accueil({
     }))
     .sort((a, b) => b.progress - a.progress)[0];
 
-  const achievedGoals = activeGoals.filter(
-    (goal) =>
-      Number(goal.targetAmount || 0) > 0 &&
-      Number(goal.currentAmount || 0) >= Number(goal.targetAmount || 0)
-  );
+  const achievedGoals = activeGoals.filter((goal) => getGoalProgress(goal) >= 100);
 
   const lastActivity = history[0];
   const lastDeposit = history.find((item) => item.type === "depot");
@@ -339,9 +350,10 @@ function Accueil({
   function money(value) {
     if (!showAmounts) return p.amountsHidden;
 
-    return `${Number(value || 0).toLocaleString("fr-CA", {
-      maximumFractionDigits: 2,
-    })} $`;
+    return `${Number(value || 0).toLocaleString(
+      language === "EN" ? "en-CA" : language === "ES" ? "es-CA" : "fr-CA",
+      { maximumFractionDigits: 2 }
+    )} $`;
   }
 
   return (
@@ -349,7 +361,7 @@ function Accueil({
       <section className="accueil-hero" />
 
       <section className="accueil-headline" style={premiumHero}>
-        <p className="accueil-eyebrow">OnJarama Path V12.3</p>
+        <p className="accueil-eyebrow">{p.version}</p>
 
         <h1 className="accueil-title">
           {t.heroTitle}
@@ -357,9 +369,7 @@ function Accueil({
           <span>{t.heroAccent}</span>
         </h1>
 
-        <p className="accueil-subtitle">
-          {p.heroSubtitle}
-        </p>
+        <p className="accueil-subtitle">{p.heroSubtitle}</p>
       </section>
 
       <section className="accueil-headline" style={pathStartCard}>
@@ -369,23 +379,13 @@ function Accueil({
         </div>
 
         <p style={softText}>
-          {monthlyIncome > 0
-            ? p.situationReady
-            : p.situationEmpty}
+          {monthlyIncome > 0 ? p.situationReady : p.situationEmpty}
         </p>
 
         <div style={miniPathGrid}>
           <MiniPathStep label="1" text={p.situation} active={monthlyIncome > 0} />
-          <MiniPathStep
-            label="2"
-            text={p.objectives}
-            active={activeGoals.length > 0}
-          />
-          <MiniPathStep
-            label="3"
-            text={p.simulation}
-            active={Boolean(mainGoal?.simulation)}
-          />
+          <MiniPathStep label="2" text={p.objectives} active={activeGoals.length > 0} />
+          <MiniPathStep label="3" text={p.simulation} active={Boolean(mainGoal?.simulation)} />
           <MiniPathStep label="4" text={p.plan} active={Boolean(mainGoal)} />
         </div>
 
@@ -498,14 +498,12 @@ function Accueil({
           <strong>{p.connectDiscover}</strong>
         </div>
 
-        <p style={softText}>
-          {p.discoverText}
-        </p>
+        <p style={softText}>{p.discoverText}</p>
 
         <div style={discoverGrid}>
           <DiscoverItem
             icon={<Brain size={17} />}
-            title="Smart Planning"
+            title={p.smartPlanningTitle}
             text={p.smartPlanning}
             color="var(--gold)"
           />
@@ -517,13 +515,13 @@ function Accueil({
           />
           <DiscoverItem
             icon={<Route size={17} />}
-            title="Smart Journey"
+            title={p.smartJourneyTitle}
             text={p.smartJourney}
             color="var(--green)"
           />
           <DiscoverItem
             icon={<Cloud size={17} />}
-            title="Cloud Sync"
+            title={p.cloudSyncTitle}
             text={p.cloudSync}
             color="var(--purple)"
           />
@@ -612,11 +610,7 @@ function Accueil({
           <CompanionLine
             icon="🏆"
             label={p.lastVictory}
-            value={
-              lastVictory?.message ||
-              lastVictory?.title ||
-              p.noVictory
-            }
+            value={lastVictory?.message || lastVictory?.title || p.noVictory}
           />
           <CompanionLine icon="➡️" label={p.action} value={nextAction.title} />
         </div>
@@ -640,7 +634,7 @@ function Accueil({
       <div className="accueil-actions accueil-actions-single">
         <button onClick={() => setCurrentPage("assistant")} className="ai-action">
           <Bot size={18} />
-          IA OnJarama
+          {p.assistant}
         </button>
       </div>
 
@@ -671,7 +665,9 @@ function Accueil({
           title={p.sources}
           text={
             hasSources
-              ? `${sourceCount} ${sourceCount > 1 ? p.sourceSavedPlural : p.sourceSaved}`
+              ? `${sourceCount} ${
+                  sourceCount > 1 ? p.sourceSavedPlural : p.sourceSaved
+                }`
               : p.atYourPace
           }
           color={hasSources ? "var(--green)" : "var(--gold)"}
@@ -741,15 +737,6 @@ function DiscoverItem({ icon, title, text, color }) {
   );
 }
 
-function ContextNavButton({ icon, label, onClick }) {
-  return (
-    <button onClick={onClick} className="context-nav-btn">
-      <span>{icon}</span>
-      <strong>{label}</strong>
-    </button>
-  );
-}
-
 function getFinancialSourceCount({ monthlyIncome, financeData }) {
   const sources = financeData?.fundingSources || financeData?.incomeSources;
 
@@ -760,16 +747,79 @@ function getFinancialSourceCount({ monthlyIncome, financeData }) {
   return monthlyIncome > 0 ? 1 : 0;
 }
 
-function getNextVictory({ priorityDebt, closestGoal, mainGoal, totalDebt, language = "FR" }) {
+function getGoalProgress(goal) {
+  if (Array.isArray(goal?.pathSteps) && goal.pathSteps.length > 0) {
+    const done = goal.pathSteps.filter((step) => step.done).length;
+    return Math.round((done / goal.pathSteps.length) * 100);
+  }
+
+  const target = Number(goal?.targetAmount || 0);
+  if (target <= 0) return 0;
+
+  return Math.min(
+    100,
+    Math.round((Number(goal?.currentAmount || 0) / target) * 100)
+  );
+}
+
+function getNextVictory({
+  priorityDebt,
+  closestGoal,
+  mainGoal,
+  totalDebt,
+  language = "FR",
+}) {
   const x = {
     FR: {
-      threshold: "avant le prochain palier.", debtReady: "Dette prête à être finalisée.", achieved: "Objectif atteint. Une victoire à célébrer.", completed: "complété", remaining: "restants", seeDebt: "Voir mes dettes", seeGoals: "Voir Objectifs", seePlan: "Voir Mon Plan", mainText: "Objectif principal identifié. Ajoutez une progression pour créer la prochaine victoire.", debtReduction: "Réduction des dettes", debtText: "Créez un objectif dette pour suivre votre prochaine victoire.", createGoal: "Créer un objectif", firstGoal: "Premier objectif", firstText: "Ajoutez une destination pour activer votre prochaine victoire."
+      threshold: "avant le prochain palier.",
+      debtReady: "Dette prête à être finalisée.",
+      achieved: "Objectif atteint. Une victoire à célébrer.",
+      completed: "complété",
+      remaining: "restants",
+      seeDebt: "Voir mes dettes",
+      seeGoals: "Voir Objectifs",
+      seePlan: "Voir Mon Plan",
+      mainText:
+        "Objectif principal identifié. Ajoutez une progression pour créer la prochaine victoire.",
+      debtReduction: "Réduction des dettes",
+      debtText: "Créez un objectif dette pour suivre votre prochaine victoire.",
+      createGoal: "Créer un objectif",
+      firstGoal: "Premier objectif",
+      firstText: "Ajoutez une destination pour activer votre prochaine victoire.",
     },
     EN: {
-      threshold: "before the next milestone.", debtReady: "Debt ready to be finalized.", achieved: "Goal reached. A victory to celebrate.", completed: "completed", remaining: "remaining", seeDebt: "View my debts", seeGoals: "View Goals", seePlan: "View My Plan", mainText: "Main goal identified. Add progress to create the next victory.", debtReduction: "Debt reduction", debtText: "Create a debt goal to track your next victory.", createGoal: "Create a goal", firstGoal: "First goal", firstText: "Add a destination to activate your next victory."
+      threshold: "before the next milestone.",
+      debtReady: "Debt ready to be finalized.",
+      achieved: "Goal reached. A victory to celebrate.",
+      completed: "completed",
+      remaining: "remaining",
+      seeDebt: "View my debts",
+      seeGoals: "View Goals",
+      seePlan: "View My Plan",
+      mainText:
+        "Main goal identified. Add progress to create the next victory.",
+      debtReduction: "Debt reduction",
+      debtText: "Create a debt goal to track your next victory.",
+      createGoal: "Create a goal",
+      firstGoal: "First goal",
+      firstText: "Add a destination to activate your next victory.",
     },
     ES: {
-      threshold: "antes del próximo hito.", debtReady: "Deuda lista para finalizar.", achieved: "Objetivo alcanzado. Una victoria para celebrar.", completed: "completado", remaining: "restantes", seeDebt: "Ver mis deudas", seeGoals: "Ver objetivos", seePlan: "Ver Mi Plan", mainText: "Objetivo principal identificado. Agrega progreso para crear la próxima victoria.", debtReduction: "Reducción de deudas", debtText: "Crea un objetivo de deuda para seguir tu próxima victoria.", createGoal: "Crear un objetivo", firstGoal: "Primer objetivo", firstText: "Agrega un destino para activar tu próxima victoria."
+      threshold: "antes del próximo hito.",
+      debtReady: "Deuda lista para finalizar.",
+      achieved: "Objetivo alcanzado. Una victoria para celebrar.",
+      completed: "completado",
+      remaining: "restantes",
+      seeDebt: "Ver mis deudas",
+      seeGoals: "Ver objetivos",
+      seePlan: "Ver Mi Plan",
+      mainText:
+        "Objetivo principal identificado. Agrega progreso para crear la próxima victoria.",
+      debtReduction: "Reducción de deudas",
+      debtText: "Crea un objetivo de deuda para seguir tu próxima victoria.",
+      createGoal: "Crear un objetivo",
+      firstGoal: "Primer objetivo",
+      firstText: "Agrega un destino para activar tu próxima victoria.",
     },
   }[language] || {};
 
@@ -789,9 +839,10 @@ function getNextVictory({ priorityDebt, closestGoal, mainGoal, totalDebt, langua
       title: priorityDebt.name,
       text:
         remainingToThreshold > 0
-          ? `${remainingToThreshold.toLocaleString(language === "EN" ? "en-CA" : language === "ES" ? "es-CA" : "fr-CA", {
-              maximumFractionDigits: 0,
-            })} $ ${x.threshold}`
+          ? `${remainingToThreshold.toLocaleString(
+              language === "EN" ? "en-CA" : language === "ES" ? "es-CA" : "fr-CA",
+              { maximumFractionDigits: 0 }
+            )} $ ${x.threshold}`
           : x.debtReady,
       button: x.seeDebt,
       page: "dettes",
@@ -849,34 +900,132 @@ function getNextVictory({ priorityDebt, closestGoal, mainGoal, totalDebt, langua
   };
 }
 
-function getNextAction({ totalDebt, mainGoal, closestGoal, monthlyIncome, language = "FR" }) {
+function getNextAction({
+  totalDebt,
+  mainGoal,
+  closestGoal,
+  monthlyIncome,
+  language = "FR",
+}) {
   const x = {
-    FR: { completeSituation: "Compléter votre situation", completeText: "Ajoutez vos revenus et vos sorties pour activer une lecture plus précise.", openSituation: "Ouvrir Ma Situation", createDebtGoal: "Créer un objectif dette", debtGoalText: "Votre dette existe déjà dans Situation. L’étape suivante est d’en faire une destination mesurable.", openGoals: "Ouvrir Objectifs", simulateBest: "Simuler le meilleur chemin", simulateText: "Comparez les rythmes pour avancer sans perdre votre cap.", openSimulator: "Ouvrir Simulateur", finalize: "Finaliser", progress: "Progression", closeVictory: "Vous êtes proche d’une victoire.", seePlan: "Voir Mon Plan", advance: "Avancer", keepFocus: "Gardez le cap sur votre objectif principal.", firstGoal: "Créer votre premier objectif", firstText: "Ajoutez une destination pour que OnJarama Path construise votre parcours." },
-    EN: { completeSituation: "Complete your situation", completeText: "Add your income and outflows to activate a more precise view.", openSituation: "Open My Situation", createDebtGoal: "Create a debt goal", debtGoalText: "Your debt already exists in Situation. The next step is to make it a measurable destination.", openGoals: "Open Goals", simulateBest: "Simulate the best path", simulateText: "Compare rhythms to move forward without losing direction.", openSimulator: "Open Simulator", finalize: "Finalize", progress: "Progress", closeVictory: "You are close to a victory.", seePlan: "View My Plan", advance: "Advance", keepFocus: "Keep focus on your main goal.", firstGoal: "Create your first goal", firstText: "Add a destination so OnJarama Path can build your path." },
-    ES: { completeSituation: "Completar tu situación", completeText: "Agrega tus ingresos y salidas para activar una lectura más precisa.", openSituation: "Abrir Mi Situación", createDebtGoal: "Crear un objetivo de deuda", debtGoalText: "Tu deuda ya existe en Situación. El siguiente paso es convertirla en un destino medible.", openGoals: "Abrir objetivos", simulateBest: "Simular el mejor camino", simulateText: "Compara ritmos para avanzar sin perder tu dirección.", openSimulator: "Abrir simulador", finalize: "Finalizar", progress: "Progreso", closeVictory: "Estás cerca de una victoria.", seePlan: "Ver Mi Plan", advance: "Avanzar", keepFocus: "Mantén el rumbo hacia tu objetivo principal.", firstGoal: "Crear tu primer objetivo", firstText: "Agrega un destino para que OnJarama Path construya tu recorrido." },
+    FR: {
+      completeSituation: "Compléter votre situation",
+      completeText:
+        "Ajoutez vos revenus et vos sorties pour activer une lecture plus précise.",
+      openSituation: "Ouvrir Ma Situation",
+      createDebtGoal: "Créer un objectif dette",
+      debtGoalText:
+        "Votre dette existe déjà dans Situation. L’étape suivante est d’en faire une destination mesurable.",
+      openGoals: "Ouvrir Objectifs",
+      simulateBest: "Simuler le meilleur chemin",
+      simulateText: "Comparez les rythmes pour avancer sans perdre votre cap.",
+      openSimulator: "Ouvrir Simulateur",
+      finalize: "Finaliser",
+      progress: "Progression",
+      closeVictory: "Vous êtes proche d’une victoire.",
+      seePlan: "Voir Mon Plan",
+      advance: "Avancer",
+      keepFocus: "Gardez le cap sur votre objectif principal.",
+      firstGoal: "Créer votre premier objectif",
+      firstText:
+        "Ajoutez une destination pour que OnJarama Path construise votre parcours.",
+    },
+    EN: {
+      completeSituation: "Complete your situation",
+      completeText:
+        "Add your income and outflows to activate a more precise view.",
+      openSituation: "Open My Situation",
+      createDebtGoal: "Create a debt goal",
+      debtGoalText:
+        "Your debt already exists in Situation. The next step is to make it a measurable destination.",
+      openGoals: "Open Goals",
+      simulateBest: "Simulate the best path",
+      simulateText: "Compare rhythms to move forward without losing direction.",
+      openSimulator: "Open Simulator",
+      finalize: "Finalize",
+      progress: "Progress",
+      closeVictory: "You are close to a victory.",
+      seePlan: "View My Plan",
+      advance: "Advance",
+      keepFocus: "Keep focus on your main goal.",
+      firstGoal: "Create your first goal",
+      firstText: "Add a destination so OnJarama Path can build your path.",
+    },
+    ES: {
+      completeSituation: "Completar tu situación",
+      completeText:
+        "Agrega tus ingresos y salidas para activar una lectura más precisa.",
+      openSituation: "Abrir Mi Situación",
+      createDebtGoal: "Crear un objetivo de deuda",
+      debtGoalText:
+        "Tu deuda ya existe en Situación. El siguiente paso es convertirla en un destino medible.",
+      openGoals: "Abrir objetivos",
+      simulateBest: "Simular el mejor camino",
+      simulateText: "Compara ritmos para avanzar sin perder tu dirección.",
+      openSimulator: "Abrir simulador",
+      finalize: "Finalizar",
+      progress: "Progreso",
+      closeVictory: "Estás cerca de una victoria.",
+      seePlan: "Ver Mi Plan",
+      advance: "Avanzar",
+      keepFocus: "Mantén el rumbo hacia tu objetivo principal.",
+      firstGoal: "Crear tu primer objetivo",
+      firstText:
+        "Agrega un destino para que OnJarama Path construya tu recorrido.",
+    },
   }[language] || {};
 
   if (!monthlyIncome || monthlyIncome <= 0) {
-    return { title: x.completeSituation, text: x.completeText, button: x.openSituation, page: "situation" };
+    return {
+      title: x.completeSituation,
+      text: x.completeText,
+      button: x.openSituation,
+      page: "situation",
+    };
   }
 
   if (totalDebt > 0 && !mainGoal) {
-    return { title: x.createDebtGoal, text: x.debtGoalText, button: x.openGoals, page: "objectifs" };
+    return {
+      title: x.createDebtGoal,
+      text: x.debtGoalText,
+      button: x.openGoals,
+      page: "objectifs",
+    };
   }
 
   if (totalDebt > 0) {
-    return { title: x.simulateBest, text: x.simulateText, button: x.openSimulator, page: "simulateur" };
+    return {
+      title: x.simulateBest,
+      text: x.simulateText,
+      button: x.openSimulator,
+      page: "simulateur",
+    };
   }
 
   if (closestGoal && closestGoal.progress >= 80 && closestGoal.progress < 100) {
-    return { title: `${x.finalize} ${closestGoal.title}`, text: `${x.progress}: ${closestGoal.progress} %. ${x.closeVictory}`, button: x.seePlan, page: "monplan" };
+    return {
+      title: `${x.finalize} ${closestGoal.title}`,
+      text: `${x.progress}: ${closestGoal.progress} %. ${x.closeVictory}`,
+      button: x.seePlan,
+      page: "monplan",
+    };
   }
 
   if (mainGoal) {
-    return { title: `${x.advance} ${mainGoal.title}`, text: x.keepFocus, button: x.seePlan, page: "monplan" };
+    return {
+      title: `${x.advance} ${mainGoal.title}`,
+      text: x.keepFocus,
+      button: x.seePlan,
+      page: "monplan",
+    };
   }
 
-  return { title: x.firstGoal, text: x.firstText, button: x.openGoals, page: "objectifs" };
+  return {
+    title: x.firstGoal,
+    text: x.firstText,
+    button: x.openGoals,
+    page: "objectifs",
+  };
 }
 
 function getSituationScore({
@@ -888,10 +1037,27 @@ function getSituationScore({
   language = "FR",
 }) {
   const x = {
-    FR: { empty: "Complétez vos sources et vos sorties pour générer un score fiable.", solid: "Base solide. Continuez à protéger votre marge.", stable: "Situation stable, mais quelques ajustements peuvent aider.", priority: "Priorité : reprendre du souffle mensuel." },
-    EN: { empty: "Complete your sources and outflows to generate a reliable score.", solid: "Solid base. Keep protecting your margin.", stable: "Stable situation, but a few adjustments can help.", priority: "Priority: rebuild monthly breathing room." },
-    ES: { empty: "Completa tus fuentes y salidas para generar un puntaje confiable.", solid: "Base sólida. Sigue protegiendo tu margen.", stable: "Situación estable, pero algunos ajustes pueden ayudar.", priority: "Prioridad: recuperar margen mensual." },
+    FR: {
+      empty:
+        "Complétez vos sources et vos sorties pour générer un score fiable.",
+      solid: "Base solide. Continuez à protéger votre marge.",
+      stable: "Situation stable, mais quelques ajustements peuvent aider.",
+      priority: "Priorité : reprendre du souffle mensuel.",
+    },
+    EN: {
+      empty: "Complete your sources and outflows to generate a reliable score.",
+      solid: "Solid base. Keep protecting your margin.",
+      stable: "Stable situation, but a few adjustments can help.",
+      priority: "Priority: rebuild monthly breathing room.",
+    },
+    ES: {
+      empty: "Completa tus fuentes y salidas para generar un puntaje confiable.",
+      solid: "Base sólida. Sigue protegiendo tu margen.",
+      stable: "Situación estable, pero algunos ajustes pueden ayudar.",
+      priority: "Prioridad: recuperar margen mensual.",
+    },
   }[language] || {};
+
   if (!monthlyIncome || monthlyIncome <= 0) {
     return {
       score: 0,
@@ -902,6 +1068,7 @@ function getSituationScore({
   }
 
   let score = 50;
+
   if (monthlyIncome > 0) score += 15;
   if (monthlyAvailable > 0) score += 15;
   if (monthlySavings > 0) score += 10;
@@ -911,20 +1078,25 @@ function getSituationScore({
   if (monthlyAvailable < 0) score -= 25;
 
   const safeScore = Math.max(0, Math.min(100, score));
-  if (safeScore >= 80)
+
+  if (safeScore >= 80) {
     return {
       score: safeScore,
       isReady: true,
       color: "var(--green)",
       label: x.solid,
     };
-  if (safeScore >= 55)
+  }
+
+  if (safeScore >= 55) {
     return {
       score: safeScore,
       isReady: true,
       color: "var(--gold)",
       label: x.stable,
     };
+  }
+
   return {
     score: safeScore,
     isReady: true,
@@ -934,22 +1106,39 @@ function getSituationScore({
 }
 
 function getStartedLabel(createdAt, language = "FR") {
-  if (!createdAt) return language === "EN" ? "today" : language === "ES" ? "hoy" : "aujourd’hui";
+  if (!createdAt) {
+    return language === "EN" ? "today" : language === "ES" ? "hoy" : "aujourd’hui";
+  }
 
   const start = new Date(createdAt);
   const now = new Date();
 
-  if (Number.isNaN(start.getTime())) return language === "EN" ? "today" : language === "ES" ? "hoy" : "aujourd’hui";
+  if (Number.isNaN(start.getTime())) {
+    return language === "EN" ? "today" : language === "ES" ? "hoy" : "aujourd’hui";
+  }
 
   const days = Math.max(
     0,
     Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
   );
 
-  if (days === 0) return language === "EN" ? "today" : language === "ES" ? "hoy" : "aujourd’hui";
-  if (days === 1) return language === "EN" ? "1 day ago" : language === "ES" ? "hace 1 día" : "il y a 1 jour";
+  if (days === 0) {
+    return language === "EN" ? "today" : language === "ES" ? "hoy" : "aujourd’hui";
+  }
 
-  return language === "EN" ? `${days} days ago` : language === "ES" ? `hace ${days} días` : `il y a ${days} jours`;
+  if (days === 1) {
+    return language === "EN"
+      ? "1 day ago"
+      : language === "ES"
+        ? "hace 1 día"
+        : "il y a 1 jour";
+  }
+
+  return language === "EN"
+    ? `${days} days ago`
+    : language === "ES"
+      ? `hace ${days} días`
+      : `il y a ${days} jours`;
 }
 
 function getDisciplineColor(score) {
@@ -977,15 +1166,6 @@ function CommandStat({ icon, label, value, color }) {
       <span style={{ color }}>{icon}</span>
       <small>{label}</small>
       <strong>{value}</strong>
-    </div>
-  );
-}
-
-function SituationLine({ label, value, color }) {
-  return (
-    <div style={situationLine}>
-      <span>{label}</span>
-      <strong style={{ color }}>{value}</strong>
     </div>
   );
 }
@@ -1053,12 +1233,6 @@ const premiumHero = {
   border: "1px solid var(--gold)",
   background:
     "radial-gradient(circle at top right, rgba(212,175,55,.22), transparent 34%), var(--bg-card)",
-};
-
-const mainGoalHomeCard = {
-  border: "1px solid var(--gold)",
-  background:
-    "linear-gradient(135deg, rgba(212,175,55,.16), rgba(34,197,94,.08), var(--bg-card))",
 };
 
 const progressFlagCard = {
@@ -1191,22 +1365,6 @@ const miniPathStep = {
   display: "grid",
   gap: "3px",
   textAlign: "center",
-};
-
-const situationGrid = {
-  display: "grid",
-  gap: "8px",
-  margin: "12px 0",
-};
-
-const situationLine = {
-  background: "var(--bg-panel)",
-  border: "1px solid var(--border)",
-  borderRadius: "14px",
-  padding: "10px",
-  display: "flex",
-  justifyContent: "space-between",
-  gap: "10px",
 };
 
 const companionGrid = {
