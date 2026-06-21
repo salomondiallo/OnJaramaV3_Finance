@@ -1,4 +1,11 @@
-import { PiggyBank, ShieldCheck, Target, TrendingUp } from "lucide-react";
+import {
+  ArrowRight,
+  PiggyBank,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  TrendingUp,
+} from "lucide-react";
 import { getText } from "../data/translations";
 
 const pageText = {
@@ -21,6 +28,27 @@ const pageText = {
     action2: "Séparer l’épargne de l’argent courant.",
     action3: "Prioriser le coussin avant les dépenses non essentielles.",
     createGoal: "Simuler un objectif d’épargne",
+    smartProjection: "Projection intelligente",
+    projectionSubtitle: "Comparez plusieurs rythmes d’épargne.",
+    monthly: "/mois",
+    targetReachedIn: "Objectif atteint en",
+    recommendedRhythm: "Rythme recommandé",
+    recommendedText:
+      "Un rythme réaliste doit protéger votre budget sans bloquer vos autres objectifs.",
+    lowMargin:
+      "Commencez petit. Même 100 $ par mois crée une base et garde l’habitude active.",
+    balancedMargin:
+      "Votre marge permet un rythme équilibré. Visez un coussin solide avant d’accélérer.",
+    strongMargin:
+      "Vous pouvez accélérer tout en gardant une marge de sécurité.",
+    noData:
+      "Ajoutez vos revenus et dépenses dans Situation pour obtenir une projection plus précise.",
+    current: "Actuel",
+    target: "Cible",
+    remaining: "Reste",
+    bestOption: "Meilleure option",
+    emergencyReady: "Coussin prêt",
+    toDefine: "À définir",
   },
   EN: {
     title: "Savings",
@@ -41,6 +69,27 @@ const pageText = {
     action2: "Keep savings separate from daily spending money.",
     action3: "Prioritize the cushion before non-essential expenses.",
     createGoal: "Simulate a savings goal",
+    smartProjection: "Smart projection",
+    projectionSubtitle: "Compare several savings rhythms.",
+    monthly: "/month",
+    targetReachedIn: "Target reached in",
+    recommendedRhythm: "Recommended rhythm",
+    recommendedText:
+      "A realistic rhythm should protect your budget without blocking your other goals.",
+    lowMargin:
+      "Start small. Even $100 per month builds a base and keeps the habit active.",
+    balancedMargin:
+      "Your margin supports a balanced pace. Build a strong cushion before accelerating.",
+    strongMargin:
+      "You can accelerate while keeping a safety margin.",
+    noData:
+      "Add your income and expenses in Situation to get a more precise projection.",
+    current: "Current",
+    target: "Target",
+    remaining: "Remaining",
+    bestOption: "Best option",
+    emergencyReady: "Cushion ready",
+    toDefine: "To define",
   },
   ES: {
     title: "Ahorro",
@@ -61,8 +110,31 @@ const pageText = {
     action2: "Separar el ahorro del dinero corriente.",
     action3: "Priorizar el colchón antes de gastos no esenciales.",
     createGoal: "Simular un objetivo de ahorro",
+    smartProjection: "Proyección inteligente",
+    projectionSubtitle: "Compara varios ritmos de ahorro.",
+    monthly: "/mes",
+    targetReachedIn: "Objetivo alcanzado en",
+    recommendedRhythm: "Ritmo recomendado",
+    recommendedText:
+      "Un ritmo realista debe proteger tu presupuesto sin bloquear otros objetivos.",
+    lowMargin:
+      "Empieza pequeño. Incluso 100 $ al mes crea una base y mantiene el hábito activo.",
+    balancedMargin:
+      "Tu margen permite un ritmo equilibrado. Construye un colchón sólido antes de acelerar.",
+    strongMargin:
+      "Puedes acelerar manteniendo un margen de seguridad.",
+    noData:
+      "Agrega tus ingresos y gastos en Situación para obtener una proyección más precisa.",
+    current: "Actual",
+    target: "Objetivo",
+    remaining: "Restante",
+    bestOption: "Mejor opción",
+    emergencyReady: "Colchón listo",
+    toDefine: "Por definir",
   },
 };
+
+const projectionAmounts = [100, 250, 500, 1000];
 
 function Epargne({ financeData, setCurrentPage, settings }) {
   const t = getText(settings);
@@ -76,10 +148,40 @@ function Epargne({ financeData, setCurrentPage, settings }) {
 
   const savingsRate = income > 0 ? Math.round((savings / income) * 100) : 0;
   const emergencyTarget = expenses * 3;
+  const currentSavingsBase = savings;
+  const remaining = Math.max(0, emergencyTarget - currentSavingsBase);
+
   const monthsToEmergency =
     savings > 0 && emergencyTarget > 0
-      ? Math.ceil(emergencyTarget / savings)
+      ? Math.ceil(remaining / savings)
       : 0;
+
+  const projections = projectionAmounts.map((amount) => ({
+    amount,
+    months:
+      emergencyTarget > 0 && amount > 0
+        ? Math.max(1, Math.ceil(remaining / amount))
+        : 0,
+  }));
+
+  const recommended = getRecommendedProjection({
+    projections,
+    savings,
+    income,
+    expenses,
+  });
+
+  const progress =
+    emergencyTarget > 0
+      ? Math.min(100, Math.round((currentSavingsBase / emergencyTarget) * 100))
+      : 0;
+
+  const recommendationText = getRecommendationText({
+    p,
+    income,
+    expenses,
+    savings,
+  });
 
   function money(value) {
     return Number(value || 0).toLocaleString(
@@ -90,15 +192,15 @@ function Epargne({ financeData, setCurrentPage, settings }) {
     );
   }
 
-  function simulateSavingsGoal() {
+  function simulateSavingsGoal(monthlyAmount = null) {
     localStorage.setItem(
       "onjaramaGoalToSimulate",
       JSON.stringify({
-        id: "epargne",
+        id: "urgence",
         title: p.securityGoal,
         subtitle: p.subtitle,
         defaultAmount: emergencyTarget > 0 ? emergencyTarget : 3000,
-        defaultMonthly: savings > 0 ? savings : 250,
+        defaultMonthly: monthlyAmount || savings || 250,
         startedAt: new Date().toISOString(),
       })
     );
@@ -132,7 +234,11 @@ function Epargne({ financeData, setCurrentPage, settings }) {
         <MiniCard
           icon={<TrendingUp />}
           title={p.estimatedTime}
-          value={`${monthsToEmergency} ${p.months}`}
+          value={
+            monthsToEmergency > 0
+              ? `${monthsToEmergency} ${p.months}`
+              : p.toDefine
+          }
           color="var(--green)"
           subtitle={p.currentPace}
         />
@@ -143,12 +249,94 @@ function Epargne({ financeData, setCurrentPage, settings }) {
 
         <ProgressLine
           label={p.securityGoal}
-          value={savings}
+          value={currentSavingsBase}
           total={emergencyTarget}
           color="var(--green)"
         />
 
+        <div style={statGrid}>
+          <SmallStat label={p.current} value={`${money(currentSavingsBase)} $`} />
+          <SmallStat label={p.target} value={`${money(emergencyTarget)} $`} />
+          <SmallStat label={p.remaining} value={`${money(remaining)} $`} />
+          <SmallStat
+            label={p.estimatedTime}
+            value={
+              monthsToEmergency > 0
+                ? `${monthsToEmergency} ${p.months}`
+                : p.toDefine
+            }
+          />
+        </div>
+
         <p style={muted}>{p.emergencyText}</p>
+      </section>
+
+      <section style={smartCard}>
+        <div style={header}>
+          <Sparkles color="var(--gold)" />
+          <div>
+            <h2>{p.smartProjection}</h2>
+            <p style={mutedSmall}>{p.projectionSubtitle}</p>
+          </div>
+        </div>
+
+        <div style={projectionGrid}>
+          {projections.map((projection) => {
+            const isBest = recommended?.amount === projection.amount;
+
+            return (
+              <button
+                key={projection.amount}
+                onClick={() => simulateSavingsGoal(projection.amount)}
+                style={{
+                  ...projectionCard,
+                  borderColor: isBest ? "var(--gold)" : "var(--border)",
+                  background: isBest
+                    ? "linear-gradient(135deg, rgba(212,175,55,.16), var(--bg-panel))"
+                    : "var(--bg-panel)",
+                }}
+              >
+                <strong style={{ color: isBest ? "var(--gold)" : "var(--text-main)" }}>
+                  {money(projection.amount)} $ {p.monthly}
+                </strong>
+
+                <span style={mutedSmall}>{p.targetReachedIn}</span>
+
+                <h3>
+                  {projection.months > 0
+                    ? `${projection.months} ${p.months}`
+                    : p.toDefine}
+                </h3>
+
+                {isBest && <em style={bestBadge}>✓ {p.bestOption}</em>}
+
+                <span style={goLine}>
+                  {p.createGoal}
+                  <ArrowRight size={15} />
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <section style={recommendationCard}>
+        <div style={header}>
+          <Target color="var(--green)" />
+          <div>
+            <h2>{p.recommendedRhythm}</h2>
+            <p style={mutedSmall}>{p.recommendedText}</p>
+          </div>
+        </div>
+
+        <p style={recommendationTextStyle}>{recommendationText}</p>
+
+        <button
+          onClick={() => simulateSavingsGoal(recommended?.amount || savings || 250)}
+          style={primaryBtn}
+        >
+          {p.createGoal}
+        </button>
       </section>
 
       <section style={card}>
@@ -160,13 +348,35 @@ function Epargne({ financeData, setCurrentPage, settings }) {
         <Action text={p.action1} />
         <Action text={p.action2} />
         <Action text={p.action3} />
-
-        <button onClick={simulateSavingsGoal} style={primaryBtn}>
-          {p.createGoal}
-        </button>
       </section>
     </div>
   );
+}
+
+function getRecommendedProjection({ projections, savings, income, expenses }) {
+  const availableMargin = Math.max(0, Number(income || 0) - Number(expenses || 0));
+
+  if (!Array.isArray(projections) || projections.length === 0) return null;
+
+  if (savings > 0) {
+    return (
+      projections.find((item) => item.amount >= savings) ||
+      projections[projections.length - 1]
+    );
+  }
+
+  if (availableMargin >= 1200) return projections.find((item) => item.amount === 500);
+  if (availableMargin >= 650) return projections.find((item) => item.amount === 250);
+  return projections.find((item) => item.amount === 100);
+}
+
+function getRecommendationText({ p, income, expenses, savings }) {
+  const availableMargin = Math.max(0, Number(income || 0) - Number(expenses || 0));
+
+  if (income <= 0 && expenses <= 0) return p.noData;
+  if (savings > 0 && savings >= availableMargin * 0.5) return p.strongMargin;
+  if (availableMargin >= 650) return p.balancedMargin;
+  return p.lowMargin;
 }
 
 function MiniCard({ icon, title, value, color, subtitle }) {
@@ -176,6 +386,15 @@ function MiniCard({ icon, title, value, color, subtitle }) {
       <p style={mutedSmall}>{title}</p>
       <h2>{value}</h2>
       <p style={mutedSmall}>{subtitle}</p>
+    </div>
+  );
+}
+
+function SmallStat({ label, value }) {
+  return (
+    <div style={smallStat}>
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }
@@ -230,11 +449,77 @@ const card = {
   marginTop: "20px",
 };
 
+const smartCard = {
+  background:
+    "linear-gradient(135deg, rgba(212,175,55,.14), rgba(34,197,94,.08), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const recommendationCard = {
+  background: "linear-gradient(135deg, rgba(34,197,94,.14), var(--bg-card))",
+  border: "1px solid var(--green)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
 const header = {
   display: "flex",
   alignItems: "center",
   gap: "10px",
   marginBottom: "14px",
+};
+
+const statGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: "10px",
+  marginTop: "14px",
+};
+
+const smallStat = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "14px",
+  padding: "11px",
+  display: "grid",
+  gap: "4px",
+};
+
+const projectionGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+  gap: "10px",
+};
+
+const projectionCard = {
+  minHeight: "150px",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "13px",
+  color: "var(--text-main)",
+  textAlign: "left",
+  display: "grid",
+  gap: "6px",
+};
+
+const bestBadge = {
+  color: "var(--gold)",
+  fontStyle: "normal",
+  fontWeight: "900",
+  fontSize: "12px",
+};
+
+const goLine = {
+  color: "var(--green)",
+  fontWeight: "900",
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+  marginTop: "4px",
 };
 
 const lineTop = {
@@ -262,6 +547,14 @@ const action = {
   borderRadius: "14px",
   padding: "12px",
   marginTop: "10px",
+};
+
+const recommendationTextStyle = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "14px",
+  padding: "12px",
+  color: "var(--text-main)",
 };
 
 const primaryBtn = {
