@@ -1,22 +1,29 @@
+import { useEffect, useMemo, useState } from "react";
 import {
   Camera,
   CheckCircle,
   Cloud,
+  Database,
   Globe,
+  ImagePlus,
   KeyRound,
   LoaderCircle,
+  Lock,
   LogOut,
   ShieldCheck,
   Star,
   History,
+  Trash2,
   Trophy,
   UserCircle,
 } from "lucide-react";
 import { getText } from "../data/translations";
 
+const PROFILE_PHOTO_KEY = "onjaramaProfilePhoto";
+
 const pageText = {
   FR: {
-    subtitle: "Profil, compte, cloud, sauvegarde et historique.",
+    subtitle: "Profil, compte, sécurité, sauvegarde et historique.",
     user: "Utilisateur OnJarama",
     beta: "Mode invité local",
     connected: "Compte connecté",
@@ -38,7 +45,10 @@ const pageText = {
       "Le cloud est prêt. Vous pouvez vous connecter pour préparer la synchronisation future.",
     cloudDisabledText:
       "La connexion sera disponible quand les clés Supabase seront configurées dans Vercel.",
-    photoSoon: "Photo bientôt",
+    addPhoto: "Ajouter une photo",
+    replacePhoto: "Remplacer la photo",
+    deletePhoto: "Supprimer la photo",
+    photoSaved: "Photo enregistrée localement.",
     account: "Compte",
     country: "Pays",
     currency: "Devise",
@@ -67,9 +77,31 @@ const pageText = {
     noVictory: "Aucune victoire enregistrée pour le moment.",
     goalFallback: "Objectif",
     openSettings: "Ouvrir les réglages",
+    trustTitle: "Indice de confiance",
+    trustSubtitle: "Votre niveau de préparation et de sécurité visible.",
+    photoAdded: "Photo ajoutée",
+    situationReady: "Situation commencée",
+    activeGoalReady: "Objectif actif",
+    localData: "Données locales",
+    securityVisible: "Sécurité vérifiée",
+    securityCenter: "Centre de sécurité",
+    securityText:
+      "OnJarama Path est un guide financier. L’application ne fait aucun paiement, ne déplace aucun argent et ne prend aucune décision à votre place.",
+    localStorage: "Stockage local",
+    localStorageText: "Actif sur cet appareil",
+    bankAccess: "Accès bancaire",
+    bankAccessText: "Lecture seule — bientôt disponible",
+    transactionAccess: "Transactions",
+    transactionAccessText: "Aucune transaction possible",
+    cloudBackup: "Sauvegarde cloud",
+    cloudBackupText: "Préparée progressivement",
+    privacyTrust: "Pourquoi faire confiance ?",
+    privacyTrustText:
+      "Vos données vous appartiennent. Vous pouvez utiliser l’application localement, réinitialiser vos données et garder le contrôle.",
+    developed: "Fièrement développé au Québec ⚜️",
   },
   EN: {
-    subtitle: "Profile, account, cloud, backup and history.",
+    subtitle: "Profile, account, security, backup and history.",
     user: "OnJarama User",
     beta: "Local guest mode",
     connected: "Connected account",
@@ -91,7 +123,10 @@ const pageText = {
       "Cloud is ready. You can sign in to prepare future synchronization.",
     cloudDisabledText:
       "Sign-in will be available when Supabase keys are configured in Vercel.",
-    photoSoon: "Photo coming soon",
+    addPhoto: "Add photo",
+    replacePhoto: "Replace photo",
+    deletePhoto: "Delete photo",
+    photoSaved: "Photo saved locally.",
     account: "Account",
     country: "Country",
     currency: "Currency",
@@ -120,9 +155,31 @@ const pageText = {
     noVictory: "No victory recorded yet.",
     goalFallback: "Goal",
     openSettings: "Open settings",
+    trustTitle: "Trust score",
+    trustSubtitle: "Your visible preparation and security level.",
+    photoAdded: "Photo added",
+    situationReady: "Situation started",
+    activeGoalReady: "Active goal",
+    localData: "Local data",
+    securityVisible: "Security verified",
+    securityCenter: "Security center",
+    securityText:
+      "OnJarama Path is a financial guide. The app does not make payments, move money or make decisions for you.",
+    localStorage: "Local storage",
+    localStorageText: "Active on this device",
+    bankAccess: "Bank access",
+    bankAccessText: "Read-only — coming soon",
+    transactionAccess: "Transactions",
+    transactionAccessText: "No transaction possible",
+    cloudBackup: "Cloud backup",
+    cloudBackupText: "Progressively prepared",
+    privacyTrust: "Why trust it?",
+    privacyTrustText:
+      "Your data belongs to you. You can use the app locally, reset your data and stay in control.",
+    developed: "Proudly developed in Quebec ⚜️",
   },
   ES: {
-    subtitle: "Perfil, cuenta, cloud, copia e historial.",
+    subtitle: "Perfil, cuenta, seguridad, copia e historial.",
     user: "Usuario OnJarama",
     beta: "Modo invitado local",
     connected: "Cuenta conectada",
@@ -144,7 +201,10 @@ const pageText = {
       "El cloud está listo. Puedes conectarte para preparar la sincronización futura.",
     cloudDisabledText:
       "La conexión estará disponible cuando las claves Supabase estén configuradas en Vercel.",
-    photoSoon: "Foto próximamente",
+    addPhoto: "Agregar foto",
+    replacePhoto: "Cambiar foto",
+    deletePhoto: "Eliminar foto",
+    photoSaved: "Foto guardada localmente.",
     account: "Cuenta",
     country: "País",
     currency: "Moneda",
@@ -173,6 +233,28 @@ const pageText = {
     noVictory: "No hay victoria registrada por ahora.",
     goalFallback: "Objetivo",
     openSettings: "Abrir ajustes",
+    trustTitle: "Índice de confianza",
+    trustSubtitle: "Tu nivel visible de preparación y seguridad.",
+    photoAdded: "Foto agregada",
+    situationReady: "Situación iniciada",
+    activeGoalReady: "Objetivo activo",
+    localData: "Datos locales",
+    securityVisible: "Seguridad verificada",
+    securityCenter: "Centro de seguridad",
+    securityText:
+      "OnJarama Path es una guía financiera. La app no realiza pagos, no mueve dinero y no toma decisiones por ti.",
+    localStorage: "Almacenamiento local",
+    localStorageText: "Activo en este dispositivo",
+    bankAccess: "Acceso bancario",
+    bankAccessText: "Solo lectura — próximamente",
+    transactionAccess: "Transacciones",
+    transactionAccessText: "Ninguna transacción posible",
+    cloudBackup: "Copia cloud",
+    cloudBackupText: "Preparada progresivamente",
+    privacyTrust: "¿Por qué confiar?",
+    privacyTrustText:
+      "Tus datos te pertenecen. Puedes usar la app localmente, reiniciar tus datos y mantener el control.",
+    developed: "Desarrollado con orgullo en Quebec ⚜️",
   },
 };
 
@@ -180,12 +262,23 @@ function Profil({
   settings,
   setCurrentPage,
   selectedGoals,
+  financeData,
   disciplineScore,
   auth,
 }) {
   const t = getText(settings);
   const language = settings?.language || "FR";
   const p = pageText[language] || pageText.FR;
+
+  const [profilePhoto, setProfilePhoto] = useState(() => {
+    try {
+      return localStorage.getItem(PROFILE_PHOTO_KEY) || "";
+    } catch {
+      return "";
+    }
+  });
+
+  const [photoMessage, setPhotoMessage] = useState("");
 
   const goals = Array.isArray(selectedGoals)
     ? selectedGoals.filter((goal) => !goal.archived)
@@ -205,6 +298,55 @@ function Profil({
   const authError = auth?.authError || "";
   const userEmail = auth?.user?.email || auth?.session?.user?.email || "";
 
+  const trustItems = useMemo(
+    () => [
+      { label: p.photoAdded, done: Boolean(profilePhoto) },
+      {
+        label: p.situationReady,
+        done:
+          Number(financeData?.overview?.monthlyIncome || 0) > 0 ||
+          Number(financeData?.overview?.monthlyExpenses || 0) > 0 ||
+          Number(financeData?.overview?.monthlySavings || 0) > 0,
+      },
+      { label: p.activeGoalReady, done: activeGoals.length > 0 },
+      { label: p.localData, done: true },
+      { label: p.securityVisible, done: true },
+    ],
+    [p, profilePhoto, financeData, activeGoals.length]
+  );
+
+  const trustScore = Math.round(
+    (trustItems.filter((item) => item.done).length / trustItems.length) * 100
+  );
+
+  useEffect(() => {
+    if (!photoMessage) return;
+    const timer = window.setTimeout(() => setPhotoMessage(""), 1800);
+    return () => window.clearTimeout(timer);
+  }, [photoMessage]);
+
+  function handlePhotoChange(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const result = String(reader.result || "");
+      setProfilePhoto(result);
+      localStorage.setItem(PROFILE_PHOTO_KEY, result);
+      setPhotoMessage(p.photoSaved);
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  function removePhoto() {
+    setProfilePhoto("");
+    localStorage.removeItem(PROFILE_PHOTO_KEY);
+    setPhotoMessage("");
+  }
+
   return (
     <div className="native-page">
       <h1>{t.profil}</h1>
@@ -212,17 +354,95 @@ function Profil({
 
       <section style={profileCard}>
         <div style={avatar}>
-          <UserCircle size={58} />
+          {profilePhoto ? (
+            <img src={profilePhoto} alt="Profil" style={avatarImage} />
+          ) : (
+            <UserCircle size={58} />
+          )}
         </div>
 
         <div>
           <h2>{isConnected ? p.connected : p.user}</h2>
           <p style={muted}>{isConnected ? p.connectedText : p.beta}</p>
+          {photoMessage && <p style={successLine}>✓ {photoMessage}</p>}
         </div>
 
-        <button style={photoBtn}>
-          <Camera size={17} /> {p.photoSoon}
-        </button>
+        <div style={photoActions}>
+          <label style={photoBtn}>
+            <ImagePlus size={17} />
+            {profilePhoto ? p.replacePhoto : p.addPhoto}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoChange}
+              style={hiddenInput}
+            />
+          </label>
+
+          {profilePhoto && (
+            <button onClick={removePhoto} style={deletePhotoBtn}>
+              <Trash2 size={17} />
+              {p.deletePhoto}
+            </button>
+          )}
+        </div>
+      </section>
+
+      <section style={trustCard}>
+        <div style={header}>
+          <ShieldCheck color="var(--green)" />
+          <div>
+            <h2>{p.trustTitle}</h2>
+            <p style={mutedSmall}>{p.trustSubtitle}</p>
+          </div>
+        </div>
+
+        <div style={trustScoreBox}>
+          <strong>{trustScore}%</strong>
+          <span>{p.trustTitle}</span>
+        </div>
+
+        <div style={progressBar}>
+          <div
+            style={{
+              ...progressFill,
+              width: `${trustScore}%`,
+              background: getDisciplineColor(trustScore),
+            }}
+          />
+        </div>
+
+        <div style={trustGrid}>
+          {trustItems.map((item) => (
+            <div key={item.label} style={trustItem}>
+              <CheckCircle
+                size={18}
+                color={item.done ? "var(--green)" : "var(--text-muted)"}
+              />
+              <span>{item.label}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section style={securityCard}>
+        <div style={header}>
+          <Lock color="var(--gold)" />
+          <div>
+            <h2>{p.securityCenter}</h2>
+            <p style={mutedSmall}>{p.securityText}</p>
+          </div>
+        </div>
+
+        <InfoRow label={p.localStorage} value={p.localStorageText} />
+        <InfoRow label={p.bankAccess} value={p.bankAccessText} />
+        <InfoRow label={p.transactionAccess} value={p.transactionAccessText} />
+        <InfoRow label={p.cloudBackup} value={p.cloudBackupText} />
+
+        <div style={trustNote}>
+          <ShieldCheck size={18} color="var(--green)" />
+          <p>{p.privacyTrustText}</p>
+        </div>
       </section>
 
       <section style={authCard(isConnected)}>
@@ -410,11 +630,11 @@ function Profil({
 
       <section style={card}>
         <div style={header}>
-          <ShieldCheck color="var(--gold)" />
-          <h2>{t.privacy}</h2>
+          <Database color="var(--gold)" />
+          <h2>{p.developed}</h2>
         </div>
 
-        <p style={muted}>{t.privacyText}</p>
+        <p style={muted}>{p.privacyTrust}</p>
       </section>
 
       <button onClick={() => setCurrentPage("reglages")} style={settingsBtn}>
@@ -524,6 +744,61 @@ function authButtonStyle(base, disabled) {
   };
 }
 
+const trustCard = {
+  background: "linear-gradient(135deg, rgba(34,197,94,.14), var(--bg-card))",
+  border: "1px solid var(--green)",
+  borderRadius: "22px",
+  padding: "18px",
+  marginTop: "16px",
+};
+
+const securityCard = {
+  background: "linear-gradient(135deg, rgba(212,175,55,.13), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "22px",
+  padding: "18px",
+  marginTop: "16px",
+};
+
+const trustScoreBox = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "18px",
+  padding: "14px",
+  display: "grid",
+  gap: "4px",
+  marginTop: "12px",
+};
+
+const trustGrid = {
+  display: "grid",
+  gap: "8px",
+  marginTop: "12px",
+};
+
+const trustItem = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "14px",
+  padding: "10px",
+  display: "flex",
+  gap: "9px",
+  alignItems: "center",
+  fontWeight: "800",
+};
+
+const trustNote = {
+  background: "rgba(34,197,94,.10)",
+  border: "1px solid var(--green)",
+  borderRadius: "14px",
+  padding: "12px",
+  marginTop: "12px",
+  display: "flex",
+  gap: "10px",
+  alignItems: "flex-start",
+  color: "var(--text-main)",
+};
+
 const historyCard = {
   background: "linear-gradient(135deg, rgba(212,175,55,.12), var(--bg-card))",
   border: "1px solid var(--gold)",
@@ -581,6 +856,13 @@ const guestLine = {
   marginTop: "10px",
 };
 
+const successLine = {
+  color: "var(--green)",
+  fontSize: "13px",
+  fontWeight: "900",
+  marginTop: "8px",
+};
+
 const errorLine = {
   color: "var(--red)",
   fontSize: "13px",
@@ -607,18 +889,47 @@ const avatar = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
+  overflow: "hidden",
+};
+
+const avatarImage = {
+  width: "100%",
+  height: "100%",
+  objectFit: "cover",
+};
+
+const photoActions = {
+  gridColumn: "1 / -1",
+  display: "grid",
+  gap: "8px",
 };
 
 const photoBtn = {
-  gridColumn: "1 / -1",
-  border: "1px solid var(--border)",
-  background: "var(--bg-panel)",
-  color: "var(--text-main)",
+  border: "1px solid var(--green)",
+  background: "rgba(34,197,94,.12)",
+  color: "var(--green)",
   borderRadius: "14px",
   padding: "12px",
   display: "flex",
   justifyContent: "center",
   gap: "8px",
+  fontWeight: "900",
+};
+
+const deletePhotoBtn = {
+  border: "1px solid var(--red)",
+  background: "rgba(239,68,68,.10)",
+  color: "var(--red)",
+  borderRadius: "14px",
+  padding: "12px",
+  display: "flex",
+  justifyContent: "center",
+  gap: "8px",
+  fontWeight: "900",
+};
+
+const hiddenInput = {
+  display: "none",
 };
 
 const authActions = {

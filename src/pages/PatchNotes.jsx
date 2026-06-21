@@ -1,14 +1,14 @@
 import {
-  CheckCircle,
-  Cloud,
-  Sparkles,
-  Trophy,
-  Flag,
   BookOpen,
-  ShieldCheck,
   Brain,
   Calculator,
+  CheckCircle,
+  Cloud,
+  Flag,
   Route,
+  ShieldCheck,
+  Sparkles,
+  Trophy,
 } from "lucide-react";
 
 const pageText = {
@@ -30,33 +30,73 @@ function PatchNotes({ settings }) {
 
   const notes = [
     {
-      version: "V11.1",
-      title: "Smart Planning & Simulateur Premium",
+      version: "V16.0",
+      title: "Trust & Security",
       text:
         language === "EN"
-          ? "Connect+ Discover, Next Victory, Smart Journey improvements, Premium Simulator and intelligent planning enhancements."
-          : "Connect+ Découvre, Prochaine Victoire, amélioration Smart Journey, Simulateur Premium et renforcement du plan intelligent.",
-      icon: <Brain />,
-      color: "var(--gold)",
+          ? "Profile photo, trust score, visible security center, local data reassurance and clearer reset confirmations."
+          : "Photo de profil, indice de confiance, centre de sécurité visible, rassurance des données locales et confirmations de réinitialisation.",
+      icon: <ShieldCheck />,
+      color: "var(--green)",
       current: true,
     },
     {
-      version: "V11.0",
-      title: "Navigation Premium",
+      version: "V15.6",
+      title: "Smart Flip Cards & Path Validation",
       text:
         language === "EN"
-          ? "Premium navigation and central My Plan experience."
-          : "Navigation premium et expérience Mon Plan centrale.",
-      icon: <Trophy />,
+          ? "Situation cards now separate results and explanations. Activated goals can be followed through checkable path steps."
+          : "Les cartes Situation séparent maintenant résultats et explications. Les objectifs activés peuvent être suivis avec des étapes cochables.",
+      icon: <Route />,
+      color: "var(--gold)",
+    },
+    {
+      version: "V15.5",
+      title: "Smart Objective Templates",
+      text:
+        language === "EN"
+          ? "Goal templates now adapt by type: travel, home, car, debt, mortgage, savings, studies and business."
+          : "Les modèles d’objectifs s’adaptent maintenant au type : voyage, maison, auto, dette, hypothèque, épargne, études et entreprise.",
+      icon: <Sparkles />,
+      color: "var(--gold)",
+    },
+    {
+      version: "V15.0",
+      title: "Savings Simulator Integration",
+      text:
+        language === "EN"
+          ? "Savings and project simulations were clarified with target amount, available amount and monthly contribution."
+          : "Les simulations épargne et projets ont été clarifiées avec montant visé, montant disponible et contribution mensuelle.",
+      icon: <Calculator />,
+      color: "var(--blue)",
+    },
+    {
+      version: "V13.5",
+      title: "Navigation & Settings Cleanup",
+      text:
+        language === "EN"
+          ? "Navigation, profile, notifications, language and settings were reorganized for a cleaner structure."
+          : "Navigation, profil, notifications, langue et paramètres ont été réorganisés pour une structure plus claire.",
+      icon: <CheckCircle />,
+      color: "var(--green)",
+    },
+    {
+      version: "V11.1",
+      title: "Smart Planning & Premium Simulator",
+      text:
+        language === "EN"
+          ? "Premium Simulator and intelligent planning improvements."
+          : "Simulateur Premium et renforcement du plan intelligent.",
+      icon: <Brain />,
       color: "var(--gold)",
     },
     {
       version: "V10.3",
-      title: "UX Premium Finalization",
+      title: "Privacy & Progress Flag",
       text:
         language === "EN"
-          ? "Funding source privacy, progress flag and premium refinements."
-          : "Origine des fonds discrète, drapeau de progression et améliorations premium.",
+          ? "Discreet funding source display and progress flag improvements."
+          : "Origine des fonds discrète et drapeau de progression.",
       icon: <Flag />,
       color: "var(--gold)",
     },
@@ -71,26 +111,6 @@ function PatchNotes({ settings }) {
       color: "var(--blue)",
     },
     {
-      version: "V10.1",
-      title: "Auth UI Supabase",
-      text:
-        language === "EN"
-          ? "Google and Microsoft sign-in preparation."
-          : "Préparation des connexions Google et Microsoft.",
-      icon: <CheckCircle />,
-      color: "var(--green)",
-    },
-    {
-      version: "V9.0",
-      title: "Mon Plan Premium",
-      text:
-        language === "EN"
-          ? "Priority engine and financial roadmap."
-          : "Moteur de priorités et feuille de route financière.",
-      icon: <ShieldCheck />,
-      color: "var(--green)",
-    },
-    {
       version: "V8.0",
       title: "Guide Foundation",
       text:
@@ -102,33 +122,23 @@ function PatchNotes({ settings }) {
     },
     {
       version: "FUTUR",
-      title: "V11.2 Smart Allocation Engine",
+      title: "Banking Read Only",
       text:
         language === "EN"
-          ? "Automatic allocation, multi-goal planning and instant impact calculations."
-          : "Répartition automatique, multi-objectifs et calcul d'impact instantané.",
-      icon: <Calculator />,
-      color: "var(--purple)",
+          ? "Real account balances without transactions."
+          : "Lecture des comptes bancaires sans transaction.",
+      icon: <ShieldCheck />,
+      color: "var(--green)",
     },
     {
       version: "FUTUR",
-      title: "V11.3 Cloud Sync",
+      title: "Cloud Sync",
       text:
         language === "EN"
           ? "Profile, goals and settings synchronization."
           : "Synchronisation profil, objectifs et paramètres.",
       icon: <Cloud />,
       color: "var(--blue)",
-    },
-    {
-      version: "FUTUR",
-      title: "V12 Banking Read Only",
-      text:
-        language === "EN"
-          ? "Real account balances without transactions."
-          : "Lecture des comptes bancaires sans transaction.",
-      icon: <Route />,
-      color: "var(--gold)",
     },
   ];
 
@@ -146,24 +156,15 @@ function PatchNotes({ settings }) {
           }}
         >
           <div style={header}>
-            <span style={{ ...iconBox, color: note.color }}>
-              {note.icon}
-            </span>
+            <span style={{ ...iconBox, color: note.color }}>{note.icon}</span>
 
             <div>
-              <strong style={{ color: note.color }}>
-                {note.version}
-              </strong>
-
+              <strong style={{ color: note.color }}>{note.version}</strong>
               <h2>{note.title}</h2>
             </div>
           </div>
 
-          {note.current && (
-            <span style={badge}>
-              {p.current}
-            </span>
-          )}
+          {note.current && <span style={badge}>{p.current}</span>}
 
           <p style={muted}>{note.text}</p>
         </section>
