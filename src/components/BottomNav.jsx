@@ -19,7 +19,7 @@ function BottomNav({
   const labels = {
     FR: {
       accueil: "OJ",
-      monplan: "Mon Plan",
+      situation: "Situation",
       objectifs: "Objectifs",
       parcours: "Parcours",
       profil: "Profil",
@@ -29,7 +29,7 @@ function BottomNav({
     },
     EN: {
       accueil: "OJ",
-      monplan: "My Plan",
+      situation: "Situation",
       objectifs: "Goals",
       parcours: "Path",
       profil: "Profile",
@@ -39,7 +39,7 @@ function BottomNav({
     },
     ES: {
       accueil: "OJ",
-      monplan: "Mi Plan",
+      situation: "Situación",
       objectifs: "Objetivos",
       parcours: "Recorrido",
       profil: "Perfil",
@@ -80,10 +80,10 @@ function BottomNav({
         />
 
         <NavButton
-          active={currentPage === "monplan"}
+          active={currentPage === "situation"}
           icon={<BarChart3 size={21} />}
-          label={t.monplan}
-          onClick={() => go("monplan")}
+          label={t.situation}
+          onClick={() => go("situation")}
         />
 
         <button

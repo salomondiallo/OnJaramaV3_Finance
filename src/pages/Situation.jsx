@@ -81,6 +81,13 @@ const pageText = {
     aiWaiting: "Le diagnostic sera généré quand l’origine et la destination des fonds seront renseignées.",
     debtPressure: "Pression dettes",
     monthlyBreath: "Souffle mensuel",
+    speTitle: "SPE — Smart Plan Engine",
+    speSubtitle: "Le moteur intelligent qui transforme votre situation en plan clair.",
+    spePointPriority: "Analyse votre situation actuelle",
+    spePointDebt: "Identifie la dette ou l’objectif prioritaire",
+    spePointAction: "Prépare la prochaine action recommandée",
+    spePointStrategy: "Construit votre stratégie personnalisée",
+    openSpe: "Ouvrir Smart Plan Engine",
   },
   EN: {
     subtitle: "Your situation first: sources, destinations, debts and real margin.",
@@ -142,6 +149,13 @@ const pageText = {
     aiWaiting: "The diagnosis will be generated when fund sources and destinations are entered.",
     debtPressure: "Debt pressure",
     monthlyBreath: "Monthly breath",
+    speTitle: "SPE — Smart Plan Engine",
+    speSubtitle: "The smart engine that turns your situation into a clear plan.",
+    spePointPriority: "Analyzes your current situation",
+    spePointDebt: "Identifies the priority debt or goal",
+    spePointAction: "Prepares the recommended next action",
+    spePointStrategy: "Builds your personalized strategy",
+    openSpe: "Open Smart Plan Engine",
   },
   ES: {
     subtitle: "Tu situación primero: orígenes, destinos, deudas y margen real.",
@@ -203,6 +217,13 @@ const pageText = {
     aiWaiting: "El diagnóstico se generará cuando se indiquen los orígenes y destinos de los fondos.",
     debtPressure: "Presión de deuda",
     monthlyBreath: "Respiro mensual",
+    speTitle: "SPE — Smart Plan Engine",
+    speSubtitle: "El motor inteligente que transforma tu situación en un plan claro.",
+    spePointPriority: "Analiza tu situación actual",
+    spePointDebt: "Identifica la deuda u objetivo prioritario",
+    spePointAction: "Prepara la próxima acción recomendada",
+    spePointStrategy: "Construye tu estrategia personalizada",
+    openSpe: "Abrir Smart Plan Engine",
   },
 };
 
@@ -445,6 +466,28 @@ function Situation({ financeData, setFinanceData, settings, setCurrentPage }) {
         </div>
       </section>
 
+      <section style={speCard}>
+        <div style={header}>
+          <Sparkles color="var(--gold)" />
+          <div>
+            <h2>{p.speTitle}</h2>
+            <p style={muted}>{p.speSubtitle}</p>
+          </div>
+        </div>
+
+        <div style={speGrid}>
+          <SpePoint text={p.spePointPriority} />
+          <SpePoint text={p.spePointDebt} />
+          <SpePoint text={p.spePointAction} />
+          <SpePoint text={p.spePointStrategy} />
+        </div>
+
+        <button onClick={() => setCurrentPage("monplan")} style={speButton}>
+          {p.openSpe}
+          <ArrowRight size={17} />
+        </button>
+      </section>
+
       <section style={statusCard(premiumStatus.color)}>
         <div style={header}>{premiumStatus.icon}<div><p style={mutedSmall}>{p.snapshot}</p><h2>{premiumStatus.label}</h2></div></div>
         <p style={muted}>{aiText}</p>
@@ -502,6 +545,10 @@ function getDefaultDetails(language) {
   };
 }
 
+function SpePoint({ text }) {
+  return <div style={spePoint}><CheckCircle2 size={16} color="var(--green)" /><span>{text}</span></div>;
+}
+
 function CategorySection({ id, title, icon, items, currency, onChange }) {
   return <section id={id} style={card}><div style={header}>{icon}<h2>{title}</h2></div>{items.map((item) => <div key={item.id} style={categoryRow}><label>{item.label}</label><input value={item.amount || ""} onChange={(event) => onChange(item.id, event.target.value)} inputMode="decimal" placeholder={`0 ${currency}`} style={input} /></div>)}</section>;
 }
@@ -523,6 +570,10 @@ const pageHead = { display: "flex", justifyContent: "space-between", alignItems:
 const eyebrow = { color: "var(--gold)", fontSize: "12px", fontWeight: "900", letterSpacing: ".04em", textTransform: "uppercase", margin: 0 };
 const card = { background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "22px", padding: "20px", marginTop: "20px" };
 const heroCard = { background: "radial-gradient(circle at top right, rgba(212,175,55,.20), transparent 34%), linear-gradient(135deg, rgba(34,197,94,.12), var(--bg-card))", border: "1px solid rgba(212,175,55,.45)", borderRadius: "26px", padding: "22px", marginTop: "20px", boxShadow: "0 18px 40px var(--shadow)" };
+const speCard = { background: "radial-gradient(circle at top right, rgba(212,175,55,.22), transparent 36%), linear-gradient(135deg, rgba(212,175,55,.14), rgba(56,189,248,.08), var(--bg-card))", border: "1px solid rgba(212,175,55,.55)", borderRadius: "24px", padding: "20px", marginTop: "20px", boxShadow: "0 16px 34px var(--shadow)" };
+const speGrid = { display: "grid", gap: "9px", marginTop: "14px" };
+const spePoint = { background: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "14px", padding: "11px", display: "flex", alignItems: "center", gap: "9px", color: "var(--text-main)", fontWeight: "800" };
+const speButton = { width: "100%", marginTop: "16px", padding: "14px", borderRadius: "14px", border: "1px solid var(--gold)", background: "rgba(212,175,55,.14)", color: "var(--gold)", fontWeight: "900", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" };
 const heroTop = { display: "flex", justifyContent: "space-between", alignItems: "center", gap: "14px" };
 const scoreTitle = { fontSize: "34px", lineHeight: 1, margin: "6px 0 0" };
 const scoreRing = { width: "82px", height: "82px", borderRadius: "50%", padding: "8px", flex: "0 0 auto" };
