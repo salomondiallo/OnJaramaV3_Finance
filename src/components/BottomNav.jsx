@@ -52,13 +52,13 @@ function BottomNav({
   const t = labels[language] || labels.FR;
 
   function go(page) {
-    setCurrentPage(page);
+    setCurrentPage?.(page);
   }
 
   return (
     <>
       <button
-        onClick={() => setNavHidden(!navHidden)}
+        onClick={() => setNavHidden?.(!navHidden)}
         className="bottom-nav-handle"
         aria-label={navHidden ? t.showNav : t.hideNav}
         title={navHidden ? t.showNav : t.hideNav}
@@ -67,7 +67,7 @@ function BottomNav({
       </button>
 
       <nav
-        className={`bottom-nav bottom-nav-v123 ${
+        className={`bottom-nav bottom-nav-v145 ${
           navHidden ? "bottom-nav-hidden" : ""
         }`}
         aria-label={t.mainNav}
