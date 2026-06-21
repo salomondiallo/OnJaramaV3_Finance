@@ -1,78 +1,150 @@
 import { PiggyBank, ShieldCheck, Target, TrendingUp } from "lucide-react";
+import { getText } from "../data/translations";
 
-function Epargne({ financeData, setCurrentPage }) {
-  const income = Number(financeData.overview.monthlyIncome || 0);
-  const savings = Number(financeData.overview.monthlySavings || 0);
-  const expenses = Number(financeData.overview.monthlyExpenses || 0);
+const pageText = {
+  FR: {
+    title: "Épargne",
+    subtitle: "Construire une sécurité avant les grands projets.",
+    monthlySavings: "Épargne prévue par mois",
+    incomeRate: "de vos revenus mensuels.",
+    recommendedCushion: "Coussin recommandé",
+    cushionSubtitle: "Environ 3 mois de dépenses.",
+    estimatedTime: "Temps estimé",
+    currentPace: "Au rythme actuel.",
+    months: "mois",
+    cushionProgress: "Progression du coussin",
+    securityGoal: "Objectif sécurité",
+    emergencyText:
+      "Votre coussin d’urgence aide à éviter de retourner au crédit lors d’un imprévu.",
+    recommendedActions: "Actions recommandées",
+    action1: "Automatiser un montant fixe après chaque paie.",
+    action2: "Séparer l’épargne de l’argent courant.",
+    action3: "Prioriser le coussin avant les dépenses non essentielles.",
+    createGoal: "Créer un objectif d’épargne",
+  },
+  EN: {
+    title: "Savings",
+    subtitle: "Build security before major projects.",
+    monthlySavings: "Planned monthly savings",
+    incomeRate: "of your monthly income.",
+    recommendedCushion: "Recommended cushion",
+    cushionSubtitle: "About 3 months of expenses.",
+    estimatedTime: "Estimated time",
+    currentPace: "At the current pace.",
+    months: "months",
+    cushionProgress: "Cushion progress",
+    securityGoal: "Security goal",
+    emergencyText:
+      "Your emergency cushion helps avoid going back to credit when something unexpected happens.",
+    recommendedActions: "Recommended actions",
+    action1: "Automate a fixed amount after each pay.",
+    action2: "Keep savings separate from daily spending money.",
+    action3: "Prioritize the cushion before non-essential expenses.",
+    createGoal: "Create a savings goal",
+  },
+  ES: {
+    title: "Ahorro",
+    subtitle: "Construir seguridad antes de los grandes proyectos.",
+    monthlySavings: "Ahorro mensual previsto",
+    incomeRate: "de tus ingresos mensuales.",
+    recommendedCushion: "Colchón recomendado",
+    cushionSubtitle: "Aproximadamente 3 meses de gastos.",
+    estimatedTime: "Tiempo estimado",
+    currentPace: "Al ritmo actual.",
+    months: "meses",
+    cushionProgress: "Progreso del colchón",
+    securityGoal: "Objetivo de seguridad",
+    emergencyText:
+      "Tu colchón de emergencia ayuda a evitar volver al crédito ante un imprevisto.",
+    recommendedActions: "Acciones recomendadas",
+    action1: "Automatizar un monto fijo después de cada pago.",
+    action2: "Separar el ahorro del dinero corriente.",
+    action3: "Priorizar el colchón antes de gastos no esenciales.",
+    createGoal: "Crear un objetivo de ahorro",
+  },
+};
+
+function Epargne({ financeData, setCurrentPage, settings }) {
+  const t = getText(settings);
+  const language = settings?.language || "FR";
+  const p = pageText[language] || pageText.FR;
+
+  const overview = financeData?.overview || {};
+  const income = Number(overview.monthlyIncome || 0);
+  const savings = Number(overview.monthlySavings || 0);
+  const expenses = Number(overview.monthlyExpenses || 0);
 
   const savingsRate = income > 0 ? Math.round((savings / income) * 100) : 0;
   const emergencyTarget = expenses * 3;
   const monthsToEmergency =
-    savings > 0 ? Math.ceil(emergencyTarget / savings) : 0;
+    savings > 0 && emergencyTarget > 0 ? Math.ceil(emergencyTarget / savings) : 0;
 
   function money(value) {
-    return Number(value || 0).toLocaleString("fr-CA", {
-      maximumFractionDigits: 2,
-    });
+    return Number(value || 0).toLocaleString(
+      language === "EN" ? "en-CA" : language === "ES" ? "es-CA" : "fr-CA",
+      {
+        maximumFractionDigits: 2,
+      }
+    );
   }
 
   return (
-    <div>
-      <h1>Épargne</h1>
-      <p style={muted}>Construire une sécurité avant les grands projets.</p>
+    <div className="native-page">
+      <h1>{t.epargne || p.title}</h1>
+      <p style={muted}>{p.subtitle}</p>
 
       <section style={heroCard}>
         <PiggyBank color="var(--green)" size={38} />
-        <p style={muted}>Épargne prévue par mois</p>
+        <p style={muted}>{p.monthlySavings}</p>
         <h1 style={{ color: "var(--green)" }}>{money(savings)} $</h1>
-        <p style={muted}>{savingsRate}% de vos revenus mensuels.</p>
+        <p style={muted}>
+          {savingsRate}% {p.incomeRate}
+        </p>
       </section>
 
       <div className="grid-2" style={grid}>
         <MiniCard
           icon={<ShieldCheck />}
-          title="Coussin recommandé"
+          title={p.recommendedCushion}
           value={`${money(emergencyTarget)} $`}
           color="var(--gold)"
-          subtitle="Environ 3 mois de dépenses."
+          subtitle={p.cushionSubtitle}
         />
 
         <MiniCard
           icon={<TrendingUp />}
-          title="Temps estimé"
-          value={`${monthsToEmergency} mois`}
+          title={p.estimatedTime}
+          value={`${monthsToEmergency} ${p.months}`}
           color="var(--green)"
-          subtitle="Au rythme actuel."
+          subtitle={p.currentPace}
         />
       </div>
 
       <section style={card}>
-        <h2>Progression du coussin</h2>
+        <h2>{p.cushionProgress}</h2>
 
         <ProgressLine
-          label="Objectif sécurité"
+          label={p.securityGoal}
           value={savings}
           total={emergencyTarget}
           color="var(--green)"
         />
 
-        <p style={muted}>
-          Votre coussin d’urgence aide à éviter de retourner au crédit lors d’un imprévu.
-        </p>
+        <p style={muted}>{p.emergencyText}</p>
       </section>
 
       <section style={card}>
         <div style={header}>
           <Target color="var(--gold)" />
-          <h2>Actions recommandées</h2>
+          <h2>{p.recommendedActions}</h2>
         </div>
 
-        <Action text="Automatiser un montant fixe après chaque paie." />
-        <Action text="Séparer l’épargne de l’argent courant." />
-        <Action text="Prioriser le coussin avant les dépenses non essentielles." />
+        <Action text={p.action1} />
+        <Action text={p.action2} />
+        <Action text={p.action3} />
 
-        <button onClick={() => setCurrentPage("objectifs")} style={primaryBtn}>
-          Créer un objectif d’épargne
+        <button onClick={() => setCurrentPage?.("objectifs")} style={primaryBtn}>
+          {p.createGoal}
         </button>
       </section>
     </div>
@@ -154,9 +226,10 @@ const lineTop = {
 
 const barBg = {
   height: "9px",
-  background: "#07111f",
+  background: "var(--bg-panel)",
   borderRadius: "999px",
   marginTop: "8px",
+  overflow: "hidden",
 };
 
 const barFill = {
@@ -165,7 +238,7 @@ const barFill = {
 };
 
 const action = {
-  background: "#07111f",
+  background: "var(--bg-panel)",
   border: "1px solid var(--border)",
   borderRadius: "14px",
   padding: "12px",
