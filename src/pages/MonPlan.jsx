@@ -16,6 +16,7 @@ import {
   Trophy,
   TrendingUp,
 } from "lucide-react";
+import { useState } from "react";
 import { formatMoney } from "../utils/formatters";
 
 function MonPlan({
@@ -27,6 +28,7 @@ function MonPlan({
   disciplineScore,
 }) {
   const currency = settings?.currency || "CAD";
+  const [nextAmount, setNextAmount] = useState("500");
 
   const debts = Array.isArray(financeData?.debts) ? financeData.debts : [];
   const goals = Array.isArray(selectedGoals)
@@ -147,6 +149,15 @@ function MonPlan({
     currency,
   });
 
+  const nextAmountValue = Number(nextAmount || 0);
+  const nextAmountPlan = buildSmartAllocation({
+    monthlyAvailable: nextAmountValue,
+    monthlySavings: 0,
+    priorityDebt,
+    goals: enrichedGoals,
+    mainGoal,
+  });
+
   const horizonSteps = buildDynamicHorizon({
     priorityDebt,
     goals: enrichedGoals,
@@ -160,11 +171,11 @@ function MonPlan({
     <div className="native-page">
       <div style={pageHead}>
         <div>
-          <p style={eyebrow}>OnJarama Path V11.7</p>
-          <h1>Smart Command Center</h1>
+          <p style={eyebrow}>OnJarama Path V12.0</p>
+          <h1>Smart Plan Engine</h1>
           <p style={muted}>
-            Mon Plan devient le centre de commandement : une action aujourd’hui,
-            une projection claire, un objectif vedette et un cap intelligent.
+            Mon Plan devient le cerveau financier : priorité automatique, répartition intelligente,
+            prochain montant à placer et horizon dynamique.
           </p>
         </div>
 
@@ -360,6 +371,43 @@ function MonPlan({
         <button onClick={() => setCurrentPage("simulateur")} style={goldButton}>
           Tester l’impact dans le simulateur
         </button>
+      </section>
+
+
+
+      <section style={nextAmountCard}>
+        <div style={header}>
+          <Compass color="var(--gold)" />
+          <div>
+            <p style={eyebrow}>Smart Plan Engine V12</p>
+            <h2>Que faire avec mon prochain montant ?</h2>
+          </div>
+        </div>
+
+        <p style={muted}>
+          Entrez un montant disponible et OnJarama propose une répartition simple selon la priorité actuelle.
+        </p>
+
+        <div style={amountInputWrap}>
+          <input
+            value={nextAmount}
+            onChange={(event) => setNextAmount(event.target.value.replace(/[^\d]/g, ""))}
+            inputMode="numeric"
+            style={amountInput}
+            aria-label="Montant disponible à répartir"
+          />
+          <span style={amountSuffix}>{currency}</span>
+        </div>
+
+        <div style={allocationList}>
+          {nextAmountPlan.lines.map((line) => (
+            <AllocationLine key={`next-${line.id}`} line={line} currency={currency} />
+          ))}
+        </div>
+
+        <p style={mutedSmall}>
+          Lecture V12 : priorité à la dette coûteuse, protection minimale, puis objectif actif.
+        </p>
       </section>
 
       <section style={horizonCard}>
@@ -1477,6 +1525,44 @@ const impactTile = {
   padding: "12px",
   display: "grid",
   gap: "6px",
+};
+
+
+const nextAmountCard = {
+  background:
+    "radial-gradient(circle at top right, rgba(212,175,55,.26), transparent 34%), linear-gradient(135deg, rgba(139,92,246,.12), rgba(212,175,55,.10), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "24px",
+  padding: "20px",
+  marginTop: "20px",
+  boxShadow: "0 0 24px rgba(212,175,55,.10)",
+};
+
+const amountInputWrap = {
+  display: "grid",
+  gridTemplateColumns: "1fr auto",
+  alignItems: "center",
+  background: "var(--bg-panel)",
+  border: "1px solid rgba(212,175,55,.48)",
+  borderRadius: "16px",
+  marginTop: "14px",
+  paddingRight: "14px",
+};
+
+const amountInput = {
+  width: "100%",
+  border: "none",
+  outline: "none",
+  background: "transparent",
+  color: "var(--text-main)",
+  padding: "15px",
+  fontSize: "22px",
+  fontWeight: "900",
+};
+
+const amountSuffix = {
+  color: "var(--gold)",
+  fontWeight: "900",
 };
 
 const horizonCard = {
