@@ -3,6 +3,7 @@ import {
   Bell,
   BookOpen,
   ChevronRight,
+  CreditCard,
   FileText,
   Info,
   LogOut,
@@ -43,12 +44,13 @@ function TopBar({
     "parcours",
     "monplan",
     "simulateur",
+    "paiements",
   ];
 
   const isMainPage = mainPages.includes(currentPage);
 
   function openPage(page) {
-    setCurrentPage(page);
+    setCurrentPage?.(page);
     setMenuOpen(false);
   }
 
@@ -62,7 +64,17 @@ function TopBar({
   }
 
   function toggleQuickLanguage() {
-    updateLanguage(language === "FR" ? "EN" : "FR");
+    if (language === "FR") {
+      updateLanguage("EN");
+      return;
+    }
+
+    if (language === "EN") {
+      updateLanguage("ES");
+      return;
+    }
+
+    updateLanguage("FR");
   }
 
   function signOut() {
@@ -105,7 +117,8 @@ function TopBar({
         <button
           onClick={toggleQuickLanguage}
           className="topbar-menu-btn"
-          aria-label={language === "EN" ? "Switch to French" : "Passer en anglais"}
+          aria-label={m.switchLanguage}
+          title={m.switchLanguage}
           style={languageButton}
         >
           {language}
@@ -115,6 +128,7 @@ function TopBar({
           onClick={() => openPage("notifications")}
           className="topbar-menu-btn"
           aria-label={t.notificationsPage}
+          title={t.notificationsPage}
           style={menuButtonWithBadge}
         >
           <Bell size={19} />
@@ -130,6 +144,7 @@ function TopBar({
           onClick={() => setMenuOpen(true)}
           className="topbar-menu-btn"
           aria-label={t.menuOnJarama}
+          title={t.menuOnJarama}
         >
           <Menu size={22} />
         </button>
@@ -145,7 +160,7 @@ function TopBar({
 
           <div className="topbar-menu-panel" style={slidePanel}>
             <div className="topbar-menu-head">
-              <strong>OnJarama Path V13.5</strong>
+              <strong>OnJarama Path V14.5</strong>
               <span>{m.subtitle}</span>
             </div>
 
@@ -153,6 +168,12 @@ function TopBar({
               icon={<Settings size={18} />}
               label={getPageLabel("reglages", language)}
               onClick={() => openPage("reglages")}
+            />
+
+            <MenuButton
+              icon={<CreditCard size={18} />}
+              label={getPageLabel("paiements", language) || m.payments}
+              onClick={() => openPage("paiements")}
             />
 
             <MenuButton
@@ -218,18 +239,24 @@ const menuText = {
     privacy: "Confidentialité",
     about: "À propos",
     logout: "Déconnexion",
+    payments: "Paiements",
+    switchLanguage: "Changer la langue",
   },
   EN: {
     subtitle: "OnJarama Path quick menu.",
     privacy: "Privacy",
     about: "About",
     logout: "Sign out",
+    payments: "Payments",
+    switchLanguage: "Switch language",
   },
   ES: {
     subtitle: "Menú rápido OnJarama Path.",
     privacy: "Privacidad",
     about: "Acerca de",
     logout: "Cerrar sesión",
+    payments: "Pagos",
+    switchLanguage: "Cambiar idioma",
   },
 };
 
