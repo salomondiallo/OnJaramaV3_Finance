@@ -1,8 +1,8 @@
 import {
   BarChart3,
-  Calculator,
   ChevronDown,
   ChevronUp,
+  Route,
   Target,
   UserCircle,
 } from "lucide-react";
@@ -19,9 +19,9 @@ function BottomNav({
   const labels = {
     FR: {
       accueil: "OJ",
-      situation: "Situation",
+      monplan: "Mon Plan",
       objectifs: "Objectifs",
-      simulateur: "Simulateur",
+      parcours: "Parcours",
       profil: "Profil",
       showNav: "Afficher la navigation",
       hideNav: "Masquer la navigation",
@@ -29,9 +29,9 @@ function BottomNav({
     },
     EN: {
       accueil: "OJ",
-      situation: "Situation",
+      monplan: "My Plan",
       objectifs: "Goals",
-      simulateur: "Simulator",
+      parcours: "Path",
       profil: "Profile",
       showNav: "Show navigation",
       hideNav: "Hide navigation",
@@ -39,9 +39,9 @@ function BottomNav({
     },
     ES: {
       accueil: "OJ",
-      situation: "Situación",
+      monplan: "Mi Plan",
       objectifs: "Objetivos",
-      simulateur: "Simulador",
+      parcours: "Recorrido",
       profil: "Perfil",
       showNav: "Mostrar navegación",
       hideNav: "Ocultar navegación",
@@ -50,7 +50,6 @@ function BottomNav({
   };
 
   const t = labels[language] || labels.FR;
-  const objectivesActive = currentPage === "objectifs";
 
   function go(page) {
     setCurrentPage(page);
@@ -81,15 +80,17 @@ function BottomNav({
         />
 
         <NavButton
-          active={currentPage === "situation"}
+          active={currentPage === "monplan"}
           icon={<BarChart3 size={21} />}
-          label={t.situation}
-          onClick={() => go("situation")}
+          label={t.monplan}
+          onClick={() => go("monplan")}
         />
 
         <button
           onClick={() => go("objectifs")}
-          className={`bottom-center-plan ${objectivesActive ? "active" : ""}`}
+          className={`bottom-center-plan ${
+            currentPage === "objectifs" ? "active" : ""
+          }`}
           aria-label={t.objectifs}
           title={t.objectifs}
         >
@@ -100,10 +101,10 @@ function BottomNav({
         </button>
 
         <NavButton
-          active={currentPage === "simulateur"}
-          icon={<Calculator size={21} />}
-          label={t.simulateur}
-          onClick={() => go("simulateur")}
+          active={currentPage === "parcours"}
+          icon={<Route size={21} />}
+          label={t.parcours}
+          onClick={() => go("parcours")}
         />
 
         <NavButton

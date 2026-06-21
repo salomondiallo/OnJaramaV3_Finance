@@ -1,7 +1,46 @@
-import { navigationItems } from "../data/navigationItems";
-
-function Sidebar({ sidebarOpen, currentPage, setCurrentPage }) {
+function Sidebar({ sidebarOpen, currentPage, setCurrentPage, settings }) {
   if (!sidebarOpen) return null;
+
+  const language = settings?.language || "FR";
+
+  const t = {
+    FR: {
+      account: "Compte",
+      preferences: "Préférences",
+      resources: "Ressources",
+      security: "Sécurité",
+      profile: "Profil",
+      settings: "Paramètres",
+      guide: "Guide",
+      patchNotes: "Patch Notes",
+      privacy: "Confidentialité",
+      logout: "Déconnexion",
+    },
+    EN: {
+      account: "Account",
+      preferences: "Preferences",
+      resources: "Resources",
+      security: "Security",
+      profile: "Profile",
+      settings: "Settings",
+      guide: "Guide",
+      patchNotes: "Patch Notes",
+      privacy: "Privacy",
+      logout: "Logout",
+    },
+    ES: {
+      account: "Cuenta",
+      preferences: "Preferencias",
+      resources: "Recursos",
+      security: "Seguridad",
+      profile: "Perfil",
+      settings: "Configuración",
+      guide: "Guía",
+      patchNotes: "Patch Notes",
+      privacy: "Privacidad",
+      logout: "Cerrar sesión",
+    },
+  }[language];
 
   return (
     <aside className="desktop-sidebar" style={sidebarStyle}>
@@ -24,41 +63,75 @@ function Sidebar({ sidebarOpen, currentPage, setCurrentPage }) {
           </p>
         </div>
 
-        <ul>
-          {navigationItems
-            .filter((item) => item.id !== "reglages")
-            .map((item) => (
-              <li
-                key={item.id}
-                onClick={() => setCurrentPage(item.id)}
-                className="tile-hover"
-                style={{
-                  ...menuItem,
-                  background:
-                    currentPage === item.id ? "#143b73" : "transparent",
-                  color: currentPage === item.id ? "white" : "var(--text-muted)",
-                  fontWeight: currentPage === item.id ? "bold" : "normal",
-                  borderColor:
-                    currentPage === item.id ? "#4da3ff" : "transparent",
-                }}
-              >
-                {item.label}
-              </li>
-            ))}
-        </ul>
+        <MenuSection title={t.account}>
+          <MenuItem
+            active={currentPage === "profil"}
+            onClick={() => setCurrentPage("profil")}
+          >
+            {t.profile}
+          </MenuItem>
+
+          <MenuItem
+            active={currentPage === "reglages"}
+            onClick={() => setCurrentPage("reglages")}
+          >
+            {t.settings}
+          </MenuItem>
+        </MenuSection>
+
+        <MenuSection title={t.preferences}>
+          <MenuItem>{language}</MenuItem>
+          <MenuItem>Notifications</MenuItem>
+          <MenuItem>Thème</MenuItem>
+        </MenuSection>
+
+        <MenuSection title={t.resources}>
+          <MenuItem onClick={() => setCurrentPage("guide")}>
+            {t.guide}
+          </MenuItem>
+
+          <MenuItem onClick={() => setCurrentPage("patchnotes")}>
+            {t.patchNotes}
+          </MenuItem>
+        </MenuSection>
+
+        <MenuSection title={t.security}>
+          <MenuItem>{t.privacy}</MenuItem>
+        </MenuSection>
       </div>
 
-      <div
-        onClick={() => setCurrentPage("reglages")}
-        className="tile-hover"
-        style={{
-          ...profileBox,
-          background: currentPage === "reglages" ? "#143b73" : "var(--bg-card)",
-        }}
-      >
-        👤 Profil / Réglages →
+      <div style={logoutBox}>
+        <MenuItem danger>{t.logout}</MenuItem>
       </div>
     </aside>
+  );
+}
+
+function MenuSection({ title, children }) {
+  return (
+    <div style={{ marginBottom: "20px" }}>
+      <div style={sectionTitle}>{title}</div>
+      {children}
+    </div>
+  );
+}
+
+function MenuItem({ children, active, onClick, danger }) {
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        ...menuItem,
+        background: active ? "#143b73" : "transparent",
+        color: danger
+          ? "#ef4444"
+          : active
+            ? "white"
+            : "var(--text-muted)",
+      }}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -84,37 +157,38 @@ const logo = {
   width: "115px",
   height: "115px",
   objectFit: "contain",
-  marginBottom: "10px",
 };
 
 const pathText = {
   color: "#e11d2e",
   fontWeight: "bold",
   letterSpacing: "6px",
-  marginTop: "4px",
 };
 
 const tagline = {
   color: "var(--text-muted)",
   fontSize: "12px",
   marginTop: "10px",
-  lineHeight: "18px",
+};
+
+const sectionTitle = {
+  color: "var(--gold)",
+  fontSize: "12px",
+  fontWeight: "700",
+  textTransform: "uppercase",
+  marginBottom: "8px",
 };
 
 const menuItem = {
-  padding: "14px",
-  marginBottom: "8px",
+  padding: "12px",
   borderRadius: "12px",
   cursor: "pointer",
-  border: "1px solid transparent",
+  marginBottom: "6px",
 };
 
-const profileBox = {
-  padding: "16px",
-  borderRadius: "14px",
-  border: "1px solid var(--border)",
-  cursor: "pointer",
-  color: "white",
+const logoutBox = {
+  borderTop: "1px solid var(--border)",
+  paddingTop: "12px",
 };
 
 export default Sidebar;

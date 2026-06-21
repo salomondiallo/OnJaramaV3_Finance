@@ -12,10 +12,6 @@ import {
   Trophy,
   CreditCard,
   Route,
-  Brain,
-  Calculator,
-  BookOpen,
-  Cloud,
 } from "lucide-react";
 
 import { useState } from "react";
@@ -23,7 +19,7 @@ import { getText } from "../data/translations";
 
 const homeText = {
   FR: {
-    version: "OnJarama Path V13.2",
+    version: "OnJarama Path V13.3",
     start: "Départ",
     amountsHidden: "Chiffres masqués",
     heroSubtitle:
@@ -46,19 +42,6 @@ const homeText = {
     toComplete: "À compléter",
     discipline: "Discipline",
     victories: "Victoires",
-    connectDiscover: "Connect+ Découvre",
-    discoverText:
-      "Les nouveautés OnJarama Path sont regroupées ici pour ne rien manquer.",
-    smartPlanningTitle: "Plan intelligent",
-    smartPlanning: "Mon Plan recommande l’action principale.",
-    simulatorPremiumTitle: "Simulateur Premium",
-    premiumSimulator: "Rythmes Tranquille, Équilibré, Dynamique et Féroce.",
-    smartJourneyTitle: "Parcours intelligent",
-    smartJourney: "Votre parcours devient une histoire claire.",
-    cloudSyncTitle: "Synchronisation cloud",
-    cloudSync: "Synchronisation Supabase bientôt disponible.",
-    viewPatchNotes: "Voir Patch Notes",
-    guideTips: "Guide & Astuces",
     quickActions: "Actions rapides utiles",
     addIncome: "Ajouter revenu",
     fundingSource: "Origine des fonds",
@@ -100,7 +83,7 @@ const homeText = {
     assistant: "IA OnJarama",
   },
   EN: {
-    version: "OnJarama Path V13.2",
+    version: "OnJarama Path V13.3",
     start: "Start",
     amountsHidden: "Amounts hidden",
     heroSubtitle:
@@ -122,19 +105,6 @@ const homeText = {
     toComplete: "To complete",
     discipline: "Discipline",
     victories: "Victories",
-    connectDiscover: "Connect+ Discover",
-    discoverText:
-      "OnJarama Path updates are grouped here so you do not miss anything.",
-    smartPlanningTitle: "Smart Planning",
-    smartPlanning: "My Plan recommends the main action.",
-    simulatorPremiumTitle: "Premium Simulator",
-    premiumSimulator: "Calm, Balanced, Dynamic and Fierce rhythms.",
-    smartJourneyTitle: "Smart Journey",
-    smartJourney: "Your path becomes a clear story.",
-    cloudSyncTitle: "Cloud Sync",
-    cloudSync: "Supabase sync coming soon.",
-    viewPatchNotes: "View Patch Notes",
-    guideTips: "Guide & Tips",
     quickActions: "Useful quick actions",
     addIncome: "Add income",
     fundingSource: "Funding source",
@@ -175,7 +145,7 @@ const homeText = {
     assistant: "OnJarama AI",
   },
   ES: {
-    version: "OnJarama Path V13.2",
+    version: "OnJarama Path V13.3",
     start: "Inicio",
     amountsHidden: "Montos ocultos",
     heroSubtitle:
@@ -197,19 +167,6 @@ const homeText = {
     toComplete: "Por completar",
     discipline: "Disciplina",
     victories: "Victorias",
-    connectDiscover: "Connect+ Descubre",
-    discoverText:
-      "Las novedades de OnJarama Path están reunidas aquí para no perder nada.",
-    smartPlanningTitle: "Plan inteligente",
-    smartPlanning: "Mi Plan recomienda la acción principal.",
-    simulatorPremiumTitle: "Simulador Premium",
-    premiumSimulator: "Ritmos Tranquilo, Equilibrado, Dinámico y Feroz.",
-    smartJourneyTitle: "Recorrido inteligente",
-    smartJourney: "Tu recorrido se convierte en una historia clara.",
-    cloudSyncTitle: "Sincronización cloud",
-    cloudSync: "Sincronización Supabase próximamente.",
-    viewPatchNotes: "Ver Patch Notes",
-    guideTips: "Guía y consejos",
     quickActions: "Acciones rápidas útiles",
     addIncome: "Agregar ingreso",
     fundingSource: "Origen de fondos",
@@ -492,57 +449,6 @@ function Accueil({
         </div>
       </section>
 
-      <section className="accueil-headline" style={connectDiscoverCard}>
-        <div style={sectionHead}>
-          <Sparkles size={20} color="var(--gold)" />
-          <strong>{p.connectDiscover}</strong>
-        </div>
-
-        <p style={softText}>{p.discoverText}</p>
-
-        <div style={discoverGrid}>
-          <DiscoverItem
-            icon={<Brain size={17} />}
-            title={p.smartPlanningTitle}
-            text={p.smartPlanning}
-            color="var(--gold)"
-          />
-          <DiscoverItem
-            icon={<Calculator size={17} />}
-            title={p.simulatorPremiumTitle}
-            text={p.premiumSimulator}
-            color="var(--blue)"
-          />
-          <DiscoverItem
-            icon={<Route size={17} />}
-            title={p.smartJourneyTitle}
-            text={p.smartJourney}
-            color="var(--green)"
-          />
-          <DiscoverItem
-            icon={<Cloud size={17} />}
-            title={p.cloudSyncTitle}
-            text={p.cloudSync}
-            color="var(--purple)"
-          />
-        </div>
-
-        <div style={discoverActions}>
-          <button
-            onClick={() => setCurrentPage("patchnotes")}
-            style={discoverButton}
-          >
-            <Sparkles size={16} />
-            {p.viewPatchNotes}
-          </button>
-
-          <button onClick={() => setCurrentPage("guide")} style={guideButton}>
-            <BookOpen size={16} />
-            {p.guideTips}
-          </button>
-        </div>
-      </section>
-
       <section className="accueil-headline" style={quickActionsCard}>
         <div style={sectionHead}>
           <Sparkles size={20} color="var(--gold)" />
@@ -724,16 +630,6 @@ function QuickActionButton({ label, text, color, onClick }) {
       <strong style={{ color }}>{label}</strong>
       <small>{text}</small>
     </button>
-  );
-}
-
-function DiscoverItem({ icon, title, text, color }) {
-  return (
-    <div style={{ ...discoverItem, borderColor: color }}>
-      <span style={{ color }}>{icon}</span>
-      <strong>{title}</strong>
-      <small>{text}</small>
-    </div>
   );
 }
 
@@ -1277,64 +1173,6 @@ const nextVictoryCard = {
   border: "1px solid var(--gold)",
   background:
     "radial-gradient(circle at top right, rgba(212,175,55,.24), transparent 34%), linear-gradient(135deg, rgba(212,175,55,.16), rgba(34,197,94,.08), var(--bg-card))",
-};
-
-const connectDiscoverCard = {
-  border: "1px solid rgba(212,175,55,.62)",
-  background:
-    "radial-gradient(circle at top right, rgba(212,175,55,.28), transparent 32%), linear-gradient(135deg, rgba(56,189,248,.10), rgba(212,175,55,.10), var(--bg-card))",
-  boxShadow: "0 0 22px rgba(212,175,55,.12)",
-};
-
-const discoverGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-  gap: "8px",
-  marginTop: "12px",
-};
-
-const discoverItem = {
-  background: "var(--bg-panel)",
-  border: "1px solid var(--border)",
-  borderRadius: "15px",
-  padding: "11px",
-  display: "grid",
-  gap: "5px",
-};
-
-const discoverActions = {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: "8px",
-  marginTop: "12px",
-};
-
-const discoverButton = {
-  width: "100%",
-  minHeight: "42px",
-  border: "1px solid var(--gold)",
-  borderRadius: "14px",
-  background: "rgba(212,175,55,.14)",
-  color: "var(--gold)",
-  fontWeight: "900",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "7px",
-};
-
-const guideButton = {
-  width: "100%",
-  minHeight: "42px",
-  border: "1px solid var(--blue)",
-  borderRadius: "14px",
-  background: "rgba(56,189,248,.12)",
-  color: "var(--blue)",
-  fontWeight: "900",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "7px",
 };
 
 const miniBarBg = {
