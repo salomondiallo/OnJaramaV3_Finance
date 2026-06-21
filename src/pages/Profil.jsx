@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Bell,
   Camera,
@@ -27,6 +27,9 @@ import {
 import { getText } from "../data/translations";
 
 const PROFILE_PHOTO_KEY = "onjaramaProfilePhoto";
+const FOUNDER_UNLOCK_KEY = "onjaramaFounderMode";
+const FOUNDER_PIN = "0621";
+const FOUNDER_HOLD_MS = 10000;
 
 const pageText = {
   FR: {
@@ -362,6 +365,8 @@ function Profil({
   });
 
   const [photoMessage, setPhotoMessage] = useState("");
+  const founderHoldTimer = useRef(null);
+  const [founderMessage, setFounderMessage] = useState("");
 
   const goals = Array.isArray(selectedGoals)
     ? selectedGoals.filter((goal) => !goal.archived)
@@ -415,6 +420,20 @@ function Profil({
     return () => window.clearTimeout(timer);
   }, [photoMessage]);
 
+  useEffect(() => {
+    if (!founderMessage) return;
+    const timer = window.setTimeout(() => setFounderMessage(""), 2200);
+    return () => window.clearTimeout(timer);
+  }, [founderMessage]);
+
+  useEffect(() => {
+    return () => {
+      if (founderHoldTimer.current) {
+        window.clearTimeout(founderHoldTimer.current);
+      }
+    };
+  }, []);
+
   function handlePhotoChange(event) {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -435,6 +454,48 @@ function Profil({
     setProfilePhoto("");
     localStorage.removeItem(PROFILE_PHOTO_KEY);
     setPhotoMessage("");
+  }
+
+  function unlockFounderWorkshop() {
+    localStorage.setItem(FOUNDER_UNLOCK_KEY, "true");
+    setFounderMessage("Atelier Fondateur déverrouillé.");
+    setCurrentPage?.("atelierfondateur");
+  }
+
+  function requestFounderPin() {
+    const pin = window.prompt("Mode Fondateur\nEntrer le NIP");
+
+    if (pin === null) return;
+
+    if (pin.trim() === FOUNDER_PIN) {
+      unlockFounderWorkshop();
+      return;
+    }
+
+    setFounderMessage("NIP invalide.");
+  }
+
+  function startFounderPress(event) {
+    event?.preventDefault?.();
+
+    if (founderHoldTimer.current) {
+      window.clearTimeout(founderHoldTimer.current);
+    }
+
+    setFounderMessage("Maintenez 10 secondes pour ouvrir le Mode Fondateur.");
+
+    founderHoldTimer.current = window.setTimeout(() => {
+      founderHoldTimer.current = null;
+      requestFounderPin();
+    }, FOUNDER_HOLD_MS);
+  }
+
+  function stopFounderPress() {
+    if (!founderHoldTimer.current) return;
+
+    window.clearTimeout(founderHoldTimer.current);
+    founderHoldTimer.current = null;
+    setFounderMessage("");
   }
 
   return (
@@ -781,7 +842,18 @@ function Profil({
         <InfoRow label={p.currency} value={settings.currency} />
       </Section>
 
-      <section style={brandCard}>
+      <section
+        style={brandCard}
+        role="button"
+        tabIndex={0}
+        aria-label="Mode Fondateur"
+        onMouseDown={startFounderPress}
+        onMouseUp={stopFounderPress}
+        onMouseLeave={stopFounderPress}
+        onTouchStart={startFounderPress}
+        onTouchEnd={stopFounderPress}
+        onTouchCancel={stopFounderPress}
+      >
         <div style={brandBadge}>
           <Database color="var(--gold)" />
           <strong>{p.version}</strong>
@@ -797,6 +869,8 @@ function Profil({
           <span>{p.founderTitle}</span>
           <span>{p.countries}</span>
         </div>
+
+        {founderMessage && <p style={founderUnlockLine}>{founderMessage}</p>}
       </section>
 
       <button onClick={() => setCurrentPage("reglages")} style={settingsBtn}>
@@ -1385,6 +1459,13 @@ const founderBox = {
   marginTop: "14px",
   display: "grid",
   gap: "5px",
+};
+
+const founderUnlockLine = {
+  color: "var(--gold)",
+  fontSize: "13px",
+  fontWeight: "900",
+  marginTop: "12px",
 };
 
 const header = {
