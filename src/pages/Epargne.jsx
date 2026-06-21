@@ -20,7 +20,7 @@ const pageText = {
     action1: "Automatiser un montant fixe après chaque paie.",
     action2: "Séparer l’épargne de l’argent courant.",
     action3: "Prioriser le coussin avant les dépenses non essentielles.",
-    createGoal: "Créer un objectif d’épargne",
+    createGoal: "Simuler un objectif d’épargne",
   },
   EN: {
     title: "Savings",
@@ -40,7 +40,7 @@ const pageText = {
     action1: "Automate a fixed amount after each pay.",
     action2: "Keep savings separate from daily spending money.",
     action3: "Prioritize the cushion before non-essential expenses.",
-    createGoal: "Create a savings goal",
+    createGoal: "Simulate a savings goal",
   },
   ES: {
     title: "Ahorro",
@@ -60,7 +60,7 @@ const pageText = {
     action1: "Automatizar un monto fijo después de cada pago.",
     action2: "Separar el ahorro del dinero corriente.",
     action3: "Priorizar el colchón antes de gastos no esenciales.",
-    createGoal: "Crear un objetivo de ahorro",
+    createGoal: "Simular un objetivo de ahorro",
   },
 };
 
@@ -77,7 +77,9 @@ function Epargne({ financeData, setCurrentPage, settings }) {
   const savingsRate = income > 0 ? Math.round((savings / income) * 100) : 0;
   const emergencyTarget = expenses * 3;
   const monthsToEmergency =
-    savings > 0 && emergencyTarget > 0 ? Math.ceil(emergencyTarget / savings) : 0;
+    savings > 0 && emergencyTarget > 0
+      ? Math.ceil(emergencyTarget / savings)
+      : 0;
 
   function money(value) {
     return Number(value || 0).toLocaleString(
@@ -86,6 +88,22 @@ function Epargne({ financeData, setCurrentPage, settings }) {
         maximumFractionDigits: 2,
       }
     );
+  }
+
+  function simulateSavingsGoal() {
+    localStorage.setItem(
+      "onjaramaGoalToSimulate",
+      JSON.stringify({
+        id: "epargne",
+        title: p.securityGoal,
+        subtitle: p.subtitle,
+        defaultAmount: emergencyTarget > 0 ? emergencyTarget : 3000,
+        defaultMonthly: savings > 0 ? savings : 250,
+        startedAt: new Date().toISOString(),
+      })
+    );
+
+    setCurrentPage?.("simulateur");
   }
 
   return (
@@ -143,7 +161,7 @@ function Epargne({ financeData, setCurrentPage, settings }) {
         <Action text={p.action2} />
         <Action text={p.action3} />
 
-        <button onClick={() => setCurrentPage?.("objectifs")} style={primaryBtn}>
+        <button onClick={simulateSavingsGoal} style={primaryBtn}>
           {p.createGoal}
         </button>
       </section>
@@ -163,7 +181,8 @@ function MiniCard({ icon, title, value, color, subtitle }) {
 }
 
 function ProgressLine({ label, value, total, color }) {
-  const progress = total > 0 ? Math.min(100, Math.round((value / total) * 100)) : 0;
+  const progress =
+    total > 0 ? Math.min(100, Math.round((value / total) * 100)) : 0;
 
   return (
     <div style={{ marginTop: "14px" }}>
