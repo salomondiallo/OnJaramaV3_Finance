@@ -23,13 +23,9 @@ const STORAGE_KEYS_TO_CLEAR = [
 
 function cleanPersonalDataOnce() {
   const alreadyCleaned = localStorage.getItem(PRIVACY_CLEAN_VERSION);
-
   if (alreadyCleaned === "done") return;
 
-  STORAGE_KEYS_TO_CLEAR.forEach((key) => {
-    localStorage.removeItem(key);
-  });
-
+  STORAGE_KEYS_TO_CLEAR.forEach((key) => localStorage.removeItem(key));
   localStorage.setItem(PRIVACY_CLEAN_VERSION, "done");
 }
 
@@ -106,6 +102,300 @@ function isPaymentOverdue(payment) {
   if (Number.isNaN(dueDate.getTime())) return false;
 
   return dueDate.getTime() < today.getTime();
+}
+
+function getGoalRemaining(goal) {
+  return Math.max(
+    0,
+    Number(goal?.targetAmount || 0) - Number(goal?.currentAmount || 0)
+  );
+}
+
+function getPriorityDebt(debts) {
+  return [...(Array.isArray(debts) ? debts : [])]
+    .filter((debt) => Number(debt.balance || 0) > 0)
+    .sort((a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0))[0];
+}
+
+function estimateMonths(amount, monthlyAmount) {
+  const total = Number(amount || 0);
+  const monthly = Number(monthlyAmount || 0);
+
+  if (total <= 0) return 0;
+  if (monthly <= 0) return null;
+
+  return Math.max(1, Math.ceil(total / monthly));
+}
+
+function formatMonthEstimate(months) {
+  if (months === null) return "À définir";
+  if (months <= 0) return "Atteint";
+  if (months === 1) return "1 mois";
+  if (months < 12) return `${months} mois`;
+
+  const years = Math.floor(months / 12);
+  const rest = months % 12;
+
+  if (rest === 0) return `${years} an${years > 1 ? "s" : ""}`;
+  return `${years} an${years > 1 ? "s" : ""} et ${rest} mois`;
+}
+
+function estimateInterestAvoided(debt, monthlyBoost) {
+  const balance = Number(debt?.balance || 0);
+  const rate = Number(debt?.interestRate || 0) / 100;
+  const boost = Number(monthlyBoost || 0);
+
+  if (balance <= 0 || rate <= 0 || boost <= 0) return 0;
+
+  const monthlyRate = rate / 12;
+  const roughMonthsSaved = Math.min(12, Math.max(1, Math.round(boost / 75)));
+  const avoided = balance * monthlyRate * roughMonthsSaved * 0.55;
+
+  return Math.max(0, Math.round(avoided));
+}
+
+function buildSmartAllocation({ financeData, selectedGoals }) {
+  const overview = financeData?.overview || {};
+
+  const monthlyIncome = Number(overview.monthlyIncome || 0);
+  const monthlyExpenses = Number(overview.monthlyExpenses || 0);
+  const monthlySavings = Number(overview.monthlySavings || 0);
+  const monthlyAvailable = monthlyIncome - monthlyExpenses - monthlySavings;
+  const availableAmount = Math.max(0, Math.round(monthlyAvailable));
+
+  const debts = Array.isArray(financeData?.debts) ? financeData.debts : [];
+  const goals = Array.isArray(selectedGoals)
+    ? selectedGoals.filter((goal) => !goal.archived && getGoalRemaining(goal) > 0)
+    : [];
+
+  const priorityDebt = getPriorityDebt(debts);
+  const highlightedGoal = goals.find((goal) => goal.highlighted) || goals[0];
+
+  const emergencyGoal =
+    goals.find((goal) =>
+      ["securite", "liberte", "epargne"].includes(goal.category)
+    ) || null;
+
+  const travelGoal = goals.find((goal) => goal.category === "voyage") || null;
+  const houseGoal = goals.find((goal) => goal.category === "maison") || null;
+
+  const allocations = [];
+
+  function pushAllocation(label, amount, type, targetId, reason, color) {
+    const rounded = Math.max(0, Math.round(amount || 0));
+    if (rounded <= 0) return;
+
+    allocations.push({
+      id: `${type}-${targetId || label}`,
+      label,
+      amount: rounded,
+      type,
+      targetId: targetId || null,
+      reason,
+      color,
+    });
+  }
+
+  if (availableAmount > 0) {
+    let remaining = availableAmount;
+
+    if (priorityDebt) {
+      const share = Math.min(
+        remaining,
+        Math.max(50, Math.round(availableAmount * 0.6))
+      );
+
+      pushAllocation(
+        priorityDebt.name || "Dette prioritaire",
+        share,
+        "debt",
+        priorityDebt.id || priorityDebt.name,
+        "Priorité au taux d’intérêt le plus élevé.",
+        "var(--red)"
+      );
+
+      remaining -= share;
+    }
+
+    if (emergencyGoal && remaining > 0) {
+      const share = Math.min(
+        remaining,
+        Math.max(25, Math.round(availableAmount * 0.2))
+      );
+
+      pushAllocation(
+        emergencyGoal.title || "Fonds urgence",
+        share,
+        "goal",
+        emergencyGoal.id,
+        "Protéger la base avant d’accélérer.",
+        "var(--green)"
+      );
+
+      remaining -= share;
+    }
+
+    if (highlightedGoal && remaining > 0) {
+      const share = Math.min(
+        remaining,
+        Math.max(25, Math.round(availableAmount * 0.15))
+      );
+
+      pushAllocation(
+        highlightedGoal.title,
+        share,
+        "goal",
+        highlightedGoal.id,
+        "Objectif principal à maintenir actif.",
+        "var(--gold)"
+      );
+
+      remaining -= share;
+    }
+
+    const secondaryGoal =
+      travelGoal?.id !== highlightedGoal?.id
+        ? travelGoal
+        : houseGoal?.id !== highlightedGoal?.id
+          ? houseGoal
+          : goals.find(
+              (goal) =>
+                goal.id !== highlightedGoal?.id &&
+                goal.id !== emergencyGoal?.id
+            );
+
+    if (secondaryGoal && remaining > 0) {
+      pushAllocation(
+        secondaryGoal.title,
+        remaining,
+        "goal",
+        secondaryGoal.id,
+        "Avancer un projet secondaire sans disperser le plan.",
+        "var(--blue)"
+      );
+      remaining = 0;
+    }
+
+    if (!priorityDebt && !highlightedGoal && !emergencyGoal && remaining > 0) {
+      pushAllocation(
+        "Marge à organiser",
+        remaining,
+        "available",
+        null,
+        "À diriger vers un objectif ou une épargne.",
+        "var(--gold)"
+      );
+    }
+  }
+
+  const firstAllocation = allocations[0];
+  const firstAmount = Number(firstAllocation?.amount || 0);
+
+  const debtMonthsCurrent = priorityDebt
+    ? estimateMonths(priorityDebt.balance, Math.max(1, monthlySavings))
+    : null;
+
+  const debtMonthsWithAllocation =
+    priorityDebt && firstAmount > 0
+      ? estimateMonths(
+          priorityDebt.balance,
+          Math.max(1, monthlySavings + firstAmount)
+        )
+      : debtMonthsCurrent;
+
+  const monthsSaved =
+    debtMonthsCurrent !== null && debtMonthsWithAllocation !== null
+      ? Math.max(0, debtMonthsCurrent - debtMonthsWithAllocation)
+      : 0;
+
+  const interestAvoided =
+    priorityDebt && firstAmount > 0
+      ? estimateInterestAvoided(priorityDebt, firstAmount)
+      : 0;
+
+  const horizon = [];
+
+  if (priorityDebt) {
+    horizon.push({
+      label: "Aujourd’hui",
+      title: priorityDebt.name || "Dette prioritaire",
+      text: "Réduire la dette au taux le plus élevé.",
+      color: "var(--red)",
+    });
+  }
+
+  if (emergencyGoal) {
+    horizon.push({
+      label: "Ensuite",
+      title: emergencyGoal.title,
+      text: "Construire une sécurité minimale.",
+      color: "var(--green)",
+    });
+  }
+
+  if (highlightedGoal) {
+    horizon.push({
+      label: horizon.length === 0 ? "Aujourd’hui" : "Puis",
+      title: highlightedGoal.title,
+      text: "Garder l’objectif principal actif.",
+      color: "var(--gold)",
+    });
+  }
+
+  if (travelGoal && travelGoal.id !== highlightedGoal?.id) {
+    horizon.push({
+      label: "Après",
+      title: travelGoal.title,
+      text: "Préparer le projet voyage.",
+      color: "var(--blue)",
+    });
+  }
+
+  if (houseGoal && houseGoal.id !== highlightedGoal?.id) {
+    horizon.push({
+      label: "Long terme",
+      title: houseGoal.title,
+      text: "Avancer le projet maison.",
+      color: "var(--purple)",
+    });
+  }
+
+  if (horizon.length === 0) {
+    horizon.push({
+      label: "Aujourd’hui",
+      title: "Créer un objectif",
+      text: "Ajoutez une destination pour activer la stratégie.",
+      color: "var(--gold)",
+    });
+  }
+
+  return {
+    monthlyIncome,
+    monthlyExpenses,
+    monthlySavings,
+    monthlyAvailable,
+    availableAmount,
+    hasAvailableAmount: availableAmount > 0,
+    priorityDebt: priorityDebt || null,
+    highlightedGoal: highlightedGoal || null,
+    allocations,
+    impact: {
+      monthsSaved,
+      monthsSavedLabel: monthsSaved > 0 ? `${monthsSaved} mois` : "À confirmer",
+      interestAvoided,
+      interestAvoidedLabel:
+        interestAvoided > 0
+          ? `${interestAvoided.toLocaleString("fr-CA")} $`
+          : "À confirmer",
+      currentDebtEstimate: formatMonthEstimate(debtMonthsCurrent),
+      improvedDebtEstimate: formatMonthEstimate(debtMonthsWithAllocation),
+    },
+    horizon: horizon.slice(0, 5),
+    recommendation:
+      availableAmount > 0
+        ? "Répartir la marge disponible selon la priorité actuelle."
+        : "Commencer par retrouver une marge positive avant d’accélérer.",
+  };
 }
 
 function useAppState() {
@@ -194,6 +484,15 @@ function useAppState() {
               : "Excellent rythme",
     };
   }, [selectedGoals, activityHistory, scheduledPayments]);
+
+  const smartAllocationEngine = useMemo(
+    () =>
+      buildSmartAllocation({
+        financeData,
+        selectedGoals,
+      }),
+    [financeData, selectedGoals]
+  );
 
   useEffect(() => {
     localStorage.setItem("onjaramaFinanceData", JSON.stringify(financeData));
@@ -338,6 +637,7 @@ function useAppState() {
     achievedGoals,
     unseenVictories,
     disciplineScore,
+    smartAllocationEngine,
     addActivity,
     markNotificationsRead,
     clearNotifications,

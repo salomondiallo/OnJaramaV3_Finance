@@ -115,6 +115,27 @@ function MonPlan({
     currency,
   });
 
+  const smartAllocation = buildSmartAllocation({
+    monthlyAvailable,
+    monthlySavings,
+    priorityDebt,
+    goals: enrichedGoals,
+    mainGoal,
+    currency,
+  });
+
+  const allocationImpact = buildAllocationImpact({
+    priorityDebt,
+    allocation: smartAllocation,
+    currency,
+  });
+
+  const horizonSteps = buildDynamicHorizon({
+    priorityDebt,
+    goals: enrichedGoals,
+    mainGoal,
+  });
+
   const weekStats = getPeriodStats(history, 7);
   const yearStats = getPeriodStats(history, 365);
 
@@ -187,6 +208,66 @@ function MonPlan({
         >
           {nextAction.button}
         </button>
+      </section>
+
+      <section style={allocationCard}>
+        <div style={header}>
+          <Gauge color="var(--gold)" />
+          <h2>Répartition intelligente</h2>
+        </div>
+
+        <p style={muted}>
+          OnJarama propose une répartition simple selon vos dettes, votre marge et vos objectifs actifs.
+        </p>
+
+        <div style={allocationCapacityBox}>
+          <small>Disponible ce mois</small>
+          <strong>{formatMoney(smartAllocation.capacity, currency)}</strong>
+        </div>
+
+        <div style={allocationList}>
+          {smartAllocation.lines.map((line) => (
+            <AllocationLine key={line.id} line={line} currency={currency} />
+          ))}
+        </div>
+
+        <div style={impactGrid}>
+          <ImpactTile
+            label="Temps estimé gagné"
+            value={allocationImpact.timeSaved}
+            color="var(--blue)"
+          />
+          <ImpactTile
+            label="Intérêts évités"
+            value={allocationImpact.interestSaved}
+            color="var(--green)"
+          />
+        </div>
+
+        <p style={mutedSmall}>
+          Estimation simple pour guider la décision. Les montants peuvent être ajustés selon votre réalité.
+        </p>
+
+        <button onClick={() => setCurrentPage("simulateur")} style={goldButton}>
+          Tester l’impact dans le simulateur
+        </button>
+      </section>
+
+      <section style={horizonCard}>
+        <div style={header}>
+          <Route color="var(--blue)" />
+          <h2>Horizon dynamique</h2>
+        </div>
+
+        <p style={muted}>
+          L’ordre conseillé évolue selon vos priorités : réduire, protéger, puis accélérer les projets.
+        </p>
+
+        <div style={horizonList}>
+          {horizonSteps.map((step, index) => (
+            <HorizonLine key={`${step.title}-${index}`} step={step} index={index} />
+          ))}
+        </div>
       </section>
 
       <section style={scoreCard(onjaramaScore.color)}>
@@ -517,6 +598,223 @@ function MonPlan({
   );
 }
 
+function AllocationLine({ line, currency }) {
+  return (
+    <div style={{ ...allocationLine, borderColor: line.color }}>
+      <span style={{ color: line.color }}>{line.icon}</span>
+      <div style={{ flex: 1 }}>
+        <strong>{line.label}</strong>
+        <p style={mutedSmall}>{line.reason}</p>
+      </div>
+      <strong style={{ color: line.color }}>
+        {formatMoney(line.amount, currency)}
+      </strong>
+    </div>
+  );
+}
+
+function ImpactTile({ label, value, color }) {
+  return (
+    <div style={{ ...impactTile, borderColor: color }}>
+      <small>{label}</small>
+      <strong style={{ color }}>{value}</strong>
+    </div>
+  );
+}
+
+function HorizonLine({ step, index }) {
+  return (
+    <div style={{ ...horizonLine, borderColor: step.color }}>
+      <span style={{ ...horizonIndex, color: step.color, borderColor: step.color }}>
+        {index + 1}
+      </span>
+      <div>
+        <strong>{step.title}</strong>
+        <p style={mutedSmall}>{step.text}</p>
+      </div>
+    </div>
+  );
+}
+
+function buildSmartAllocation({
+  monthlyAvailable,
+  monthlySavings,
+  priorityDebt,
+  goals,
+  mainGoal,
+}) {
+  const capacity = Math.max(0, Math.round(Number(monthlyAvailable || 0) + Number(monthlySavings || 0)));
+  const activeGoals = Array.isArray(goals) ? goals.filter((goal) => goal.remaining > 0) : [];
+  const selectedGoal = mainGoal?.remaining > 0 ? mainGoal : activeGoals[0];
+
+  if (capacity <= 0) {
+    return {
+      capacity: 0,
+      lines: [
+        {
+          id: "base",
+          icon: "🛡️",
+          label: "Reprendre du souffle",
+          amount: 0,
+          color: "var(--gold)",
+          reason: "Votre marge disponible doit être clarifiée avant de répartir.",
+        },
+      ],
+    };
+  }
+
+  if (priorityDebt) {
+    const debtAmount = Math.min(Number(priorityDebt.balance || 0), roundToNearest5(capacity * 0.6));
+    const safetyAmount = roundToNearest5(capacity * 0.2);
+    const goalAmount = Math.max(0, capacity - debtAmount - safetyAmount);
+
+    return {
+      capacity,
+      lines: [
+        {
+          id: "debt",
+          icon: "💳",
+          label: priorityDebt.name || "Dette prioritaire",
+          amount: debtAmount,
+          color: "var(--red)",
+          reason: `Priorité au taux le plus élevé (${priorityDebt.interestRate || 0}%).`,
+        },
+        {
+          id: "safety",
+          icon: "🛡️",
+          label: "Fonds de sécurité",
+          amount: safetyAmount,
+          color: "var(--green)",
+          reason: "Garder une petite protection pour éviter de retourner au crédit.",
+        },
+        {
+          id: "goal",
+          icon: "🎯",
+          label: selectedGoal?.title || "Objectif principal",
+          amount: goalAmount,
+          color: "var(--gold)",
+          reason: selectedGoal
+            ? "Maintenir le projet actif pendant la réduction de dette."
+            : "Préparer le prochain objectif après la dette.",
+        },
+      ],
+    };
+  }
+
+  const safetyAmount = roundToNearest5(capacity * 0.25);
+  const goalAmount = selectedGoal ? roundToNearest5(capacity * 0.55) : 0;
+  const freedomAmount = Math.max(0, capacity - safetyAmount - goalAmount);
+
+  return {
+    capacity,
+    lines: [
+      {
+        id: "goal",
+        icon: "🎯",
+        label: selectedGoal?.title || "Objectif principal",
+        amount: goalAmount,
+        color: "var(--gold)",
+        reason: selectedGoal
+          ? "Accélérer la prochaine destination active."
+          : "Créer un objectif pour activer la répartition.",
+      },
+      {
+        id: "safety",
+        icon: "🛡️",
+        label: "Fonds de sécurité",
+        amount: safetyAmount,
+        color: "var(--green)",
+        reason: "Protéger la base avant les grosses décisions.",
+      },
+      {
+        id: "future",
+        icon: "🚀",
+        label: "Projets futurs",
+        amount: freedomAmount,
+        color: "var(--blue)",
+        reason: "Préparer voyage, maison ou liberté financière.",
+      },
+    ],
+  };
+}
+
+function buildAllocationImpact({ priorityDebt, allocation, currency }) {
+  const debtLine = allocation.lines.find((line) => line.id === "debt");
+  const debtAmount = Number(debtLine?.amount || 0);
+
+  if (!priorityDebt || debtAmount <= 0) {
+    return {
+      timeSaved: allocation.capacity > 0 ? "Cap stabilisé" : "À définir",
+      interestSaved: formatMoney(0, currency),
+    };
+  }
+
+  const balance = Number(priorityDebt.balance || 0);
+  const rate = Number(priorityDebt.interestRate || 0);
+  const basePayment = Math.max(50, Number(priorityDebt.minimumPayment || priorityDebt.monthlyPayment || 0));
+  const monthsBase = balance > 0 ? Math.ceil(balance / basePayment) : 0;
+  const monthsBoosted = balance > 0 ? Math.ceil(balance / (basePayment + debtAmount)) : 0;
+  const monthsSaved = Math.max(0, monthsBase - monthsBoosted);
+  const interestSaved = Math.max(0, Math.round(debtAmount * (rate / 100) * Math.max(1, monthsSaved) / 12));
+
+  return {
+    timeSaved: monthsSaved > 0 ? `${monthsSaved} mois` : "Impact progressif",
+    interestSaved: formatMoney(interestSaved, currency),
+  };
+}
+
+function buildDynamicHorizon({ priorityDebt, goals, mainGoal }) {
+  const activeGoals = Array.isArray(goals) ? goals.filter((goal) => goal.remaining > 0) : [];
+  const highlighted = mainGoal?.remaining > 0 ? mainGoal : activeGoals[0];
+  const nextGoal = activeGoals.find((goal) => goal.id !== highlighted?.id);
+
+  const steps = [];
+
+  if (priorityDebt) {
+    steps.push({
+      title: `Aujourd’hui → ${priorityDebt.name}`,
+      text: "Réduire la dette prioritaire avant d’accélérer les autres projets.",
+      color: "var(--red)",
+    });
+  }
+
+  steps.push({
+    title: priorityDebt ? "Ensuite → Fonds de sécurité" : "Aujourd’hui → Fonds de sécurité",
+    text: "Protéger une petite marge pour éviter de revenir au crédit.",
+    color: "var(--green)",
+  });
+
+  if (highlighted) {
+    steps.push({
+      title: `${priorityDebt ? "Puis" : "Ensuite"} → ${highlighted.title}`,
+      text: "Faire avancer l’objectif principal avec une action régulière.",
+      color: "var(--gold)",
+    });
+  }
+
+  if (nextGoal) {
+    steps.push({
+      title: `Après → ${nextGoal.title}`,
+      text: "Préparer le prochain objectif sans perdre le rythme.",
+      color: "var(--blue)",
+    });
+  }
+
+  if (steps.length < 4) {
+    steps.push({
+      title: "Enfin → Liberté financière",
+      text: "Construire une vision long terme quand la base est stable.",
+      color: "var(--purple)",
+    });
+  }
+
+  return steps.slice(0, 4);
+}
+
+function roundToNearest5(value) {
+  return Math.max(0, Math.round(Number(value || 0) / 5) * 5);
+}
+
 function getNextAction({
   priorityDebt,
   debtTotal,
@@ -817,6 +1115,92 @@ function getStartedLabel(createdAt) {
 
   return `il y a ${days} jours`;
 }
+
+const allocationCard = {
+  background:
+    "radial-gradient(circle at top right, rgba(212,175,55,.24), transparent 34%), linear-gradient(135deg, rgba(34,197,94,.10), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "24px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const allocationCapacityBox = {
+  background: "var(--bg-panel)",
+  border: "1px solid rgba(212,175,55,.45)",
+  borderRadius: "16px",
+  padding: "14px",
+  marginTop: "14px",
+  display: "grid",
+  gap: "4px",
+};
+
+const allocationList = {
+  display: "grid",
+  gap: "10px",
+  marginTop: "12px",
+};
+
+const allocationLine = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "12px",
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
+};
+
+const impactGrid = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "10px",
+  marginTop: "12px",
+};
+
+const impactTile = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "12px",
+  display: "grid",
+  gap: "6px",
+};
+
+const horizonCard = {
+  background: "linear-gradient(135deg, rgba(56,189,248,.13), var(--bg-card))",
+  border: "1px solid var(--blue)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const horizonList = {
+  display: "grid",
+  gap: "10px",
+  marginTop: "14px",
+};
+
+const horizonLine = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "12px",
+  display: "grid",
+  gridTemplateColumns: "34px 1fr",
+  gap: "10px",
+  alignItems: "center",
+};
+
+const horizonIndex = {
+  width: "30px",
+  height: "30px",
+  borderRadius: "999px",
+  border: "1px solid var(--border)",
+  display: "grid",
+  placeItems: "center",
+  fontWeight: "900",
+};
 
 const pageHead = {
   display: "flex",
