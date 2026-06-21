@@ -19,7 +19,7 @@ import { getText } from "../data/translations";
 
 const homeText = {
   FR: {
-    version: "OnJarama Path V13.3",
+    version: "OnJarama Path V14.1",
     start: "Départ",
     amountsHidden: "Chiffres masqués",
     heroSubtitle:
@@ -81,9 +81,17 @@ const homeText = {
     bankConnection: "Connexion bancaire",
     soon: "Bientôt disponible",
     assistant: "IA OnJarama",
+    closestGoalTitle: "Objetivo más cercano",
+    remaining: "restantes",
+    continueGoal: "Continuar",
+    noClosestGoal: "Ningún objetivo activo con monto objetivo.",
+    closestGoalTitle: "Objectif le plus proche",
+    remaining: "restants",
+    continueGoal: "Continuer",
+    noClosestGoal: "Aucun objectif actif avec montant cible.",
   },
   EN: {
-    version: "OnJarama Path V13.3",
+    version: "OnJarama Path V14.1",
     start: "Start",
     amountsHidden: "Amounts hidden",
     heroSubtitle:
@@ -143,9 +151,13 @@ const homeText = {
     bankConnection: "Bank connection",
     soon: "Coming soon",
     assistant: "OnJarama AI",
+    closestGoalTitle: "Closest goal",
+    remaining: "remaining",
+    continueGoal: "Continue",
+    noClosestGoal: "No active goal with a target amount.",
   },
   ES: {
-    version: "OnJarama Path V13.3",
+    version: "OnJarama Path V14.1",
     start: "Inicio",
     amountsHidden: "Montos ocultos",
     heroSubtitle:
@@ -410,6 +422,47 @@ function Accueil({
         >
           {nextVictory.button}
         </button>
+      </section>
+
+
+      <section className="accueil-headline" style={closestGoalCard}>
+        <div style={sectionHead}>
+          <Trophy size={20} color="var(--green)" />
+          <strong>{p.closestGoalTitle}</strong>
+        </div>
+
+        {closestGoal ? (
+          <>
+            <p style={softText}>
+              <strong>{closestGoal.title}</strong>
+            </p>
+
+            <p style={softText}>
+              {closestGoal.progress}% • {money(closestGoal.remaining)} {p.remaining}
+            </p>
+
+            <div style={miniBarBg}>
+              <div
+                style={{
+                  ...miniBarFill,
+                  width: `${closestGoal.progress}%`,
+                  background:
+                    closestGoal.progress >= 80 ? "var(--green)" : "var(--gold)",
+                }}
+              />
+            </div>
+
+            <button
+              onClick={() => setCurrentPage("objectifs")}
+              className="ai-action"
+              style={{ marginTop: 12 }}
+            >
+              {p.continueGoal}
+            </button>
+          </>
+        ) : (
+          <p style={softText}>{p.noClosestGoal}</p>
+        )}
       </section>
 
       <section className="accueil-headline" style={commandCenter}>
@@ -1134,6 +1187,13 @@ const premiumHero = {
 const progressFlagCard = {
   border: "1px solid rgba(212,175,55,.5)",
   background: "linear-gradient(135deg, rgba(212,175,55,.13), var(--bg-card))",
+};
+
+
+const closestGoalCard = {
+  border: "1px solid var(--green)",
+  background:
+    "radial-gradient(circle at top right, rgba(34,197,94,.22), transparent 34%), linear-gradient(135deg, rgba(34,197,94,.13), rgba(212,175,55,.08), var(--bg-card))",
 };
 
 const commandCenter = {

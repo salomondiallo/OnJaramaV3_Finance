@@ -16,7 +16,7 @@ import {
   Trophy,
   TrendingUp,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { formatMoney } from "../utils/formatters";
 
 function MonPlan({
@@ -26,26 +26,23 @@ function MonPlan({
   setCurrentPage,
   activityHistory,
   disciplineScore,
+  smartAllocationEngine,
 }) {
   const currency = settings?.currency || "CAD";
+  const language = settings?.language || "FR";
   const [nextAmount, setNextAmount] = useState("500");
 
+  const text = getPageText(language);
   const debts = Array.isArray(financeData?.debts) ? financeData.debts : [];
   const goals = Array.isArray(selectedGoals)
     ? selectedGoals.filter((goal) => !goal.archived)
     : [];
   const history = Array.isArray(activityHistory) ? activityHistory : [];
 
-  const lastActivity = history[0];
-  const lastVictory = history.find((item) => item.type === "victoire");
-
-  const firstGoal = [...goals].sort(
-    (a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0)
-  )[0];
-
-  const monthlyIncome = Number(financeData?.overview?.monthlyIncome || 0);
-  const monthlyExpenses = Number(financeData?.overview?.monthlyExpenses || 0);
-  const monthlySavings = Number(financeData?.overview?.monthlySavings || 0);
+  const overview = financeData?.overview || {};
+  const monthlyIncome = Number(overview.monthlyIncome || 0);
+  const monthlyExpenses = Number(overview.monthlyExpenses || 0);
+  const monthlySavings = Number(overview.monthlySavings || 0);
   const monthlyAvailable = monthlyIncome - monthlyExpenses - monthlySavings;
   const monthlyCapacity = Math.max(0, monthlyAvailable + monthlySavings);
 
@@ -54,24 +51,7 @@ function MonPlan({
     0
   );
 
-  const priorityDebt = [...debts]
-    .filter((debt) => Number(debt.balance || 0) > 0)
-    .sort((a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0))[0];
-
-  const totalGoalTarget = goals.reduce(
-    (sum, goal) => sum + Number(goal.targetAmount || 0),
-    0
-  );
-
-  const totalGoalCurrent = goals.reduce(
-    (sum, goal) => sum + Number(goal.currentAmount || 0),
-    0
-  );
-
-  const goalProgress =
-    totalGoalTarget > 0
-      ? Math.min(100, Math.round((totalGoalCurrent / totalGoalTarget) * 100))
-      : 0;
+  const priorityDebt = getPriorityDebt(debts);
 
   const enrichedGoals = goals.map((goal) => ({
     ...goal,
@@ -88,9 +68,26 @@ function MonPlan({
 
   const achievedGoals = enrichedGoals.filter((goal) => goal.progress >= 100);
 
+  const firstGoal = [...enrichedGoals].sort(
+    (a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0)
+  )[0];
+
+  const totalGoalTarget = enrichedGoals.reduce(
+    (sum, goal) => sum + Number(goal.targetAmount || 0),
+    0
+  );
+  const totalGoalCurrent = enrichedGoals.reduce(
+    (sum, goal) => sum + Number(goal.currentAmount || 0),
+    0
+  );
+  const goalProgress =
+    totalGoalTarget > 0
+      ? Math.min(100, Math.round((totalGoalCurrent / totalGoalTarget) * 100))
+      : 0;
+
   const disciplineValue =
     Number(disciplineScore?.score || 0) ||
-    calculateDisciplineFromHistory(history, goals);
+    calculateDisciplineFromHistory(history, enrichedGoals);
 
   const onjaramaScore = calculateOnJaramaScore({
     monthlyIncome,
@@ -102,7 +99,27 @@ function MonPlan({
     disciplineValue,
   });
 
-  const commandLevel = getCommandLevel(onjaramaScore.value, disciplineValue);
+  const commandLevel = getCommandLevel(onjaramaScore.value, disciplineValue, text);
+
+  const allocation = smartAllocationEngine?.allocations?.length
+    ? normalizeExternalAllocation(smartAllocationEngine, currency)
+    : buildSmartAllocation({
+        monthlyAvailable,
+        monthlySavings,
+        priorityDebt,
+        goals: enrichedGoals,
+        mainGoal,
+      });
+
+  const dailyAction = buildDailyAction({
+    priorityDebt,
+    mainGoal,
+    closestGoal,
+    allocation,
+    monthlyCapacity,
+    currency,
+    text,
+  });
 
   const nextAction = getNextAction({
     priorityDebt,
@@ -111,14 +128,30 @@ function MonPlan({
     closestGoal,
     achievedGoals,
     currency,
+    text,
   });
 
-  const todayActions = buildTodayActions({
+  const ninetyDayPlan = useMemo(
+    () =>
+      buildNinetyDayPlan({
+        priorityDebt,
+        goals: enrichedGoals,
+        mainGoal,
+        monthlyCapacity,
+        language,
+        text,
+      }),
+    [priorityDebt, enrichedGoals, mainGoal, monthlyCapacity, language, text]
+  );
+
+  const cap = buildCurrentCap({
     priorityDebt,
     mainGoal,
     closestGoal,
-    monthlyAvailable,
-    goals,
+    monthlyCapacity,
+    currency,
+    language,
+    text,
   });
 
   const autoProjection = buildAutoProjection({
@@ -126,27 +159,7 @@ function MonPlan({
     goals: enrichedGoals,
     monthlyCapacity,
     currency,
-  });
-
-  const forecast = buildForecast({
-    priorityDebt,
-    mainGoal,
-    monthlyAvailable,
-    monthlySavings,
-  });
-
-  const smartAllocation = buildSmartAllocation({
-    monthlyAvailable,
-    monthlySavings,
-    priorityDebt,
-    goals: enrichedGoals,
-    mainGoal,
-  });
-
-  const allocationImpact = buildAllocationImpact({
-    priorityDebt,
-    allocation: smartAllocation,
-    currency,
+    text,
   });
 
   const nextAmountValue = Number(nextAmount || 0);
@@ -162,21 +175,21 @@ function MonPlan({
     priorityDebt,
     goals: enrichedGoals,
     mainGoal,
+    text,
   });
 
   const weekStats = getPeriodStats(history, 7);
   const yearStats = getPeriodStats(history, 365);
+  const lastActivity = history[0];
+  const lastVictory = history.find((item) => item.type === "victoire");
 
   return (
     <div className="native-page">
       <div style={pageHead}>
         <div>
-          <p style={eyebrow}>OnJarama Path V12.0</p>
+          <p style={eyebrow}>OnJarama Path V14.1</p>
           <h1>Smart Plan Engine</h1>
-          <p style={muted}>
-            Mon Plan devient le cerveau financier : priorité automatique, répartition intelligente,
-            prochain montant à placer et horizon dynamique.
-          </p>
+          <p style={muted}>{text.intro}</p>
         </div>
 
         <Sparkles color="var(--gold)" />
@@ -186,35 +199,147 @@ function MonPlan({
         <div style={header}>
           <Lightbulb color="var(--gold)" />
           <div>
-            <p style={eyebrow}>Aujourd’hui</p>
-            <h2>Une action suffit</h2>
+            <p style={eyebrow}>{text.today}</p>
+            <h2>{text.dailyAction}</h2>
           </div>
         </div>
 
-        <div style={todayActionList}>
-          {todayActions.map((action) => (
-            <div key={action} style={todayActionLine}>
-              <CheckCircle size={17} color="var(--green)" />
-              <span>{action}</span>
+        <div style={dailyActionBox}>
+          <span style={{ ...dailyIcon, color: dailyAction.color }}>
+            {dailyAction.icon}
+          </span>
+          <div style={{ flex: 1 }}>
+            <strong>{dailyAction.title}</strong>
+            <p style={mutedSmall}>{dailyAction.reason}</p>
+          </div>
+          <strong style={{ color: dailyAction.color }}>
+            {formatMoney(dailyAction.amount, currency)}
+          </strong>
+        </div>
+
+        <div style={impactGrid}>
+          <ImpactTile
+            label={text.timeImpact}
+            value={dailyAction.timeImpact}
+            color="var(--blue)"
+          />
+          <ImpactTile
+            label={text.moneyImpact}
+            value={dailyAction.moneyImpact}
+            color="var(--green)"
+          />
+        </div>
+
+        <button onClick={() => setCurrentPage(dailyAction.page)} style={goldButton}>
+          {dailyAction.button}
+        </button>
+      </section>
+
+      <section style={closestGoalCard}>
+        <div style={header}>
+          <Trophy color="var(--green)" />
+          <div>
+            <p style={eyebrowGreen}>{text.closestGoal}</p>
+            <h2>{closestGoal?.title || text.noGoal}</h2>
+          </div>
+        </div>
+
+        {closestGoal ? (
+          <>
+            <div style={smartGrid}>
+              <SmallStat label={text.progress} value={`${closestGoal.progress}%`} />
+              <SmallStat
+                label={text.remaining}
+                value={formatMoney(closestGoal.remaining, currency)}
+              />
+              <SmallStat
+                label={text.estimatedDate}
+                value={estimateCompletion(
+                  closestGoal.remaining,
+                  Number(closestGoal.monthlyContribution || 0) || monthlyCapacity,
+                  language
+                )}
+              />
+            </div>
+            <MiniBar progress={closestGoal.progress} color="var(--green)" />
+            <button onClick={() => setCurrentPage("objectifs")} style={greenButton}>
+              {text.continueGoal}
+            </button>
+          </>
+        ) : (
+          <button onClick={() => setCurrentPage("objectifs")} style={goldButton}>
+            {text.createGoal}
+          </button>
+        )}
+      </section>
+
+      <section style={ninetyCard}>
+        <div style={header}>
+          <CalendarDays color="var(--blue)" />
+          <div>
+            <p style={eyebrowBlue}>{text.gps}</p>
+            <h2>{text.ninetyDays}</h2>
+          </div>
+        </div>
+
+        <div style={monthPlanList}>
+          {ninetyDayPlan.map((month) => (
+            <div key={month.label} style={monthPlanCard}>
+              <strong style={{ color: month.color }}>{month.label}</strong>
+              <div style={monthActionList}>
+                {month.actions.map((action) => (
+                  <div key={action} style={monthActionLine}>
+                    <CheckCircle size={15} color="var(--green)" />
+                    <span>{action}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>
+      </section>
 
-        <button onClick={() => setCurrentPage(nextAction.page)} style={goldButton}>
-          {nextAction.button}
-        </button>
+      <section style={capCard}>
+        <div style={header}>
+          <Compass color="var(--gold)" />
+          <div>
+            <p style={eyebrow}>{text.currentCap}</p>
+            <h2>{cap.title}</h2>
+          </div>
+        </div>
+
+        <div style={smartGrid}>
+          <SmallStat label={text.currentRhythm} value={cap.currentDate} />
+          <SmallStat label={text.acceleratedRhythm} value={cap.acceleratedDate} />
+          <SmallStat label={text.gain} value={cap.gainLabel} />
+        </div>
+
+        <p style={mutedSmall}>{cap.message}</p>
+      </section>
+
+      <section style={levelCard(commandLevel.color)}>
+        <div style={header}>
+          <Award color={commandLevel.color} />
+          <div>
+            <p style={eyebrow}>{text.onjaramaLevel}</p>
+            <h2>{commandLevel.title}</h2>
+            <p style={muted}>{commandLevel.message}</p>
+          </div>
+        </div>
+
+        <MiniBar progress={commandLevel.progress} color={commandLevel.color} />
       </section>
 
       <section style={featuredGoalCard}>
         <div style={header}>
           <Target color="var(--gold)" />
           <div>
-            <p style={eyebrow}>Objectif vedette</p>
-            <h2>{mainGoal?.title || "À définir"}</h2>
+            <p style={eyebrow}>{text.featuredGoal}</p>
+            <h2>{mainGoal?.title || text.toDefine}</h2>
             <p style={muted}>
               {mainGoal
-                ? mainGoal.option || mainGoal.categoryLabel || "Objectif actif"
-                : "Créez un objectif pour activer le GPS financier."}
+                ? mainGoal.option || mainGoal.categoryLabel || text.activeGoal
+                : text.createGoalHint}
             </p>
           </div>
         </div>
@@ -222,10 +347,10 @@ function MonPlan({
         {mainGoal ? (
           <>
             <div style={smartGrid}>
-              <SmallStat label="Progression" value={`${mainGoal.progress}%`} />
-              <SmallStat label="Reste" value={formatMoney(mainGoal.remaining, currency)} />
+              <SmallStat label={text.progress} value={`${mainGoal.progress}%`} />
+              <SmallStat label={text.remaining} value={formatMoney(mainGoal.remaining, currency)} />
               <SmallStat
-                label="Contribution"
+                label={text.contribution}
                 value={
                   Number(mainGoal.monthlyContribution || 0) > 0
                     ? formatMoney(mainGoal.monthlyContribution, currency)
@@ -234,24 +359,40 @@ function MonPlan({
               />
             </div>
             <MiniBar progress={mainGoal.progress} color="var(--gold)" />
-            <p style={mutedSmall}>
-              Prochain palier : {mainGoal.progress >= 100 ? "Victoire" : `${getNextMilestone(mainGoal.progress)} %`}
-              {mainGoal.targetDate ? ` • Date cible : ${mainGoal.targetDate}` : ""}
-            </p>
           </>
         ) : (
           <button onClick={() => setCurrentPage("objectifs")} style={goldButton}>
-            Créer un objectif
+            {text.createGoal}
           </button>
         )}
+      </section>
+
+      <section style={allocationCard}>
+        <div style={header}>
+          <Gauge color="var(--gold)" />
+          <h2>{text.smartAllocation}</h2>
+        </div>
+
+        <p style={muted}>{text.smartAllocationText}</p>
+
+        <div style={allocationCapacityBox}>
+          <small>{text.availableThisMonth}</small>
+          <strong>{formatMoney(allocation.capacity, currency)}</strong>
+        </div>
+
+        <div style={allocationList}>
+          {allocation.lines.map((line) => (
+            <AllocationLine key={line.id} line={line} currency={currency} />
+          ))}
+        </div>
       </section>
 
       <section style={projectionCard}>
         <div style={header}>
           <CalendarDays color="var(--blue)" />
           <div>
-            <p style={eyebrowBlue}>Si je continue ainsi</p>
-            <h2>Projection automatique</h2>
+            <p style={eyebrowBlue}>{text.ifContinue}</p>
+            <h2>{text.autoProjection}</h2>
           </div>
         </div>
 
@@ -267,134 +408,30 @@ function MonPlan({
         </div>
 
         <button onClick={() => setCurrentPage("simulateur")} style={blueButton}>
-          Ajuster dans le simulateur
+          {text.adjustSimulator}
         </button>
       </section>
-
-      <section style={levelCard(commandLevel.color)}>
-        <div style={header}>
-          <Award color={commandLevel.color} />
-          <div>
-            <p style={eyebrow}>Niveau OnJarama</p>
-            <h2>{commandLevel.title}</h2>
-            <p style={muted}>{commandLevel.message}</p>
-          </div>
-        </div>
-
-        <MiniBar progress={commandLevel.progress} color={commandLevel.color} />
-      </section>
-
-      <section style={nextMoveCard}>
-        <div style={header}>
-          <Target color="var(--gold)" />
-          <h2>Mon prochain mouvement</h2>
-        </div>
-
-        <p>
-          <strong>{nextAction.title}</strong>
-        </p>
-
-        <p style={muted}>{nextAction.description}</p>
-
-        {mainGoal && (
-          <div style={missionStrip}>
-            <span>🎯 Mission active</span>
-            <strong>{mainGoal.title}</strong>
-          </div>
-        )}
-
-        <button onClick={() => setCurrentPage(nextAction.page)} style={goldButton}>
-          {nextAction.button}
-        </button>
-      </section>
-
-      <section style={brainCard}>
-        <div style={header}>
-          <Compass color="var(--gold)" />
-          <h2>Résumé du plan de match</h2>
-        </div>
-
-        <p>
-          <strong>{nextAction.title}</strong>
-        </p>
-
-        <p style={muted}>{nextAction.description}</p>
-
-        <div style={decisionGrid}>
-          <DecisionLine text="Garder une action principale" ok />
-          <DecisionLine text="Éviter une nouvelle dette inutile" ok />
-          <DecisionLine
-            text={
-              monthlyAvailable >= 0
-                ? "Marge mensuelle positive"
-                : "Marge mensuelle à reprendre"
-            }
-            ok={monthlyAvailable >= 0}
-          />
-        </div>
-
-        <button onClick={() => setCurrentPage(nextAction.page)} style={goldButton}>
-          {nextAction.button}
-        </button>
-      </section>
-
-      <section style={allocationCard}>
-        <div style={header}>
-          <Gauge color="var(--gold)" />
-          <h2>Répartition intelligente</h2>
-        </div>
-
-        <p style={muted}>
-          OnJarama propose une répartition simple selon vos dettes, votre marge et vos objectifs actifs.
-        </p>
-
-        <div style={allocationCapacityBox}>
-          <small>Disponible ce mois</small>
-          <strong>{formatMoney(smartAllocation.capacity, currency)}</strong>
-        </div>
-
-        <div style={allocationList}>
-          {smartAllocation.lines.map((line) => (
-            <AllocationLine key={line.id} line={line} currency={currency} />
-          ))}
-        </div>
-
-        <div style={impactGrid}>
-          <ImpactTile label="Temps estimé gagné" value={allocationImpact.timeSaved} color="var(--blue)" />
-          <ImpactTile label="Intérêts évités" value={allocationImpact.interestSaved} color="var(--green)" />
-        </div>
-
-        <p style={mutedSmall}>
-          Estimation simple pour guider la décision. Les montants peuvent être ajustés selon votre réalité.
-        </p>
-
-        <button onClick={() => setCurrentPage("simulateur")} style={goldButton}>
-          Tester l’impact dans le simulateur
-        </button>
-      </section>
-
-
 
       <section style={nextAmountCard}>
         <div style={header}>
           <Compass color="var(--gold)" />
           <div>
-            <p style={eyebrow}>Smart Plan Engine V12</p>
-            <h2>Que faire avec mon prochain montant ?</h2>
+            <p style={eyebrow}>Smart Plan Engine V14.1</p>
+            <h2>{text.nextAmountQuestion}</h2>
           </div>
         </div>
 
-        <p style={muted}>
-          Entrez un montant disponible et OnJarama propose une répartition simple selon la priorité actuelle.
-        </p>
+        <p style={muted}>{text.nextAmountText}</p>
 
         <div style={amountInputWrap}>
           <input
             value={nextAmount}
-            onChange={(event) => setNextAmount(event.target.value.replace(/[^\d]/g, ""))}
+            onChange={(event) =>
+              setNextAmount(event.target.value.replace(/[^\d]/g, ""))
+            }
             inputMode="numeric"
             style={amountInput}
-            aria-label="Montant disponible à répartir"
+            aria-label={text.amountInputLabel}
           />
           <span style={amountSuffix}>{currency}</span>
         </div>
@@ -404,21 +441,15 @@ function MonPlan({
             <AllocationLine key={`next-${line.id}`} line={line} currency={currency} />
           ))}
         </div>
-
-        <p style={mutedSmall}>
-          Lecture V12 : priorité à la dette coûteuse, protection minimale, puis objectif actif.
-        </p>
       </section>
 
       <section style={horizonCard}>
         <div style={header}>
           <Route color="var(--blue)" />
-          <h2>Horizon dynamique</h2>
+          <h2>{text.dynamicHorizon}</h2>
         </div>
 
-        <p style={muted}>
-          L’ordre conseillé évolue selon vos priorités : réduire, protéger, puis accélérer les projets.
-        </p>
+        <p style={muted}>{text.dynamicHorizonText}</p>
 
         <div style={horizonList}>
           {horizonSteps.map((step, index) => (
@@ -430,7 +461,7 @@ function MonPlan({
       <section style={scoreCard(onjaramaScore.color)}>
         <div style={header}>
           <Gauge color={onjaramaScore.color} />
-          <h2>Score financier OnJarama</h2>
+          <h2>{text.onjaramaScore}</h2>
         </div>
 
         <div style={scoreRow}>
@@ -446,42 +477,19 @@ function MonPlan({
         <p style={muted}>{onjaramaScore.message}</p>
       </section>
 
-      <section style={calendarCard}>
-        <div style={header}>
-          <CalendarDays color="var(--blue)" />
-          <h2>Prévisions</h2>
-        </div>
-
-        <ForecastLine
-          label="Dette prioritaire"
-          value={forecast.debt}
-          color={priorityDebt ? "var(--red)" : "var(--green)"}
-        />
-        <ForecastLine label="Objectif vedette" value={forecast.goal} color="var(--gold)" />
-        <ForecastLine
-          label="Souffle mensuel"
-          value={formatMoney(monthlyAvailable, currency)}
-          color={monthlyAvailable >= 0 ? "var(--green)" : "var(--red)"}
-        />
-
-        <button onClick={() => setCurrentPage("simulateur")} style={blueButton}>
-          Tester une simulation
-        </button>
-      </section>
-
       <section style={disciplineCard}>
         <Flag color="var(--gold)" />
 
         <div style={{ flex: 1 }}>
-          <h2>Discipline OnJarama</h2>
+          <h2>{text.discipline}</h2>
           <p style={muted}>
             {firstGoal
-              ? `Vous avez commencé votre parcours ${getStartedLabel(firstGoal.createdAt)}.`
-              : "Votre parcours commence dès votre premier objectif."}
+              ? `${text.started} ${getStartedLabel(firstGoal.createdAt, language)}.`
+              : text.noStart}
           </p>
 
           <strong style={{ color: getDisciplineColor(disciplineValue) }}>
-            {disciplineValue}% • {getDisciplineLabel(disciplineValue)}
+            {disciplineValue}% • {getDisciplineLabel(disciplineValue, text)}
           </strong>
 
           <MiniBar progress={disciplineValue} color={getDisciplineColor(disciplineValue)} />
@@ -491,7 +499,7 @@ function MonPlan({
       <section style={card}>
         <div style={header}>
           <TrendingUp color="var(--gold)" />
-          <h2>Priorité automatique</h2>
+          <h2>{text.automaticPriority}</h2>
         </div>
 
         <p><strong>{nextAction.title}</strong></p>
@@ -505,12 +513,12 @@ function MonPlan({
       <section style={card}>
         <div style={header}>
           <Clock3 color="var(--blue)" />
-          <h2>Vue activité</h2>
+          <h2>{text.activityView}</h2>
         </div>
 
         <div style={periodGrid}>
-          <PeriodCard title="Cette semaine" stats={weekStats} />
-          <PeriodCard title="Cette année" stats={yearStats} />
+          <PeriodCard title={text.thisWeek} stats={weekStats} />
+          <PeriodCard title={text.thisYear} stats={yearStats} />
         </div>
       </section>
 
@@ -518,16 +526,16 @@ function MonPlan({
         <section style={card}>
           <div style={header}>
             <Clock3 color="var(--blue)" />
-            <h2>Dernière activité</h2>
+            <h2>{text.lastActivity}</h2>
           </div>
 
           <span style={typeBadge}>{labelType(lastActivity.type)}</span>
           <p><strong>{lastActivity.title}</strong></p>
           <p style={muted}>{lastActivity.message}</p>
-          <small style={mutedSmall}>{formatDate(lastActivity.createdAt)}</small>
+          <small style={mutedSmall}>{formatDate(lastActivity.createdAt, language)}</small>
 
           <button onClick={() => setCurrentPage("historique")} style={blueButton}>
-            Voir l’historique
+            {text.seeHistory}
           </button>
         </section>
       )}
@@ -537,58 +545,9 @@ function MonPlan({
           <Trophy color="var(--gold)" />
 
           <div>
-            <h2>Dernière victoire</h2>
+            <h2>{text.lastVictory}</h2>
             <p><strong>{lastVictory.title}</strong></p>
             <p style={muted}>{lastVictory.message}</p>
-          </div>
-        </section>
-      )}
-
-      {mainGoal && (
-        <section style={card}>
-          <div style={header}>
-            <Flag color="var(--gold)" />
-            <h2>Objectif vedette</h2>
-          </div>
-
-          <p><strong>{mainGoal.title}</strong></p>
-          <p style={muted}>
-            {mainGoal.categoryLabel || "Objectif"} {mainGoal.option ? `• ${mainGoal.option}` : ""}
-          </p>
-
-          <ProgressLine goal={mainGoal} currency={currency} />
-
-          {mainGoal.simulation && (
-            <div style={simulationPlanBox}>
-              <strong>Simulation retenue</strong>
-              <p style={mutedSmall}>
-                {formatMoney(mainGoal.simulation.monthlyAmount, currency)} / mois • Fin estimée : {mainGoal.simulation.estimatedEnd}
-              </p>
-            </div>
-          )}
-
-          <button onClick={() => setCurrentPage("objectifs")} style={greenButton}>
-            Gérer cet objectif
-          </button>
-        </section>
-      )}
-
-      {closestGoal && (
-        <section style={successCard}>
-          <Trophy color="var(--green)" />
-
-          <div style={{ flex: 1 }}>
-            <h2>Le plus proche d’être atteint</h2>
-            <p><strong>{closestGoal.title}</strong></p>
-            <p style={muted}>Progression : {closestGoal.progress}%</p>
-
-            {closestGoal.progress >= 100 ? (
-              <p style={victoryText}>🏆 Objectif atteint</p>
-            ) : closestGoal.progress >= 80 ? (
-              <p style={almostText}>🔥 Presque atteint</p>
-            ) : (
-              <p style={muted}>Continue doucement, le chemin est déjà tracé.</p>
-            )}
           </div>
         </section>
       )}
@@ -596,65 +555,61 @@ function MonPlan({
       <section style={card}>
         <div style={header}>
           <CreditCard color={debtTotal > 0 ? "var(--red)" : "var(--green)"} />
-          <h2>Étape 1 — Réduire les dettes</h2>
+          <h2>{text.stepDebt}</h2>
         </div>
 
         {priorityDebt ? (
           <>
-            <p>Dette prioritaire : <strong>{priorityDebt.name}</strong></p>
+            <p>{text.priorityDebt}: <strong>{priorityDebt.name}</strong></p>
             <p style={muted}>
-              Taux : {priorityDebt.interestRate}% • Solde : {formatMoney(priorityDebt.balance, currency)}
+              {text.rate}: {priorityDebt.interestRate}% • {text.balance}: {formatMoney(priorityDebt.balance, currency)}
             </p>
           </>
         ) : (
-          <p style={muted}>Aucune dette prioritaire détectée.</p>
+          <p style={muted}>{text.noPriorityDebt}</p>
         )}
 
         <strong>{formatMoney(debtTotal, currency)}</strong>
         <button onClick={() => setCurrentPage("dettes")} style={redButton}>
-          Voir mes dettes
+          {text.seeDebts}
         </button>
       </section>
 
       <section style={card}>
         <div style={header}>
           <PiggyBank color="var(--green)" />
-          <h2>Étape 2 — Protéger votre base</h2>
+          <h2>{text.stepBase}</h2>
         </div>
 
-        <p style={muted}>
-          Garder une petite épargne aide à éviter de retourner au crédit en cas d’imprévu.
-        </p>
+        <p style={muted}>{text.stepBaseText}</p>
       </section>
 
       <section style={card}>
         <div style={header}>
           <Target color="var(--gold)" />
-          <h2>Étape 3 — Avancer les objectifs</h2>
+          <h2>{text.stepGoals}</h2>
         </div>
 
-        <p><strong>{goals.length}</strong> objectifs actifs</p>
-        <p style={muted}>Progression globale : <strong>{goalProgress}%</strong></p>
+        <p><strong>{goals.length}</strong> {text.activeGoals}</p>
+        <p style={muted}>{text.globalProgress}: <strong>{goalProgress}%</strong></p>
 
         <MiniBar progress={goalProgress} color="var(--green)" />
 
         <button onClick={() => setCurrentPage("objectifs")} style={greenButton}>
-          Gérer mes objectifs
+          {text.manageGoals}
         </button>
       </section>
 
       <section style={card}>
         <div style={header}>
           <Route color="var(--blue)" />
-          <h2>Étape 4 — Suivre le parcours</h2>
+          <h2>{text.stepPath}</h2>
         </div>
 
-        <p style={muted}>
-          Le parcours vous aide à garder la discipline : une action claire à la fois.
-        </p>
+        <p style={muted}>{text.stepPathText}</p>
 
         <button onClick={() => setCurrentPage("parcours")} style={blueButton}>
-          Voir mon parcours
+          {text.seePath}
         </button>
       </section>
 
@@ -662,10 +617,8 @@ function MonPlan({
         <section style={warningCard}>
           <AlertTriangle color="var(--red)" />
           <div>
-            <h2>Rappel discipline</h2>
-            <p style={muted}>
-              Évitez d’ajouter un nouveau financement tant que la dette prioritaire reste élevée.
-            </p>
+            <h2>{text.disciplineReminder}</h2>
+            <p style={muted}>{text.disciplineReminderText}</p>
           </div>
         </section>
       )}
@@ -674,9 +627,9 @@ function MonPlan({
         <section style={successCard}>
           <Sparkles color="var(--gold)" />
           <div>
-            <h2>Victoire enregistrée</h2>
+            <h2>{text.victorySaved}</h2>
             <p style={muted}>
-              {achievedGoals.length} objectif{achievedGoals.length > 1 ? "s" : ""} atteint{achievedGoals.length > 1 ? "s" : ""}. OnJarama garde le cap.
+              {achievedGoals.length} {text.goalReached}
             </p>
           </div>
         </section>
@@ -685,14 +638,319 @@ function MonPlan({
       <section style={successCard}>
         <CheckCircle color="var(--green)" />
         <div>
-          <h2>Objectif final</h2>
-          <p style={muted}>
-            Moins de pression, plus de contrôle, et des projets personnels qui avancent réellement.
-          </p>
+          <h2>{text.finalGoal}</h2>
+          <p style={muted}>{text.finalGoalText}</p>
         </div>
       </section>
     </div>
   );
+}
+
+function getPageText(language) {
+  const texts = {
+    FR: {
+      intro:
+        "Mon Plan devient le cerveau financier : action du jour, cap actuel, plan 90 jours et priorité automatique.",
+      today: "Aujourd’hui",
+      dailyAction: "Action du jour",
+      timeImpact: "Temps estimé gagné",
+      moneyImpact: "Intérêts / effort évité",
+      closestGoal: "Objectif le plus proche",
+      noGoal: "À définir",
+      progress: "Progression",
+      remaining: "Reste",
+      estimatedDate: "Date estimée",
+      continueGoal: "Continuer",
+      createGoal: "Créer un objectif",
+      gps: "GPS financier",
+      ninetyDays: "Mon plan des 90 prochains jours",
+      currentCap: "Cap actuel",
+      currentRhythm: "Rythme actuel",
+      acceleratedRhythm: "Rythme accéléré",
+      gain: "Gain",
+      onjaramaLevel: "Niveau OnJarama",
+      featuredGoal: "Objectif vedette",
+      toDefine: "À définir",
+      activeGoal: "Objectif actif",
+      createGoalHint: "Créez un objectif pour activer le GPS financier.",
+      contribution: "Contribution",
+      smartAllocation: "Répartition intelligente",
+      smartAllocationText:
+        "OnJarama propose une répartition simple selon vos dettes, votre marge et vos objectifs actifs.",
+      availableThisMonth: "Disponible ce mois",
+      ifContinue: "Si je continue ainsi",
+      autoProjection: "Projection automatique",
+      adjustSimulator: "Ajuster dans le simulateur",
+      nextAmountQuestion: "Que faire avec mon prochain montant ?",
+      nextAmountText:
+        "Entrez un montant disponible et OnJarama propose une répartition simple selon la priorité actuelle.",
+      amountInputLabel: "Montant disponible à répartir",
+      dynamicHorizon: "Horizon dynamique",
+      dynamicHorizonText:
+        "L’ordre conseillé évolue selon vos priorités : réduire, protéger, puis accélérer les projets.",
+      onjaramaScore: "Score financier OnJarama",
+      discipline: "Discipline OnJarama",
+      started: "Vous avez commencé votre parcours",
+      noStart: "Votre parcours commence dès votre premier objectif.",
+      automaticPriority: "Priorité automatique",
+      activityView: "Vue activité",
+      thisWeek: "Cette semaine",
+      thisYear: "Cette année",
+      lastActivity: "Dernière activité",
+      seeHistory: "Voir l’historique",
+      lastVictory: "Dernière victoire",
+      stepDebt: "Étape 1 — Réduire les dettes",
+      priorityDebt: "Dette prioritaire",
+      rate: "Taux",
+      balance: "Solde",
+      noPriorityDebt: "Aucune dette prioritaire détectée.",
+      seeDebts: "Voir mes dettes",
+      stepBase: "Étape 2 — Protéger votre base",
+      stepBaseText:
+        "Garder une petite épargne aide à éviter de retourner au crédit en cas d’imprévu.",
+      stepGoals: "Étape 3 — Avancer les objectifs",
+      activeGoals: "objectifs actifs",
+      globalProgress: "Progression globale",
+      manageGoals: "Gérer mes objectifs",
+      stepPath: "Étape 4 — Suivre le parcours",
+      stepPathText:
+        "Le parcours vous aide à garder la discipline : une action claire à la fois.",
+      seePath: "Voir mon parcours",
+      disciplineReminder: "Rappel discipline",
+      disciplineReminderText:
+        "Évitez d’ajouter un nouveau financement tant que la dette prioritaire reste élevée.",
+      victorySaved: "Victoire enregistrée",
+      goalReached: "objectif(s) atteint(s). OnJarama garde le cap.",
+      finalGoal: "Objectif final",
+      finalGoalText:
+        "Moins de pression, plus de contrôle, et des projets personnels qui avancent réellement.",
+      levels: ["🌱 Départ", "🚶 En progression", "🏃 Discipline", "🔥 Momentum", "👑 Maîtrise"],
+      levelMessages: [
+        "Le parcours commence. L’objectif est simple : clarifier, choisir, agir.",
+        "La discipline se construit. Une petite action régulière vaut mieux qu’un grand effort isolé.",
+        "Le plan se stabilise. Gardez une action principale et protégez la marge.",
+        "Le rythme est solide. La priorité est de transformer la constance en résultats visibles.",
+        "La base est forte. OnJarama peut maintenant aider à accélérer les projets long terme.",
+      ],
+      actionDebt: "Réduire",
+      actionGoal: "Avancer",
+      actionCreate: "Créer votre premier objectif",
+      actionBase: "Reprendre du souffle",
+      seeGoal: "Voir mes objectifs",
+      seePlan: "Voir Mon Plan",
+      months: "mois",
+      days: "jours",
+      noGain: "À confirmer",
+    },
+    EN: {
+      intro:
+        "My Plan becomes the financial brain: daily action, current direction, 90-day plan and automatic priority.",
+      today: "Today",
+      dailyAction: "Daily action",
+      timeImpact: "Estimated time saved",
+      moneyImpact: "Interest / effort avoided",
+      closestGoal: "Closest goal",
+      noGoal: "To define",
+      progress: "Progress",
+      remaining: "Remaining",
+      estimatedDate: "Estimated date",
+      continueGoal: "Continue",
+      createGoal: "Create a goal",
+      gps: "Financial GPS",
+      ninetyDays: "My 90-day plan",
+      currentCap: "Current direction",
+      currentRhythm: "Current rhythm",
+      acceleratedRhythm: "Accelerated rhythm",
+      gain: "Gain",
+      onjaramaLevel: "OnJarama level",
+      featuredGoal: "Featured goal",
+      toDefine: "To define",
+      activeGoal: "Active goal",
+      createGoalHint: "Create a goal to activate the financial GPS.",
+      contribution: "Contribution",
+      smartAllocation: "Smart allocation",
+      smartAllocationText:
+        "OnJarama suggests a simple split based on debts, margin and active goals.",
+      availableThisMonth: "Available this month",
+      ifContinue: "If I keep going",
+      autoProjection: "Automatic projection",
+      adjustSimulator: "Adjust in simulator",
+      nextAmountQuestion: "What should I do with my next amount?",
+      nextAmountText:
+        "Enter an available amount and OnJarama suggests a simple split based on the current priority.",
+      amountInputLabel: "Available amount to allocate",
+      dynamicHorizon: "Dynamic horizon",
+      dynamicHorizonText:
+        "The recommended order evolves with your priorities: reduce, protect, then accelerate projects.",
+      onjaramaScore: "OnJarama financial score",
+      discipline: "OnJarama discipline",
+      started: "You started your path",
+      noStart: "Your path starts with your first goal.",
+      automaticPriority: "Automatic priority",
+      activityView: "Activity view",
+      thisWeek: "This week",
+      thisYear: "This year",
+      lastActivity: "Last activity",
+      seeHistory: "View history",
+      lastVictory: "Last victory",
+      stepDebt: "Step 1 — Reduce debts",
+      priorityDebt: "Priority debt",
+      rate: "Rate",
+      balance: "Balance",
+      noPriorityDebt: "No priority debt detected.",
+      seeDebts: "View my debts",
+      stepBase: "Step 2 — Protect your base",
+      stepBaseText:
+        "Keeping a small emergency base helps avoid going back to credit.",
+      stepGoals: "Step 3 — Move goals forward",
+      activeGoals: "active goals",
+      globalProgress: "Global progress",
+      manageGoals: "Manage my goals",
+      stepPath: "Step 4 — Follow the path",
+      stepPathText:
+        "The path helps keep discipline: one clear action at a time.",
+      seePath: "View my path",
+      disciplineReminder: "Discipline reminder",
+      disciplineReminderText:
+        "Avoid adding new financing while the priority debt remains high.",
+      victorySaved: "Victory saved",
+      goalReached: "goal(s) reached. OnJarama keeps the direction.",
+      finalGoal: "Final goal",
+      finalGoalText:
+        "Less pressure, more control, and personal projects that truly move forward.",
+      levels: ["🌱 Start", "🚶 Progress", "🏃 Discipline", "🔥 Momentum", "👑 Mastery"],
+      levelMessages: [
+        "The path begins. The goal is simple: clarify, choose, act.",
+        "Discipline is building. A small regular action beats one isolated big effort.",
+        "The plan is stabilizing. Keep one main action and protect margin.",
+        "The rhythm is strong. Turn consistency into visible results.",
+        "The base is strong. OnJarama can now help accelerate long-term projects.",
+      ],
+      actionDebt: "Reduce",
+      actionGoal: "Advance",
+      actionCreate: "Create your first goal",
+      actionBase: "Rebuild breathing room",
+      seeGoal: "View my goals",
+      seePlan: "View My Plan",
+      months: "months",
+      days: "days",
+      noGain: "To confirm",
+    },
+    ES: {
+      intro:
+        "Mi Plan se vuelve el cerebro financiero: acción diaria, rumbo actual, plan de 90 días y prioridad automática.",
+      today: "Hoy",
+      dailyAction: "Acción del día",
+      timeImpact: "Tiempo estimado ganado",
+      moneyImpact: "Intereses / esfuerzo evitado",
+      closestGoal: "Objetivo más cercano",
+      noGoal: "Por definir",
+      progress: "Progreso",
+      remaining: "Resta",
+      estimatedDate: "Fecha estimada",
+      continueGoal: "Continuar",
+      createGoal: "Crear un objetivo",
+      gps: "GPS financiero",
+      ninetyDays: "Mi plan de los próximos 90 días",
+      currentCap: "Rumbo actual",
+      currentRhythm: "Ritmo actual",
+      acceleratedRhythm: "Ritmo acelerado",
+      gain: "Ganancia",
+      onjaramaLevel: "Nivel OnJarama",
+      featuredGoal: "Objetivo destacado",
+      toDefine: "Por definir",
+      activeGoal: "Objetivo activo",
+      createGoalHint: "Crea un objetivo para activar el GPS financiero.",
+      contribution: "Contribución",
+      smartAllocation: "Repartición inteligente",
+      smartAllocationText:
+        "OnJarama propone una repartición simple según tus deudas, margen y objetivos activos.",
+      availableThisMonth: "Disponible este mes",
+      ifContinue: "Si sigo así",
+      autoProjection: "Proyección automática",
+      adjustSimulator: "Ajustar en el simulador",
+      nextAmountQuestion: "¿Qué hacer con mi próximo monto?",
+      nextAmountText:
+        "Ingresa un monto disponible y OnJarama propone una repartición simple según la prioridad actual.",
+      amountInputLabel: "Monto disponible a repartir",
+      dynamicHorizon: "Horizonte dinámico",
+      dynamicHorizonText:
+        "El orden recomendado evoluciona según tus prioridades: reducir, proteger y luego acelerar proyectos.",
+      onjaramaScore: "Puntaje financiero OnJarama",
+      discipline: "Disciplina OnJarama",
+      started: "Comenzaste tu recorrido",
+      noStart: "Tu recorrido comienza con tu primer objetivo.",
+      automaticPriority: "Prioridad automática",
+      activityView: "Vista actividad",
+      thisWeek: "Esta semana",
+      thisYear: "Este año",
+      lastActivity: "Última actividad",
+      seeHistory: "Ver historial",
+      lastVictory: "Última victoria",
+      stepDebt: "Etapa 1 — Reducir deudas",
+      priorityDebt: "Deuda prioritaria",
+      rate: "Tasa",
+      balance: "Saldo",
+      noPriorityDebt: "Ninguna deuda prioritaria detectada.",
+      seeDebts: "Ver mis deudas",
+      stepBase: "Etapa 2 — Proteger tu base",
+      stepBaseText:
+        "Mantener una pequeña base de ahorro ayuda a evitar volver al crédito.",
+      stepGoals: "Etapa 3 — Avanzar objetivos",
+      activeGoals: "objetivos activos",
+      globalProgress: "Progreso global",
+      manageGoals: "Gestionar mis objetivos",
+      stepPath: "Etapa 4 — Seguir el recorrido",
+      stepPathText:
+        "El recorrido ayuda a mantener disciplina: una acción clara a la vez.",
+      seePath: "Ver mi recorrido",
+      disciplineReminder: "Recordatorio disciplina",
+      disciplineReminderText:
+        "Evita agregar nuevo financiamiento mientras la deuda prioritaria siga alta.",
+      victorySaved: "Victoria registrada",
+      goalReached: "objetivo(s) alcanzado(s). OnJarama mantiene el rumbo.",
+      finalGoal: "Objetivo final",
+      finalGoalText:
+        "Menos presión, más control y proyectos personales que realmente avanzan.",
+      levels: ["🌱 Inicio", "🚶 En progreso", "🏃 Disciplina", "🔥 Momentum", "👑 Maestría"],
+      levelMessages: [
+        "El recorrido comienza. El objetivo es simple: aclarar, elegir, actuar.",
+        "La disciplina se construye. Una acción pequeña regular vale más que un gran esfuerzo aislado.",
+        "El plan se estabiliza. Mantén una acción principal y protege el margen.",
+        "El ritmo es sólido. Transforma la constancia en resultados visibles.",
+        "La base es fuerte. OnJarama puede ayudar a acelerar proyectos de largo plazo.",
+      ],
+      actionDebt: "Reducir",
+      actionGoal: "Avanzar",
+      actionCreate: "Crear tu primer objetivo",
+      actionBase: "Recuperar margen",
+      seeGoal: "Ver objetivos",
+      seePlan: "Ver Mi Plan",
+      months: "meses",
+      days: "días",
+      noGain: "Por confirmar",
+    },
+  };
+
+  return texts[language] || texts.FR;
+}
+
+function normalizeExternalAllocation(engine, currency) {
+  return {
+    capacity: Number(engine.availableAmount || 0),
+    lines: engine.allocations.map((line) => ({
+      id: line.id,
+      icon: line.type === "debt" ? "💳" : line.type === "goal" ? "🎯" : "🧭",
+      label: line.label,
+      amount: Number(line.amount || 0),
+      color: line.color || "var(--gold)",
+      reason: line.reason || "Répartition suggérée par OnJarama.",
+    })),
+    impact: engine.impact || {
+      monthsSavedLabel: "À confirmer",
+      interestAvoidedLabel: formatMoney(0, currency),
+    },
+  };
 }
 
 function AllocationLine({ line, currency }) {
@@ -731,69 +989,158 @@ function HorizonLine({ step, index }) {
   );
 }
 
-function buildTodayActions({ priorityDebt, mainGoal, closestGoal, monthlyAvailable, goals }) {
+function buildDailyAction({ priorityDebt, mainGoal, closestGoal, allocation, monthlyCapacity, currency, text }) {
+  const firstLine = allocation.lines[0];
+  const amount = Number(firstLine?.amount || 0) || Math.max(25, Math.round(monthlyCapacity * 0.25));
+
   if (priorityDebt) {
-    return [
-      `Payer ou planifier un montant vers ${priorityDebt.name}`,
-      "Ne pas ajouter de nouveau crédit aujourd’hui",
-      "Vérifier que la prochaine action reste réaliste",
-    ];
+    const balance = Number(priorityDebt.balance || 0);
+    const basePayment = Math.max(50, Number(priorityDebt.minimumPayment || priorityDebt.monthlyPayment || 0));
+    const monthsBase = balance > 0 ? Math.ceil(balance / basePayment) : 0;
+    const monthsBoosted = balance > 0 ? Math.ceil(balance / Math.max(1, basePayment + amount)) : 0;
+    const monthsSaved = Math.max(0, monthsBase - monthsBoosted);
+    const interestSaved = estimateInterestSaved(priorityDebt, amount, monthsSaved);
+
+    return {
+      icon: "💳",
+      title: `${text.actionDebt} ${priorityDebt.name}`,
+      reason: `Priorité au taux le plus élevé (${priorityDebt.interestRate || 0}%).`,
+      amount,
+      color: "var(--red)",
+      timeImpact: monthsSaved > 0 ? `${monthsSaved} ${text.months}` : text.noGain,
+      moneyImpact: interestSaved > 0 ? formatMoney(interestSaved, currency) : text.noGain,
+      button: text.seeDebts,
+      page: "dettes",
+    };
   }
 
-  if (closestGoal?.progress >= 80 && closestGoal.progress < 100) {
-    return [
-      `Faire avancer ${closestGoal.title}`,
-      "Garder le cap jusqu’à la victoire",
-      "Tester un scénario si le montant semble lourd",
-    ];
+  const goal = closestGoal?.progress >= 80 ? closestGoal : mainGoal;
+
+  if (goal) {
+    const progressGain = Number(goal.targetAmount || 0) > 0
+      ? Math.max(1, Math.round((amount / Number(goal.targetAmount || 1)) * 100))
+      : 1;
+    const currentMonths = estimateMonths(goal.remaining, Number(goal.monthlyContribution || 0) || monthlyCapacity);
+    const acceleratedMonths = estimateMonths(goal.remaining, (Number(goal.monthlyContribution || 0) || monthlyCapacity) + amount);
+    const monthsSaved = currentMonths !== null && acceleratedMonths !== null
+      ? Math.max(0, currentMonths - acceleratedMonths)
+      : 0;
+
+    return {
+      icon: "🎯",
+      title: `${text.actionGoal} ${goal.title}`,
+      reason: "Objectif actif à rapprocher de la victoire.",
+      amount,
+      color: "var(--gold)",
+      timeImpact: monthsSaved > 0 ? `${monthsSaved} ${text.months}` : `+${progressGain}%`,
+      moneyImpact: `+${progressGain}%`,
+      button: text.seeGoal,
+      page: "objectifs",
+    };
   }
 
-  if (mainGoal) {
-    return [
-      `Avancer ${mainGoal.title}`,
-      "Protéger une petite marge de sécurité",
-      "Ouvrir le parcours pour voir la prochaine étape",
-    ];
-  }
-
-  if (monthlyAvailable < 0) {
-    return [
-      "Reprendre du souffle mensuel",
-      "Identifier une dépense à réduire",
-      "Mettre la situation à jour",
-    ];
-  }
-
-  if (goals.length === 0) {
-    return [
-      "Créer un premier objectif simple",
-      "Choisir une date cible réaliste",
-      "Laisser OnJarama construire le plan",
-    ];
-  }
-
-  return [
-    "Garder une action principale",
-    "Vérifier l’objectif vedette",
-    "Continuer sans pression inutile",
-  ];
+  return {
+    icon: "🧭",
+    title: text.actionCreate,
+    reason: "Ajoutez une destination pour activer le moteur de plan.",
+    amount: 0,
+    color: "var(--gold)",
+    timeImpact: text.noGain,
+    moneyImpact: text.noGain,
+    button: text.createGoal,
+    page: "objectifs",
+  };
 }
 
-function buildAutoProjection({ priorityDebt, goals, monthlyCapacity, currency }) {
+function buildNinetyDayPlan({ priorityDebt, goals, mainGoal, monthlyCapacity, language, text }) {
+  const months = getNextMonths(3, language);
+  const activeGoals = Array.isArray(goals) ? goals.filter((goal) => goal.remaining > 0) : [];
+  const focusGoal = mainGoal?.remaining > 0 ? mainGoal : activeGoals[0];
+  const secondGoal = activeGoals.find((goal) => goal.id !== focusGoal?.id);
+
+  return months.map((label, index) => {
+    const actions = [];
+
+    if (priorityDebt && index <= 1) {
+      actions.push(`${text.actionDebt} ${priorityDebt.name}`);
+    }
+
+    if (priorityDebt && index === 2) {
+      actions.push(priorityDebt.balance <= monthlyCapacity * 3 ? `Finaliser ${priorityDebt.name}` : `${text.actionDebt} ${priorityDebt.name}`);
+    }
+
+    actions.push(index === 0 ? text.stepBase.replace("Étape 2 — ", "") : "Fonds de sécurité");
+
+    if (focusGoal && index >= 1) {
+      actions.push(`${text.actionGoal} ${focusGoal.title}`);
+    }
+
+    if (secondGoal && index === 2) {
+      actions.push(`${text.actionGoal} ${secondGoal.title}`);
+    }
+
+    if (actions.length === 0) actions.push(text.actionCreate);
+
+    return {
+      label,
+      actions: [...new Set(actions)].slice(0, 3),
+      color: index === 0 ? "var(--gold)" : index === 1 ? "var(--blue)" : "var(--green)",
+    };
+  });
+}
+
+function buildCurrentCap({ priorityDebt, mainGoal, closestGoal, monthlyCapacity, currency, language, text }) {
+  const target = priorityDebt || closestGoal || mainGoal;
+
+  if (!target) {
+    return {
+      title: text.noGoal,
+      currentDate: text.noGain,
+      acceleratedDate: text.noGain,
+      gainLabel: text.noGain,
+      message: "Ajoutez un objectif ou une dette pour calculer le cap actuel.",
+    };
+  }
+
+  const amount = priorityDebt ? Number(priorityDebt.balance || 0) : Number(target.remaining || 0);
+  const currentMonthly = Math.max(1, monthlyCapacity || Number(target.monthlyContribution || 0));
+  const acceleratedMonthly = Math.max(currentMonthly + 1, Math.round(currentMonthly * 1.35));
+  const currentMonths = estimateMonths(amount, currentMonthly);
+  const acceleratedMonths = estimateMonths(amount, acceleratedMonthly);
+  const gain = currentMonths !== null && acceleratedMonths !== null
+    ? Math.max(0, currentMonths - acceleratedMonths)
+    : 0;
+
+  return {
+    title: priorityDebt ? priorityDebt.name : target.title,
+    currentDate: estimateCompletion(amount, currentMonthly, language),
+    acceleratedDate: estimateCompletion(amount, acceleratedMonthly, language),
+    gainLabel: gain > 0 ? `${gain} ${text.months}` : text.noGain,
+    message: `Hypothèse simple : rythme accéléré à +35 %. Montant suivi : ${formatMoney(amount, currency)}.`,
+  };
+}
+
+function getPriorityDebt(debts) {
+  return [...(Array.isArray(debts) ? debts : [])]
+    .filter((debt) => Number(debt.balance || 0) > 0)
+    .sort((a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0))[0];
+}
+
+function buildAutoProjection({ priorityDebt, goals, monthlyCapacity, currency, text }) {
   const lines = [];
 
   if (priorityDebt) {
     lines.push({
       id: "debt",
-      label: priorityDebt.name || "Dette prioritaire",
+      label: priorityDebt.name || text.priorityDebt,
       value: estimateCompletion(priorityDebt.balance, monthlyCapacity),
       color: "var(--red)",
     });
   } else {
     lines.push({
       id: "debt",
-      label: "Dette prioritaire",
-      value: "Aucune dette prioritaire",
+      label: text.priorityDebt,
+      value: text.noPriorityDebt,
       color: "var(--green)",
     });
   }
@@ -807,7 +1154,10 @@ function buildAutoProjection({ priorityDebt, goals, monthlyCapacity, currency })
     lines.push({
       id: goal.id,
       label: goal.title,
-      value: estimateCompletion(goal.remaining, monthlyCapacity || Number(goal.monthlyContribution || 0)),
+      value: estimateCompletion(
+        goal.remaining,
+        monthlyCapacity || Number(goal.monthlyContribution || 0)
+      ),
       color: goal.highlighted ? "var(--gold)" : "var(--blue)",
     });
   });
@@ -815,7 +1165,7 @@ function buildAutoProjection({ priorityDebt, goals, monthlyCapacity, currency })
   if (lines.length === 1) {
     lines.push({
       id: "capacity",
-      label: "Capacité mensuelle",
+      label: text.availableThisMonth,
       value: formatMoney(monthlyCapacity, currency),
       color: monthlyCapacity > 0 ? "var(--green)" : "var(--gold)",
     });
@@ -824,61 +1174,22 @@ function buildAutoProjection({ priorityDebt, goals, monthlyCapacity, currency })
   return lines;
 }
 
-function getCommandLevel(score, disciplineValue) {
+function getCommandLevel(score, disciplineValue, text) {
   const average = Math.round((Number(score || 0) + Number(disciplineValue || 0)) / 2);
-
-  if (average >= 85) {
-    return {
-      title: "Niveau 5 — Liberté",
-      message: "La base est forte. OnJarama peut maintenant aider à accélérer les projets long terme.",
-      color: "var(--green)",
-      progress: average,
-    };
-  }
-
-  if (average >= 70) {
-    return {
-      title: "Niveau 4 — Accélération",
-      message: "Le rythme est solide. La priorité est de transformer la constance en résultats visibles.",
-      color: "var(--blue)",
-      progress: average,
-    };
-  }
-
-  if (average >= 55) {
-    return {
-      title: "Niveau 3 — Stabilisation",
-      message: "Le plan se stabilise. Gardez une action principale et protégez la marge.",
-      color: "var(--gold)",
-      progress: average,
-    };
-  }
-
-  if (average >= 35) {
-    return {
-      title: "Niveau 2 — Discipline",
-      message: "La discipline se construit. Une petite action régulière vaut mieux qu’un grand effort isolé.",
-      color: "var(--purple)",
-      progress: average,
-    };
-  }
+  const index = average >= 85 ? 4 : average >= 70 ? 3 : average >= 55 ? 2 : average >= 35 ? 1 : 0;
+  const colors = ["var(--red)", "var(--purple)", "var(--gold)", "var(--blue)", "var(--green)"];
 
   return {
-    title: "Niveau 1 — Départ",
-    message: "Le parcours commence. L’objectif est simple : clarifier, choisir, agir.",
-    color: "var(--red)",
+    title: text.levels[index],
+    message: text.levelMessages[index],
+    color: colors[index],
     progress: average,
   };
 }
 
 function buildSmartAllocation({ monthlyAvailable, monthlySavings, priorityDebt, goals, mainGoal }) {
-  const capacity = Math.max(
-    0,
-    Math.round(Number(monthlyAvailable || 0) + Number(monthlySavings || 0))
-  );
-  const activeGoals = Array.isArray(goals)
-    ? goals.filter((goal) => goal.remaining > 0)
-    : [];
+  const capacity = Math.max(0, Math.round(Number(monthlyAvailable || 0) + Number(monthlySavings || 0)));
+  const activeGoals = Array.isArray(goals) ? goals.filter((goal) => goal.remaining > 0) : [];
   const selectedGoal = mainGoal?.remaining > 0 ? mainGoal : activeGoals[0];
 
   if (capacity <= 0) {
@@ -898,10 +1209,7 @@ function buildSmartAllocation({ monthlyAvailable, monthlySavings, priorityDebt, 
   }
 
   if (priorityDebt) {
-    const debtAmount = Math.min(
-      Number(priorityDebt.balance || 0),
-      roundToNearest5(capacity * 0.6)
-    );
+    const debtAmount = Math.min(Number(priorityDebt.balance || 0), roundToNearest5(capacity * 0.6));
     const safetyAmount = roundToNearest5(capacity * 0.2);
     const goalAmount = Math.max(0, capacity - debtAmount - safetyAmount);
 
@@ -940,7 +1248,7 @@ function buildSmartAllocation({ monthlyAvailable, monthlySavings, priorityDebt, 
 
   const safetyAmount = roundToNearest5(capacity * 0.25);
   const goalAmount = selectedGoal ? roundToNearest5(capacity * 0.55) : 0;
-  const freedomAmount = Math.max(0, capacity - safetyAmount - goalAmount);
+  const futureAmount = Math.max(0, capacity - safetyAmount - goalAmount);
 
   return {
     capacity,
@@ -951,9 +1259,7 @@ function buildSmartAllocation({ monthlyAvailable, monthlySavings, priorityDebt, 
         label: selectedGoal?.title || "Objectif vedette",
         amount: goalAmount,
         color: "var(--gold)",
-        reason: selectedGoal
-          ? "Accélérer la prochaine destination active."
-          : "Créer un objectif pour activer la répartition.",
+        reason: selectedGoal ? "Accélérer la destination active." : "Créer un objectif pour activer la répartition.",
       },
       {
         id: "safety",
@@ -967,7 +1273,7 @@ function buildSmartAllocation({ monthlyAvailable, monthlySavings, priorityDebt, 
         id: "future",
         icon: "🚀",
         label: "Projets futurs",
-        amount: freedomAmount,
+        amount: futureAmount,
         color: "var(--blue)",
         reason: "Préparer voyage, maison ou liberté financière.",
       },
@@ -975,58 +1281,22 @@ function buildSmartAllocation({ monthlyAvailable, monthlySavings, priorityDebt, 
   };
 }
 
-function buildAllocationImpact({ priorityDebt, allocation, currency }) {
-  const debtLine = allocation.lines.find((line) => line.id === "debt");
-  const debtAmount = Number(debtLine?.amount || 0);
-
-  if (!priorityDebt || debtAmount <= 0) {
-    return {
-      timeSaved: allocation.capacity > 0 ? "Cap stabilisé" : "À définir",
-      interestSaved: formatMoney(0, currency),
-    };
-  }
-
-  const balance = Number(priorityDebt.balance || 0);
-  const rate = Number(priorityDebt.interestRate || 0);
-  const basePayment = Math.max(
-    50,
-    Number(priorityDebt.minimumPayment || priorityDebt.monthlyPayment || 0)
-  );
-  const monthsBase = balance > 0 ? Math.ceil(balance / basePayment) : 0;
-  const monthsBoosted = balance > 0 ? Math.ceil(balance / (basePayment + debtAmount)) : 0;
-  const monthsSaved = Math.max(0, monthsBase - monthsBoosted);
-  const interestSaved = Math.max(
-    0,
-    Math.round((debtAmount * (rate / 100) * Math.max(1, monthsSaved)) / 12)
-  );
-
-  return {
-    timeSaved: monthsSaved > 0 ? `${monthsSaved} mois` : "Impact progressif",
-    interestSaved: formatMoney(interestSaved, currency),
-  };
-}
-
-function buildDynamicHorizon({ priorityDebt, goals, mainGoal }) {
-  const activeGoals = Array.isArray(goals)
-    ? goals.filter((goal) => goal.remaining > 0)
-    : [];
+function buildDynamicHorizon({ priorityDebt, goals, mainGoal, text }) {
+  const activeGoals = Array.isArray(goals) ? goals.filter((goal) => goal.remaining > 0) : [];
   const highlighted = mainGoal?.remaining > 0 ? mainGoal : activeGoals[0];
   const nextGoal = activeGoals.find((goal) => goal.id !== highlighted?.id);
-
   const steps = [];
 
   if (priorityDebt) {
     steps.push({
-      title: `Aujourd’hui → ${priorityDebt.name}`,
+      title: `${text.today} → ${priorityDebt.name}`,
       text: "Réduire la dette prioritaire avant d’accélérer les autres projets.",
       color: "var(--red)",
     });
   }
 
   steps.push({
-    title: priorityDebt
-      ? "Ensuite → Fonds de sécurité"
-      : "Aujourd’hui → Fonds de sécurité",
+    title: priorityDebt ? "Ensuite → Fonds de sécurité" : `${text.today} → Fonds de sécurité`,
     text: "Protéger une petite marge pour éviter de revenir au crédit.",
     color: "var(--green)",
   });
@@ -1058,25 +1328,21 @@ function buildDynamicHorizon({ priorityDebt, goals, mainGoal }) {
   return steps.slice(0, 4);
 }
 
-function roundToNearest5(value) {
-  return Math.max(0, Math.round(Number(value || 0) / 5) * 5);
-}
-
-function getNextAction({ priorityDebt, debtTotal, mainGoal, closestGoal, achievedGoals, currency }) {
+function getNextAction({ priorityDebt, debtTotal, mainGoal, closestGoal, achievedGoals, currency, text }) {
   if (closestGoal && closestGoal.progress >= 95 && closestGoal.progress < 100) {
     return {
       title: `Finaliser ${closestGoal.title}`,
       description: "Cet objectif est presque terminé. OnJarama recommande de le finaliser avant de revenir à la prochaine priorité.",
-      button: "Voir mes objectifs",
+      button: text.seeGoal,
       page: "objectifs",
     };
   }
 
   if (priorityDebt) {
     return {
-      title: `Réduire ${priorityDebt.name}`,
-      description: `Cette dette a le taux le plus élevé (${priorityDebt.interestRate}%). Solde : ${formatMoney(priorityDebt.balance, currency)}.`,
-      button: "Voir mes dettes",
+      title: `${text.actionDebt} ${priorityDebt.name}`,
+      description: `Cette dette a le taux le plus élevé (${priorityDebt.interestRate || 0}%). Solde : ${formatMoney(priorityDebt.balance, currency)}.`,
+      button: text.seeDebts,
       page: "dettes",
     };
   }
@@ -1085,16 +1351,16 @@ function getNextAction({ priorityDebt, debtTotal, mainGoal, closestGoal, achieve
     return {
       title: `Finaliser ${closestGoal.title}`,
       description: "Cet objectif est presque atteint. Un petit effort ciblé peut créer une vraie victoire.",
-      button: "Voir mes objectifs",
+      button: text.seeGoal,
       page: "objectifs",
     };
   }
 
   if (mainGoal) {
     return {
-      title: `Avancer ${mainGoal.title}`,
+      title: `${text.actionGoal} ${mainGoal.title}`,
       description: "Votre objectif vedette est identifié. Gardez le rythme sans vous disperser.",
-      button: "Continuer l’objectif",
+      button: text.seeGoal,
       page: "objectifs",
     };
   }
@@ -1103,15 +1369,15 @@ function getNextAction({ priorityDebt, debtTotal, mainGoal, closestGoal, achieve
     return {
       title: "Consolider vos victoires",
       description: "Vous avez déjà atteint un objectif. La prochaine étape est de choisir un nouveau cap.",
-      button: "Choisir un nouveau cap",
+      button: text.createGoal,
       page: "objectifs",
     };
   }
 
   return {
-    title: "Créer votre premier objectif",
+    title: text.actionCreate,
     description: "Ajoutez un objectif pour que Mon Plan puisse construire une priorité automatique.",
-    button: "Créer un objectif",
+    button: text.createGoal,
     page: "objectifs",
   };
 }
@@ -1158,43 +1424,56 @@ function calculateOnJaramaScore({ monthlyIncome, monthlyAvailable, monthlySaving
   };
 }
 
-function buildForecast({ priorityDebt, mainGoal, monthlyAvailable, monthlySavings }) {
-  const monthlyCapacity = Math.max(0, monthlyAvailable + monthlySavings);
-
-  return {
-    debt: priorityDebt
-      ? estimateCompletion(priorityDebt.balance, monthlyCapacity)
-      : "Aucune dette prioritaire",
-    goal: mainGoal
-      ? estimateCompletion(getGoalRemaining(mainGoal), monthlyCapacity || Number(mainGoal.monthlyContribution || 0))
-      : "Aucun objectif vedette",
-  };
-}
-
-function estimateCompletion(amount, monthlyCapacity) {
+function estimateCompletion(amount, monthlyCapacity, language = "FR") {
   const remaining = Number(amount || 0);
+  const monthly = Number(monthlyCapacity || 0);
 
-  if (remaining <= 0) return "Atteint";
-  if (monthlyCapacity <= 0) return "À définir";
+  if (remaining <= 0) return language === "EN" ? "Reached" : language === "ES" ? "Alcanzado" : "Atteint";
+  if (monthly <= 0) return language === "EN" ? "To define" : language === "ES" ? "Por definir" : "À définir";
 
-  const months = Math.max(1, Math.ceil(remaining / monthlyCapacity));
+  const months = Math.max(1, Math.ceil(remaining / monthly));
   const date = new Date();
   date.setMonth(date.getMonth() + months);
 
-  return date.toLocaleDateString("fr-CA", {
+  return date.toLocaleDateString(language === "EN" ? "en-CA" : language === "ES" ? "es-CA" : "fr-CA", {
     year: "numeric",
     month: "short",
+  });
+}
+
+function estimateMonths(amount, monthlyAmount) {
+  const total = Number(amount || 0);
+  const monthly = Number(monthlyAmount || 0);
+
+  if (total <= 0) return 0;
+  if (monthly <= 0) return null;
+
+  return Math.max(1, Math.ceil(total / monthly));
+}
+
+function estimateInterestSaved(debt, amount, monthsSaved) {
+  const rate = Number(debt?.interestRate || 0) / 100;
+  const boost = Number(amount || 0);
+
+  if (rate <= 0 || boost <= 0 || monthsSaved <= 0) return 0;
+
+  return Math.max(0, Math.round((boost * rate * monthsSaved) / 12));
+}
+
+function getNextMonths(count, language = "FR") {
+  const locale = language === "EN" ? "en-CA" : language === "ES" ? "es-CA" : "fr-CA";
+  const now = new Date();
+
+  return Array.from({ length: count }, (_, index) => {
+    const date = new Date(now.getFullYear(), now.getMonth() + index, 1);
+    return date.toLocaleDateString(locale, { month: "long" });
   });
 }
 
 function getPeriodStats(history, daysBack) {
   const now = Date.now();
   const since = now - daysBack * 24 * 60 * 60 * 1000;
-
-  const items = history.filter((item) => {
-    const time = new Date(item.createdAt || 0).getTime();
-    return time >= since;
-  });
+  const items = history.filter((item) => new Date(item.createdAt || 0).getTime() >= since);
 
   return {
     total: items.length,
@@ -1214,35 +1493,12 @@ function PeriodCard({ title, stats }) {
   );
 }
 
-function DecisionLine({ text, ok }) {
-  return (
-    <div style={{ ...decisionLine, borderColor: ok ? "var(--green)" : "var(--red)" }}>
-      <span>{ok ? "✅" : "⚠️"}</span>
-      <small>{text}</small>
-    </div>
-  );
-}
-
 function ForecastLine({ label, value, color }) {
   return (
     <div style={forecastLine}>
       <span>{label}</span>
       <strong style={{ color }}>{value}</strong>
     </div>
-  );
-}
-
-function ProgressLine({ goal, currency }) {
-  const progress = getGoalProgress(goal);
-
-  return (
-    <>
-      <p style={muted}>
-        {formatMoney(goal.currentAmount, currency)} / {formatMoney(goal.targetAmount, currency)}
-      </p>
-      <MiniBar progress={progress} color="var(--green)" />
-      <p style={muted}>Progression : {progress}%</p>
-    </>
   );
 }
 
@@ -1266,19 +1522,20 @@ function SmallStat({ label, value }) {
 }
 
 function getGoalProgress(goal) {
+  if (Array.isArray(goal?.pathSteps) && goal.pathSteps.length > 0) {
+    const done = goal.pathSteps.filter((step) => step.done).length;
+    return Math.round((done / goal.pathSteps.length) * 100);
+  }
+
   const target = Number(goal?.targetAmount || 0);
   const current = Number(goal?.currentAmount || 0);
 
   if (target <= 0) return 0;
-
   return Math.min(100, Math.round((current / target) * 100));
 }
 
 function getGoalRemaining(goal) {
-  return Math.max(
-    0,
-    Number(goal?.targetAmount || 0) - Number(goal?.currentAmount || 0)
-  );
+  return Math.max(0, Number(goal?.targetAmount || 0) - Number(goal?.currentAmount || 0));
 }
 
 function calculateDisciplineFromHistory(history, goals) {
@@ -1299,11 +1556,11 @@ function getDisciplineColor(score) {
   return "var(--green)";
 }
 
-function getDisciplineLabel(score) {
-  if (score <= 25) return "Départ";
-  if (score <= 50) return "En mouvement";
-  if (score <= 75) return "Régulier";
-  return "Solide";
+function getDisciplineLabel(score, text) {
+  if (score <= 25) return text.levels[0].replace(/^\S+\s/, "");
+  if (score <= 50) return text.levels[1].replace(/^\S+\s/, "");
+  if (score <= 75) return text.levels[2].replace(/^\S+\s/, "");
+  return text.levels[4].replace(/^\S+\s/, "");
 }
 
 function labelType(type) {
@@ -1318,41 +1575,36 @@ function labelType(type) {
   return labels[type] || "Action";
 }
 
-function formatDate(value) {
+function formatDate(value, language = "FR") {
   if (!value) return "Date inconnue";
 
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Date inconnue";
 
-  return date.toLocaleString("fr-CA", {
+  return date.toLocaleString(language === "EN" ? "en-CA" : language === "ES" ? "es-CA" : "fr-CA", {
     dateStyle: "medium",
     timeStyle: "short",
   });
 }
 
-function getStartedLabel(createdAt) {
-  if (!createdAt) return "aujourd’hui";
+function getStartedLabel(createdAt, language = "FR") {
+  if (!createdAt) return language === "EN" ? "today" : language === "ES" ? "hoy" : "aujourd’hui";
 
   const start = new Date(createdAt);
   const now = new Date();
 
-  if (Number.isNaN(start.getTime())) return "aujourd’hui";
+  if (Number.isNaN(start.getTime())) return language === "EN" ? "today" : language === "ES" ? "hoy" : "aujourd’hui";
 
-  const diffMs = now.getTime() - start.getTime();
-  const days = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+  const days = Math.max(0, Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
 
-  if (days === 0) return "aujourd’hui";
-  if (days === 1) return "il y a 1 jour";
+  if (days === 0) return language === "EN" ? "today" : language === "ES" ? "hoy" : "aujourd’hui";
+  if (days === 1) return language === "EN" ? "1 day ago" : language === "ES" ? "hace 1 día" : "il y a 1 jour";
 
-  return `il y a ${days} jours`;
+  return language === "EN" ? `${days} days ago` : language === "ES" ? `hace ${days} días` : `il y a ${days} jours`;
 }
 
-function getNextMilestone(progress) {
-  if (progress < 25) return 25;
-  if (progress < 50) return 50;
-  if (progress < 75) return 75;
-  if (progress < 100) return 100;
-  return 100;
+function roundToNearest5(value) {
+  return Math.max(0, Math.round(Number(value || 0) / 5) * 5);
 }
 
 const pageHead = {
@@ -1371,10 +1623,8 @@ const eyebrow = {
   textTransform: "uppercase",
 };
 
-const eyebrowBlue = {
-  ...eyebrow,
-  color: "var(--blue)",
-};
+const eyebrowBlue = { ...eyebrow, color: "var(--blue)" };
+const eyebrowGreen = { ...eyebrow, color: "var(--green)" };
 
 const card = {
   background: "var(--bg-card)",
@@ -1394,20 +1644,76 @@ const todayCommandCard = {
   boxShadow: "0 0 24px rgba(212,175,55,.12)",
 };
 
-const todayActionList = {
+const dailyActionBox = {
+  background: "var(--bg-panel)",
+  border: "1px solid rgba(212,175,55,.45)",
+  borderRadius: "18px",
+  padding: "14px",
+  display: "flex",
+  alignItems: "center",
+  gap: "12px",
+};
+
+const dailyIcon = {
+  width: "36px",
+  height: "36px",
+  borderRadius: "999px",
+  background: "var(--bg-main)",
   display: "grid",
-  gap: "9px",
+  placeItems: "center",
+  fontSize: "20px",
+};
+
+const closestGoalCard = {
+  background:
+    "radial-gradient(circle at top right, rgba(34,197,94,.22), transparent 34%), linear-gradient(135deg, rgba(34,197,94,.14), rgba(212,175,55,.08), var(--bg-card))",
+  border: "1px solid var(--green)",
+  borderRadius: "24px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const ninetyCard = {
+  background: "linear-gradient(135deg, rgba(56,189,248,.13), var(--bg-card))",
+  border: "1px solid var(--blue)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const monthPlanList = {
+  display: "grid",
+  gap: "10px",
   marginTop: "14px",
 };
 
-const todayActionLine = {
+const monthPlanCard = {
   background: "var(--bg-panel)",
   border: "1px solid var(--border)",
-  borderRadius: "14px",
-  padding: "11px",
+  borderRadius: "16px",
+  padding: "13px",
+};
+
+const monthActionList = {
+  display: "grid",
+  gap: "7px",
+  marginTop: "10px",
+};
+
+const monthActionLine = {
   display: "flex",
+  gap: "8px",
   alignItems: "center",
-  gap: "9px",
+  color: "var(--text-main)",
+};
+
+const capCard = {
+  background:
+    "radial-gradient(circle at top right, rgba(212,175,55,.22), transparent 34%), linear-gradient(135deg, rgba(139,92,246,.12), rgba(212,175,55,.08), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "24px",
+  padding: "20px",
+  marginTop: "20px",
 };
 
 const featuredGoalCard = {
@@ -1427,10 +1733,7 @@ const projectionCard = {
   marginTop: "20px",
 };
 
-const projectionList = {
-  display: "grid",
-  gap: "8px",
-};
+const projectionList = { display: "grid", gap: "8px" };
 
 const levelCard = (color) => ({
   background:
@@ -1446,34 +1749,6 @@ const smartGrid = {
   gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
   gap: "10px",
   marginTop: "14px",
-};
-
-const nextMoveCard = {
-  background:
-    "radial-gradient(circle at top right, rgba(212,175,55,.20), transparent 34%), linear-gradient(135deg, rgba(212,175,55,.14), var(--bg-card))",
-  border: "1px solid var(--gold)",
-  borderRadius: "24px",
-  padding: "20px",
-  marginTop: "20px",
-};
-
-const missionStrip = {
-  marginTop: "14px",
-  background: "var(--bg-panel)",
-  border: "1px solid rgba(212,175,55,.45)",
-  borderRadius: "16px",
-  padding: "12px",
-  display: "grid",
-  gap: "4px",
-};
-
-const brainCard = {
-  background:
-    "radial-gradient(circle at top right, rgba(212,175,55,.22), transparent 34%), linear-gradient(135deg, rgba(56,189,248,.10), var(--bg-card))",
-  border: "1px solid var(--gold)",
-  borderRadius: "24px",
-  padding: "20px",
-  marginTop: "20px",
 };
 
 const allocationCard = {
@@ -1495,11 +1770,7 @@ const allocationCapacityBox = {
   gap: "4px",
 };
 
-const allocationList = {
-  display: "grid",
-  gap: "10px",
-  marginTop: "12px",
-};
+const allocationList = { display: "grid", gap: "10px", marginTop: "12px" };
 
 const allocationLine = {
   background: "var(--bg-panel)",
@@ -1526,7 +1797,6 @@ const impactTile = {
   display: "grid",
   gap: "6px",
 };
-
 
 const nextAmountCard = {
   background:
@@ -1560,10 +1830,7 @@ const amountInput = {
   fontWeight: "900",
 };
 
-const amountSuffix = {
-  color: "var(--gold)",
-  fontWeight: "900",
-};
+const amountSuffix = { color: "var(--gold)", fontWeight: "900" };
 
 const horizonCard = {
   background: "linear-gradient(135deg, rgba(56,189,248,.13), var(--bg-card))",
@@ -1573,11 +1840,7 @@ const horizonCard = {
   marginTop: "20px",
 };
 
-const horizonList = {
-  display: "grid",
-  gap: "10px",
-  marginTop: "14px",
-};
+const horizonList = { display: "grid", gap: "10px", marginTop: "14px" };
 
 const horizonLine = {
   background: "var(--bg-panel)",
@@ -1607,14 +1870,6 @@ const scoreCard = (color) => ({
   padding: "20px",
   marginTop: "20px",
 });
-
-const calendarCard = {
-  background: "linear-gradient(135deg, rgba(56,189,248,.12), var(--bg-card))",
-  border: "1px solid var(--blue)",
-  borderRadius: "22px",
-  padding: "20px",
-  marginTop: "20px",
-};
 
 const disciplineCard = {
   background: "linear-gradient(135deg, rgba(212,175,55,.14), var(--bg-card))",
@@ -1663,14 +1918,6 @@ const header = {
   marginBottom: "12px",
 };
 
-const simulationPlanBox = {
-  marginTop: "12px",
-  background: "rgba(56,189,248,.10)",
-  border: "1px solid rgba(56,189,248,.40)",
-  borderRadius: "14px",
-  padding: "12px",
-};
-
 const scoreRow = {
   display: "flex",
   justifyContent: "space-between",
@@ -1678,10 +1925,7 @@ const scoreRow = {
   gap: "12px",
 };
 
-const scoreValue = {
-  fontSize: "42px",
-  lineHeight: 1,
-};
+const scoreValue = { fontSize: "42px", lineHeight: 1 };
 
 const scoreBadge = {
   border: "1px solid var(--gold)",
@@ -1689,22 +1933,6 @@ const scoreBadge = {
   padding: "7px 10px",
   fontSize: "12px",
   fontWeight: "900",
-};
-
-const decisionGrid = {
-  display: "grid",
-  gap: "8px",
-  marginTop: "14px",
-};
-
-const decisionLine = {
-  background: "var(--bg-panel)",
-  border: "1px solid var(--border)",
-  borderRadius: "13px",
-  padding: "10px",
-  display: "flex",
-  gap: "8px",
-  alignItems: "center",
 };
 
 const forecastLine = {
@@ -1749,10 +1977,7 @@ const barBg = {
   overflow: "hidden",
 };
 
-const barFill = {
-  height: "100%",
-  borderRadius: "999px",
-};
+const barFill = { height: "100%", borderRadius: "999px" };
 
 const typeBadge = {
   display: "inline-block",
@@ -1810,22 +2035,7 @@ const redButton = {
   fontWeight: "bold",
 };
 
-const almostText = {
-  color: "var(--gold)",
-  fontWeight: "bold",
-  marginTop: "8px",
-};
-
-const victoryText = {
-  color: "var(--green)",
-  fontWeight: "bold",
-  marginTop: "8px",
-};
-
-const muted = {
-  color: "var(--text-muted)",
-  marginTop: "8px",
-};
+const muted = { color: "var(--text-muted)", marginTop: "8px" };
 
 const mutedSmall = {
   color: "var(--text-muted)",
