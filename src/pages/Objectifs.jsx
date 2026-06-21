@@ -1,8 +1,10 @@
 import { useMemo } from "react";
 import {
+  AlertTriangle,
   Car,
   CheckCircle,
   ChevronRight,
+  Clock3,
   CreditCard,
   Home,
   PiggyBank,
@@ -12,6 +14,7 @@ import {
   Trophy,
   Users,
   Briefcase,
+  Zap,
 } from "lucide-react";
 import { formatMoney } from "../utils/formatters";
 import { getText } from "../data/translations";
@@ -34,9 +37,28 @@ const pageText = {
     progress: "Progression",
     remaining: "Reste",
     target: "Objectif",
+    current: "Actuel",
     steps: "Étapes",
-    flowTitle: "Flux V13.2",
-    flowText: "Objectif → Simulation → Activation → Parcours → Progression → Historique.",
+    flowTitle: "Flux V14.2",
+    flowText:
+      "Objectif → Simulation → Activation → Parcours → Progression → Réussite.",
+    smartGoals: "Smart Goals",
+    smartStatus: "Statut intelligent",
+    ahead: "En avance",
+    onTrack: "Dans la cible",
+    late: "En retard",
+    noDate: "Date cible non définie",
+    targetDate: "Date cible",
+    timeLeft: "Temps restant",
+    monthsLeft: "mois restants",
+    daysLeft: "jours restants",
+    started: "Parcours commencé",
+    ago: "il y a",
+    recommendedAction: "Action recommandée",
+    recommendationDefault:
+      "Simulez cet objectif pour obtenir une recommandation plus précise.",
+    recommendationMonthly: "Pour atteindre cet objectif à temps, prévoyez environ",
+    perMonth: "/mois",
   },
   EN: {
     title: "My goals",
@@ -55,9 +77,27 @@ const pageText = {
     progress: "Progress",
     remaining: "Remaining",
     target: "Target",
+    current: "Current",
     steps: "Steps",
-    flowTitle: "V13.2 flow",
-    flowText: "Goal → Simulation → Activation → Path → Progress → History.",
+    flowTitle: "V14.2 flow",
+    flowText: "Goal → Simulation → Activation → Path → Progress → Success.",
+    smartGoals: "Smart Goals",
+    smartStatus: "Smart status",
+    ahead: "Ahead",
+    onTrack: "On track",
+    late: "Late",
+    noDate: "No target date",
+    targetDate: "Target date",
+    timeLeft: "Time left",
+    monthsLeft: "months left",
+    daysLeft: "days left",
+    started: "Path started",
+    ago: "ago",
+    recommendedAction: "Recommended action",
+    recommendationDefault:
+      "Simulate this goal to get a more precise recommendation.",
+    recommendationMonthly: "To reach this goal on time, plan around",
+    perMonth: "/month",
   },
   ES: {
     title: "Mis objetivos",
@@ -76,9 +116,27 @@ const pageText = {
     progress: "Progreso",
     remaining: "Restante",
     target: "Objetivo",
+    current: "Actual",
     steps: "Etapas",
-    flowTitle: "Flujo V13.2",
-    flowText: "Objetivo → Simulación → Activación → Recorrido → Progreso → Historial.",
+    flowTitle: "Flujo V14.2",
+    flowText: "Objetivo → Simulación → Activación → Recorrido → Progreso → Éxito.",
+    smartGoals: "Smart Goals",
+    smartStatus: "Estado inteligente",
+    ahead: "Adelantado",
+    onTrack: "En camino",
+    late: "Atrasado",
+    noDate: "Fecha objetivo no definida",
+    targetDate: "Fecha objetivo",
+    timeLeft: "Tiempo restante",
+    monthsLeft: "meses restantes",
+    daysLeft: "días restantes",
+    started: "Recorrido iniciado",
+    ago: "hace",
+    recommendedAction: "Acción recomendada",
+    recommendationDefault:
+      "Simula este objetivo para obtener una recomendación más precisa.",
+    recommendationMonthly: "Para alcanzar este objetivo a tiempo, reserva cerca de",
+    perMonth: "/mes",
   },
 };
 
@@ -255,6 +313,20 @@ function Objectifs({ selectedGoals, settings, setCurrentPage }) {
         </div>
       </section>
 
+      <section style={smartCard}>
+        <div style={header}>
+          <Zap color="var(--gold)" />
+          <div>
+            <h2>{p.smartGoals}</h2>
+            <p style={mutedSmall}>
+              {activeGoals.length > 0
+                ? getTopRecommendation(activeGoals, p, currency)
+                : p.recommendationDefault}
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section style={card}>
         <div style={header}>
           <Target color="var(--gold)" />
@@ -353,9 +425,13 @@ function GoalRow({ goal, currency, text, onOpen, completed = false }) {
   );
   const steps = Array.isArray(goal.pathSteps) ? goal.pathSteps : [];
   const doneSteps = steps.filter((step) => step.done).length;
+  const smartStatus = getSmartGoalStatus(goal, progress, text);
+  const targetDate = goal.targetDate || goal.deadline || goal.endDate || "";
+  const monthlyNeed = getMonthlyNeed(goal);
+  const startedLabel = getStartedLabel(goal, text);
 
   return (
-    <div style={goalRow}>
+    <div style={{ ...goalRow, borderColor: smartStatus.color }}>
       <div style={goalRowTop}>
         <div>
           <strong>
@@ -363,33 +439,71 @@ function GoalRow({ goal, currency, text, onOpen, completed = false }) {
             {goal.title}
           </strong>
           <p style={mutedSmall}>
-            {goal.option || goal.categoryLabel || goal.category}
+            {goal.option || goal.categoryLabel || goal.category || text.smartGoals}
           </p>
         </div>
 
-        <span style={completed ? completedPill : activePill}>
-          {completed ? text.statusCompleted : text.statusActive}
+        <span
+          style={{
+            ...activePill,
+            borderColor: completed ? "var(--green)" : smartStatus.color,
+            color: completed ? "var(--green)" : smartStatus.color,
+            background: completed
+              ? "rgba(34,197,94,.12)"
+              : smartStatus.background,
+          }}
+        >
+          {completed ? text.statusCompleted : smartStatus.label}
         </span>
       </div>
+
+      {startedLabel && (
+        <div style={startedBox}>
+          <Clock3 size={16} color="var(--gold)" />
+          <span>
+            🚩 {text.started} {startedLabel}
+          </span>
+        </div>
+      )}
 
       <div style={progressBg}>
         <div
           style={{
             ...progressFill,
             width: `${progress}%`,
-            background: completed ? "var(--green)" : "var(--gold)",
+            background: completed ? "var(--green)" : smartStatus.color,
           }}
         />
       </div>
 
       <div style={miniStats}>
         <Small label={text.progress} value={`${progress}%`} />
+        <Small
+          label={text.current}
+          value={formatMoney(goal.currentAmount || 0, currency)}
+        />
         <Small label={text.remaining} value={formatMoney(remaining, currency)} />
         <Small
           label={text.target}
           value={formatMoney(goal.targetAmount || 0, currency)}
         />
+        <Small label={text.targetDate} value={formatDisplayDate(targetDate, text)} />
+        <Small label={text.timeLeft} value={getTimeLeftLabel(targetDate, text)} />
         <Small label={text.steps} value={`${doneSteps}/${steps.length || 0}`} />
+        <Small label={text.smartStatus} value={smartStatus.label} />
+      </div>
+
+      <div style={recommendationBox}>
+        <AlertTriangle size={17} color={smartStatus.color} />
+        <p>
+          <strong>{text.recommendedAction} : </strong>
+          {monthlyNeed > 0
+            ? `${text.recommendationMonthly} ${formatMoney(
+                monthlyNeed,
+                currency
+              )}${text.perMonth}.`
+            : text.recommendationDefault}
+        </p>
       </div>
 
       <button onClick={onOpen} style={pathButton}>
@@ -433,6 +547,178 @@ function getGoalProgress(goal) {
   );
 }
 
+function getGoalDate(goal) {
+  return goal?.targetDate || goal?.deadline || goal?.endDate || "";
+}
+
+function getMonthsUntil(dateValue) {
+  if (!dateValue) return null;
+
+  const today = new Date();
+  const target = new Date(`${dateValue}T12:00:00`);
+
+  if (Number.isNaN(target.getTime())) return null;
+
+  const diffMs = target.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays <= 0) return 0;
+
+  return Math.max(1, Math.ceil(diffDays / 30));
+}
+
+function getMonthlyNeed(goal) {
+  const target = Number(goal?.targetAmount || 0);
+  const current = Number(goal?.currentAmount || 0);
+  const remaining = Math.max(0, target - current);
+  const monthsLeft = getMonthsUntil(getGoalDate(goal));
+
+  if (!monthsLeft || remaining <= 0) return 0;
+
+  return Math.ceil(remaining / monthsLeft);
+}
+
+function getSmartGoalStatus(goal, progress, text) {
+  const targetDate = getGoalDate(goal);
+  const monthlyNeed = getMonthlyNeed(goal);
+  const plannedMonthly = Number(
+    goal?.monthlyAmount || goal?.monthlyContribution || goal?.recommendedMonthly || 0
+  );
+
+  if (progress >= 100) {
+    return {
+      key: "completed",
+      label: text.statusCompleted,
+      color: "var(--green)",
+      background: "rgba(34,197,94,.12)",
+    };
+  }
+
+  if (!targetDate) {
+    return {
+      key: "onTrack",
+      label: text.onTrack,
+      color: "var(--gold)",
+      background: "rgba(212,175,55,.12)",
+    };
+  }
+
+  if (monthlyNeed > 0 && plannedMonthly > 0) {
+    if (plannedMonthly >= monthlyNeed * 1.15) {
+      return {
+        key: "ahead",
+        label: text.ahead,
+        color: "var(--green)",
+        background: "rgba(34,197,94,.12)",
+      };
+    }
+
+    if (plannedMonthly < monthlyNeed * 0.85) {
+      return {
+        key: "late",
+        label: text.late,
+        color: "var(--red)",
+        background: "rgba(239,68,68,.12)",
+      };
+    }
+  }
+
+  const daysLeft = getDaysUntil(targetDate);
+
+  if (daysLeft < 0) {
+    return {
+      key: "late",
+      label: text.late,
+      color: "var(--red)",
+      background: "rgba(239,68,68,.12)",
+    };
+  }
+
+  return {
+    key: "onTrack",
+    label: text.onTrack,
+    color: "var(--gold)",
+    background: "rgba(212,175,55,.12)",
+  };
+}
+
+function getDaysUntil(dateValue) {
+  if (!dateValue) return null;
+
+  const today = new Date();
+  const target = new Date(`${dateValue}T12:00:00`);
+
+  if (Number.isNaN(target.getTime())) return null;
+
+  today.setHours(12, 0, 0, 0);
+
+  return Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function getTimeLeftLabel(dateValue, text) {
+  const daysLeft = getDaysUntil(dateValue);
+
+  if (daysLeft === null) return text.noDate;
+  if (daysLeft <= 0) return text.late;
+  if (daysLeft < 60) return `${daysLeft} ${text.daysLeft}`;
+
+  return `${Math.ceil(daysLeft / 30)} ${text.monthsLeft}`;
+}
+
+function getStartedLabel(goal, text) {
+  const startedAt = goal?.startedAt || goal?.createdAt || goal?.activatedAt;
+
+  if (!startedAt) return "";
+
+  const started = new Date(startedAt);
+  const today = new Date();
+
+  if (Number.isNaN(started.getTime())) return "";
+
+  const diffDays = Math.max(
+    0,
+    Math.floor((today.getTime() - started.getTime()) / (1000 * 60 * 60 * 24))
+  );
+
+  if (diffDays < 30) return `${text.ago} ${diffDays} jour${diffDays > 1 ? "s" : ""}`;
+
+  const months = Math.floor(diffDays / 30);
+  return `${text.ago} ${months} mois`;
+}
+
+function formatDisplayDate(value, text) {
+  if (!value) return text.noDate;
+
+  const date = new Date(`${value}T12:00:00`);
+
+  if (Number.isNaN(date.getTime())) return text.noDate;
+
+  return date.toLocaleDateString("fr-CA", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function getTopRecommendation(goals, text, currency) {
+  const sortedGoals = [...goals].sort((a, b) => {
+    const aNeed = getMonthlyNeed(a);
+    const bNeed = getMonthlyNeed(b);
+
+    return bNeed - aNeed;
+  });
+
+  const topGoal = sortedGoals[0];
+  const need = getMonthlyNeed(topGoal);
+
+  if (!topGoal || need <= 0) return text.recommendationDefault;
+
+  return `${topGoal.title} : ${text.recommendationMonthly} ${formatMoney(
+    need,
+    currency
+  )}${text.perMonth}.`;
+}
+
 const page = {
   display: "flex",
   flexDirection: "column",
@@ -452,6 +738,13 @@ const flowCard = {
   gap: "12px",
   borderColor: "var(--gold)",
   background: "linear-gradient(135deg, rgba(212,175,55,.15), var(--bg-card))",
+};
+
+const smartCard = {
+  ...card,
+  borderColor: "var(--gold)",
+  background:
+    "linear-gradient(135deg, rgba(212,175,55,.16), rgba(34,197,94,.08), var(--bg-card))",
 };
 
 const header = {
@@ -528,11 +821,18 @@ const activePill = {
   fontWeight: "900",
 };
 
-const completedPill = {
-  ...activePill,
-  borderColor: "var(--green)",
-  color: "var(--green)",
-  background: "rgba(34,197,94,.12)",
+const startedBox = {
+  marginTop: "10px",
+  border: "1px solid var(--border)",
+  background: "var(--bg-card)",
+  borderRadius: "14px",
+  padding: "9px 10px",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  color: "var(--text-main)",
+  fontSize: "13px",
+  fontWeight: "800",
 };
 
 const progressBg = {
@@ -563,6 +863,19 @@ const smallStat = {
   display: "grid",
   gap: "4px",
   fontSize: "12px",
+};
+
+const recommendationBox = {
+  marginTop: "12px",
+  border: "1px solid var(--border)",
+  background: "var(--bg-card)",
+  borderRadius: "14px",
+  padding: "11px",
+  display: "flex",
+  alignItems: "flex-start",
+  gap: "8px",
+  fontSize: "13px",
+  color: "var(--text-main)",
 };
 
 const pathButton = {

@@ -6,10 +6,13 @@ import {
   Clock3,
   CreditCard,
   Edit3,
+  Flame,
   Plus,
   RefreshCcw,
+  ShieldCheck,
   Trash2,
   Wallet,
+  Zap,
 } from "lucide-react";
 import { cleanMoneyInput, formatMoney } from "../utils/formatters";
 import { getText } from "../data/translations";
@@ -17,7 +20,8 @@ import { getText } from "../data/translations";
 const pageText = {
   FR: {
     title: "Paiements",
-    subtitle: "Suivez vos paiements programmés et vos prélèvements prévus.",
+    subtitle:
+      "Suivez vos paiements programmés, vos prélèvements prévus et leur impact sur vos objectifs.",
     smartPayments: "Paiements intelligents",
     scheduledPayments: "Paiements programmés",
     addPayment: "Ajouter un paiement",
@@ -49,6 +53,117 @@ const pageText = {
     upToDate: "À jour",
     paid: "Effectué",
     apply: "Appliquer",
+    minimum: "Minimum",
+    recommended: "Recommandé",
+    accelerated: "Accéléré",
+    smartAction: "Action recommandée aujourd'hui",
+    noSmartAction: "Aucune action urgente aujourd'hui.",
+    estimatedEnd: "Fin estimée",
+    impactTitle: "Impact sur les objectifs",
+    monthsEarlier: "mois plus tôt",
+    balanceAfter: "Solde après paiement",
+    urgent: "Urgent",
+    important: "Important",
+    stable: "Stable",
+    noDebtLinked: "Aucune dette liée",
+  },
+  EN: {
+    title: "Payments",
+    subtitle:
+      "Track scheduled payments, upcoming withdrawals and their impact on your goals.",
+    smartPayments: "Smart payments",
+    scheduledPayments: "Scheduled payments",
+    addPayment: "Add payment",
+    name: "Name",
+    type: "Type",
+    amount: "Amount",
+    frequency: "Frequency",
+    nextDate: "Next date",
+    linkedDebt: "Linked debt",
+    active: "Active",
+    inactive: "Inactive",
+    afterPayment: "Estimated balance after payment",
+    totalThisMonth: "Total planned this month",
+    totalActive: "Active payments",
+    noPayment: "No scheduled payment.",
+    save: "Add",
+    resetForm: "Reset form",
+    weekly: "Weekly",
+    biweekly: "Biweekly",
+    monthly: "Monthly",
+    custom: "Custom",
+    debt: "Debt",
+    bill: "Bill",
+    saving: "Savings",
+    project: "Project",
+    other: "Other",
+    overdue: "Overdue",
+    dueSoon: "Due soon",
+    upToDate: "Up to date",
+    paid: "Paid",
+    apply: "Apply",
+    minimum: "Minimum",
+    recommended: "Recommended",
+    accelerated: "Accelerated",
+    smartAction: "Today's recommended action",
+    noSmartAction: "No urgent action today.",
+    estimatedEnd: "Estimated end",
+    impactTitle: "Impact on goals",
+    monthsEarlier: "months earlier",
+    balanceAfter: "Balance after payment",
+    urgent: "Urgent",
+    important: "Important",
+    stable: "Stable",
+    noDebtLinked: "No linked debt",
+  },
+  ES: {
+    title: "Pagos",
+    subtitle:
+      "Sigue tus pagos programados, retiros previstos y su impacto en tus objetivos.",
+    smartPayments: "Pagos inteligentes",
+    scheduledPayments: "Pagos programados",
+    addPayment: "Agregar un pago",
+    name: "Nombre",
+    type: "Tipo",
+    amount: "Monto",
+    frequency: "Frecuencia",
+    nextDate: "Próxima fecha",
+    linkedDebt: "Deuda vinculada",
+    active: "Activo",
+    inactive: "Inactivo",
+    afterPayment: "Saldo estimado después del pago",
+    totalThisMonth: "Total previsto este mes",
+    totalActive: "Pagos activos",
+    noPayment: "No hay pago programado.",
+    save: "Agregar",
+    resetForm: "Reiniciar formulario",
+    weekly: "Semanal",
+    biweekly: "Cada 2 semanas",
+    monthly: "Mensual",
+    custom: "Personalizado",
+    debt: "Deuda",
+    bill: "Factura",
+    saving: "Ahorro",
+    project: "Proyecto",
+    other: "Otro",
+    overdue: "Atrasado",
+    dueSoon: "Próximo",
+    upToDate: "Al día",
+    paid: "Pagado",
+    apply: "Aplicar",
+    minimum: "Mínimo",
+    recommended: "Recomendado",
+    accelerated: "Acelerado",
+    smartAction: "Acción recomendada hoy",
+    noSmartAction: "Ninguna acción urgente hoy.",
+    estimatedEnd: "Fin estimado",
+    impactTitle: "Impacto en objetivos",
+    monthsEarlier: "meses antes",
+    balanceAfter: "Saldo después del pago",
+    urgent: "Urgente",
+    important: "Importante",
+    stable: "Estable",
+    noDebtLinked: "Sin deuda vinculada",
   },
 };
 
@@ -73,6 +188,8 @@ function Paiements({
   const t = getText(settings);
   const p = pageText[settings?.language || "FR"] || pageText.FR;
   const currency = settings?.currency || "CAD";
+  const safeFinanceData = financeData || {};
+  const debts = Array.isArray(safeFinanceData.debts) ? safeFinanceData.debts : [];
 
   const [localPayments, setLocalPayments] = useState(() => {
     try {
@@ -95,7 +212,10 @@ function Paiements({
     }
 
     setLocalPayments(nextPayments);
-    localStorage.setItem("onjaramaScheduledPayments", JSON.stringify(nextPayments));
+    localStorage.setItem(
+      "onjaramaScheduledPayments",
+      JSON.stringify(nextPayments)
+    );
   }
 
   const activePayments = payments.filter((payment) => payment.active);
@@ -103,7 +223,7 @@ function Paiements({
   const paymentStats = useMemo(() => {
     return activePayments.reduce(
       (stats, payment) => {
-        const status = getPaymentStatus(payment);
+        const status = getPaymentStatus(payment, p);
 
         if (status.key === "overdue") stats.overdue += 1;
         if (status.key === "dueSoon") stats.dueSoon += 1;
@@ -117,7 +237,7 @@ function Paiements({
         upToDate: 0,
       }
     );
-  }, [activePayments]);
+  }, [activePayments, p]);
 
   const monthlyEstimate = useMemo(() => {
     return activePayments.reduce((total, payment) => {
@@ -130,6 +250,15 @@ function Paiements({
       return total + amount;
     }, 0);
   }, [activePayments]);
+
+  const smartDebtPlans = useMemo(() => {
+    return debts
+      .filter((debt) => Number(debt.balance || 0) > 0)
+      .map((debt) => buildDebtPlan(debt))
+      .sort((a, b) => b.priorityScore - a.priorityScore);
+  }, [debts]);
+
+  const smartAction = getSmartAction(activePayments, smartDebtPlans, p, currency);
 
   function addPayment() {
     if (!form.name || !form.amount) return;
@@ -174,10 +303,10 @@ function Paiements({
   }
 
   function applyPayment(payment) {
-    let updatedDebts = financeData.debts;
+    let updatedDebts = debts;
 
     if (payment.linkedDebtName) {
-      updatedDebts = financeData.debts.map((debt) => {
+      updatedDebts = debts.map((debt) => {
         if (debt.name !== payment.linkedDebtName) return debt;
 
         return {
@@ -189,8 +318,8 @@ function Paiements({
         };
       });
 
-      setFinanceData({
-        ...financeData,
+      setFinanceData?.({
+        ...safeFinanceData,
         debts: updatedDebts,
       });
     }
@@ -217,9 +346,7 @@ function Paiements({
   }
 
   function getEstimatedDebtBalance(payment) {
-    const debt = financeData.debts.find(
-      (item) => item.name === payment.linkedDebtName
-    );
+    const debt = debts.find((item) => item.name === payment.linkedDebtName);
 
     if (!debt) return null;
 
@@ -228,8 +355,18 @@ function Paiements({
 
   return (
     <div className="native-page">
-      <h1>{p.title}</h1>
+      <h1>{t.paiements || p.title}</h1>
       <p style={muted}>{p.subtitle}</p>
+
+      <section style={smartActionCard}>
+        <div style={header}>
+          <Zap color="var(--gold)" />
+          <div>
+            <h2>{p.smartAction}</h2>
+            <p style={mutedSmall}>{smartAction}</p>
+          </div>
+        </div>
+      </section>
 
       <section style={smartCard}>
         <div style={header}>
@@ -260,6 +397,26 @@ function Paiements({
           />
         </div>
       </section>
+
+      {smartDebtPlans.length > 0 && (
+        <section style={card}>
+          <div style={header}>
+            <Flame color="var(--red)" />
+            <h2>{p.impactTitle}</h2>
+          </div>
+
+          <div style={debtPlanGrid}>
+            {smartDebtPlans.map((plan) => (
+              <DebtPlanCard
+                key={plan.name}
+                plan={plan}
+                text={p}
+                currency={currency}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="grid-2" style={grid}>
         <InfoCard
@@ -344,7 +501,7 @@ function Paiements({
           style={input}
         >
           <option value="">—</option>
-          {financeData.debts.map((debt) => (
+          {debts.map((debt) => (
             <option key={debt.name} value={debt.name}>
               {debt.name}
             </option>
@@ -372,7 +529,10 @@ function Paiements({
 
         {payments.map((payment) => {
           const estimatedBalance = getEstimatedDebtBalance(payment);
-          const status = getPaymentStatus(payment);
+          const status = getPaymentStatus(payment, p);
+          const linkedPlan = smartDebtPlans.find(
+            (plan) => plan.name === payment.linkedDebtName
+          );
 
           return (
             <div
@@ -408,15 +568,23 @@ function Paiements({
               </p>
 
               {status.message && (
-                <p style={{ ...mutedSmall, color: status.color, fontWeight: "bold" }}>
+                <p
+                  style={{
+                    ...mutedSmall,
+                    color: status.color,
+                    fontWeight: "bold",
+                  }}
+                >
                   {status.message}
                 </p>
               )}
 
-              {payment.linkedDebtName && (
+              {payment.linkedDebtName ? (
                 <p style={mutedSmall}>
                   {p.linkedDebt} : {payment.linkedDebtName}
                 </p>
+              ) : (
+                <p style={mutedSmall}>{p.noDebtLinked}</p>
               )}
 
               {estimatedBalance !== null && (
@@ -424,6 +592,20 @@ function Paiements({
                   {p.afterPayment} :{" "}
                   <strong>{formatMoney(estimatedBalance, currency)}</strong>
                 </p>
+              )}
+
+              {linkedPlan && (
+                <div style={miniPlan}>
+                  <Mini label={p.minimum} value={formatMoney(linkedPlan.minimum, currency)} />
+                  <Mini
+                    label={p.recommended}
+                    value={formatMoney(linkedPlan.recommended, currency)}
+                  />
+                  <Mini
+                    label={p.accelerated}
+                    value={formatMoney(linkedPlan.accelerated, currency)}
+                  />
+                </div>
               )}
 
               {payment.lastPaidAt && (
@@ -452,11 +634,82 @@ function Paiements({
   );
 }
 
-function getPaymentStatus(payment) {
+function buildDebtPlan(debt) {
+  const balance = Number(debt.balance || 0);
+  const rate = Number(debt.interestRate || debt.rate || debt.apr || 0);
+  const minimum = Math.max(
+    25,
+    Number(debt.minimumPayment || debt.minPayment || debt.payment || 0) ||
+      Math.ceil(balance * 0.03)
+  );
+  const recommended = Math.max(minimum, Math.ceil(minimum * 2.25));
+  const accelerated = Math.max(recommended, Math.ceil(minimum * 4.6));
+  const minimumMonths = estimateMonths(balance, minimum);
+  const recommendedMonths = estimateMonths(balance, recommended);
+  const acceleratedMonths = estimateMonths(balance, accelerated);
+
+  return {
+    name: debt.name,
+    balance,
+    rate,
+    minimum,
+    recommended,
+    accelerated,
+    minimumMonths,
+    recommendedMonths,
+    acceleratedMonths,
+    recommendedGain: Math.max(0, minimumMonths - recommendedMonths),
+    acceleratedGain: Math.max(0, minimumMonths - acceleratedMonths),
+    priorityScore: rate * 10 + balance / 1000,
+  };
+}
+
+function estimateMonths(balance, monthlyPayment) {
+  if (!balance || !monthlyPayment) return 0;
+
+  return Math.max(1, Math.ceil(Number(balance || 0) / Number(monthlyPayment || 1)));
+}
+
+function getSmartAction(payments, plans, p, currency) {
+  const overdue = payments.find(
+    (payment) => payment.active && getPaymentStatus(payment, p).key === "overdue"
+  );
+
+  if (overdue) {
+    return `${p.overdue} : ${overdue.name} — ${formatMoney(
+      overdue.amount,
+      currency
+    )}.`;
+  }
+
+  const dueSoon = payments.find(
+    (payment) => payment.active && getPaymentStatus(payment, p).key === "dueSoon"
+  );
+
+  if (dueSoon) {
+    return `${p.dueSoon} : ${dueSoon.name} — ${formatMoney(
+      dueSoon.amount,
+      currency
+    )}.`;
+  }
+
+  const topPlan = plans[0];
+
+  if (topPlan) {
+    return `${topPlan.name} : ${p.recommended} ${formatMoney(
+      topPlan.recommended,
+      currency
+    )}.`;
+  }
+
+  return p.noSmartAction;
+}
+
+function getPaymentStatus(payment, p = pageText.FR) {
   if (!payment.active) {
     return {
       key: "inactive",
-      label: "Inactif",
+      label: p.inactive || "Inactif",
       color: "var(--red)",
       message: "",
     };
@@ -465,7 +718,7 @@ function getPaymentStatus(payment) {
   if (!payment.nextDate) {
     return {
       key: "upToDate",
-      label: "À jour",
+      label: p.upToDate || "À jour",
       color: "var(--green)",
       message: "Aucune échéance urgente.",
     };
@@ -485,7 +738,7 @@ function getPaymentStatus(payment) {
 
     return {
       key: "overdue",
-      label: "En retard",
+      label: p.overdue || "En retard",
       color: "var(--red)",
       message: `En retard de ${lateDays} jour${lateDays > 1 ? "s" : ""}.`,
     };
@@ -503,7 +756,7 @@ function getPaymentStatus(payment) {
   if (diffDays <= 3) {
     return {
       key: "dueSoon",
-      label: "Bientôt dû",
+      label: p.dueSoon || "Bientôt dû",
       color: "var(--gold)",
       message: `Paiement dans ${diffDays} jour${diffDays > 1 ? "s" : ""}.`,
     };
@@ -511,7 +764,7 @@ function getPaymentStatus(payment) {
 
   return {
     key: "upToDate",
-    label: "À jour",
+    label: p.upToDate || "À jour",
     color: "var(--green)",
     message: `Paiement dans ${diffDays} jours.`,
   };
@@ -551,6 +804,76 @@ function formatDate(value) {
   });
 }
 
+function formatMonthEnd(months) {
+  if (!months) return "—";
+
+  const date = new Date();
+  date.setMonth(date.getMonth() + months);
+
+  return date.toLocaleDateString("fr-CA", {
+    year: "numeric",
+    month: "short",
+  });
+}
+
+function DebtPlanCard({ plan, text, currency }) {
+  const priority =
+    plan.rate >= 25 ? text.urgent : plan.rate >= 10 ? text.important : text.stable;
+  const priorityColor =
+    plan.rate >= 25 ? "var(--red)" : plan.rate >= 10 ? "var(--gold)" : "var(--green)";
+
+  return (
+    <div style={{ ...debtPlanCard, borderColor: priorityColor }}>
+      <div style={paymentHeader}>
+        <div>
+          <strong>{plan.name}</strong>
+          <p style={mutedSmall}>
+            {formatMoney(plan.balance, currency)} • {plan.rate || 0}%
+          </p>
+        </div>
+
+        <span
+          style={{
+            ...priorityPill,
+            borderColor: priorityColor,
+            color: priorityColor,
+          }}
+        >
+          {priority}
+        </span>
+      </div>
+
+      <div style={miniPlan}>
+        <Mini
+          label={text.minimum}
+          value={formatMoney(plan.minimum, currency)}
+          sub={`${text.estimatedEnd} : ${formatMonthEnd(plan.minimumMonths)}`}
+        />
+        <Mini
+          label={text.recommended}
+          value={formatMoney(plan.recommended, currency)}
+          sub={`${plan.recommendedGain} ${text.monthsEarlier}`}
+        />
+        <Mini
+          label={text.accelerated}
+          value={formatMoney(plan.accelerated, currency)}
+          sub={`${plan.acceleratedGain} ${text.monthsEarlier}`}
+        />
+      </div>
+    </div>
+  );
+}
+
+function Mini({ label, value, sub }) {
+  return (
+    <div style={miniBox}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+      {sub && <small>{sub}</small>}
+    </div>
+  );
+}
+
 function InfoCard({ icon, title, value, color }) {
   return (
     <div style={{ ...infoCard, borderColor: color }}>
@@ -574,6 +897,15 @@ function SmartStat({ icon, label, value, color }) {
 const grid = {
   gap: "12px",
   marginTop: "18px",
+};
+
+const smartActionCard = {
+  background:
+    "linear-gradient(135deg, rgba(212,175,55,.16), rgba(34,197,94,.08), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
 };
 
 const smartCard = {
@@ -662,6 +994,45 @@ const infoCard = {
   border: "1px solid var(--border)",
   borderRadius: "18px",
   padding: "16px",
+};
+
+const debtPlanGrid = {
+  display: "grid",
+  gap: "12px",
+};
+
+const debtPlanCard = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "18px",
+  padding: "16px",
+};
+
+const miniPlan = {
+  display: "grid",
+  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  gap: "8px",
+  marginTop: "12px",
+};
+
+const miniBox = {
+  border: "1px solid var(--border)",
+  background: "var(--bg-card)",
+  borderRadius: "13px",
+  padding: "10px",
+  display: "grid",
+  gap: "4px",
+  fontSize: "12px",
+};
+
+const priorityPill = {
+  border: "1px solid var(--border)",
+  borderRadius: "999px",
+  padding: "7px 10px",
+  height: "34px",
+  fontSize: "12px",
+  fontWeight: "900",
+  background: "var(--bg-card)",
 };
 
 const paymentCard = {
