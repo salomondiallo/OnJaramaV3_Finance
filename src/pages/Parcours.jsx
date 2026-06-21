@@ -25,6 +25,9 @@ const pageText = {
     completed: "Objectif atteint",
     completedMessage: "est complété",
     done: "Complété",
+    notDone: "À valider",
+    tapToValidate: "Touchez une étape pour la valider ou la rouvrir.",
+    checkedSteps: "Étapes validées",
     goGoals: "Mes objectifs",
     goSimulator: "Simuler un objectif",
     historyHint: "Les objectifs terminés seront visibles dans Profil > Historique.",
@@ -43,6 +46,9 @@ const pageText = {
     completed: "Goal achieved",
     completedMessage: "is completed",
     done: "Completed",
+    notDone: "To validate",
+    tapToValidate: "Tap a step to validate it or reopen it.",
+    checkedSteps: "Validated steps",
     goGoals: "My goals",
     goSimulator: "Simulate a goal",
     historyHint: "Completed goals will be visible in Profile > History.",
@@ -61,13 +67,22 @@ const pageText = {
     completed: "Objetivo alcanzado",
     completedMessage: "está completado",
     done: "Completado",
+    notDone: "Por validar",
+    tapToValidate: "Toca una etapa para validarla o reabrirla.",
+    checkedSteps: "Etapas validadas",
     goGoals: "Mis objetivos",
     goSimulator: "Simular un objetivo",
     historyHint: "Los objetivos terminados estarán visibles en Perfil > Historial.",
   },
 };
 
-function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, addActivity }) {
+function Parcours({
+  selectedGoals,
+  setSelectedGoals,
+  settings,
+  setCurrentPage,
+  addActivity,
+}) {
   const t = getText(settings);
   const language = settings?.language || "FR";
   const p = pageText[language] || pageText.FR;
@@ -75,7 +90,9 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
   const goals = Array.isArray(selectedGoals)
     ? selectedGoals.filter((goal) => !goal.archived)
     : [];
+
   const [focusedGoalId, setFocusedGoalId] = useState(null);
+  const [justCheckedStepId, setJustCheckedStepId] = useState(null);
 
   useEffect(() => {
     const storedGoalId = localStorage.getItem("onjaramaPathGoalId");
@@ -86,26 +103,41 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
     }
   }, []);
 
+  useEffect(() => {
+    if (!justCheckedStepId) return;
+    const timer = window.setTimeout(() => setJustCheckedStepId(null), 550);
+    return () => window.clearTimeout(timer);
+  }, [justCheckedStepId]);
+
   const activeGoals = useMemo(
     () => goals.filter((goal) => getProgress(goal, language) < 100),
+    [goals, language]
+  );
+
+  const completedGoals = useMemo(
+    () => goals.filter((goal) => getProgress(goal, language) >= 100),
     [goals, language]
   );
 
   const focusedGoal =
     activeGoals.find((goal) => String(goal.id) === String(focusedGoalId)) ||
     activeGoals.find((goal) => goal.highlighted) ||
-    activeGoals[0];
+    activeGoals[0] ||
+    completedGoals.find((goal) => String(goal.id) === String(focusedGoalId)) ||
+    completedGoals[0];
 
+  const steps = ensureSteps(focusedGoal, language);
   const progress = getProgress(focusedGoal, language);
   const remaining = getRemaining(focusedGoal, language);
   const nextStep = getNextStep(focusedGoal, language);
+  const doneCount = steps.filter((step) => step.done).length;
 
   function toggleStep(stepId) {
     if (!focusedGoal) return;
 
     setSelectedGoals?.(
       selectedGoals.map((goal) => {
-        if (goal.id !== focusedGoal.id) return goal;
+        if (String(goal.id) !== String(focusedGoal.id)) return goal;
 
         const existingSteps = ensureSteps(goal, language);
         const nextSteps = existingSteps.map((step) =>
@@ -118,21 +150,30 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
             : step
         );
 
-        const doneCount = nextSteps.filter((step) => step.done).length;
-        const nextProgress = Math.round((doneCount / nextSteps.length) * 100);
+        const nextDoneCount = nextSteps.filter((step) => step.done).length;
+        const nextProgress = Math.round((nextDoneCount / nextSteps.length) * 100);
         const completed = nextProgress >= 100;
+        const wasCompleted = getProgress(goal, language) >= 100;
 
-        if (completed && getProgress(goal, language) < 100) {
-          addActivity?.("victoire", p.completed, `${goal.title} ${p.completedMessage}.`);
+        if (completed && !wasCompleted) {
+          addActivity?.(
+            "victoire",
+            p.completed,
+            `${goal.title} ${p.completedMessage}.`
+          );
         }
+
+        setJustCheckedStepId(stepId);
 
         return {
           ...goal,
           pathSteps: nextSteps,
-          currentAmount: completed ? Number(goal.targetAmount || 0) : goal.currentAmount,
+          currentAmount: completed
+            ? Number(goal.targetAmount || 0)
+            : goal.currentAmount,
           completedAt: completed
             ? goal.completedAt || new Date().toISOString()
-            : goal.completedAt,
+            : null,
           status: completed ? "completed" : "active",
         };
       })
@@ -189,6 +230,7 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
 
             <div style={statGrid}>
               <Small label={p.progress} value={`${progress}%`} />
+              <Small label={p.checkedSteps} value={`${doneCount}/${steps.length}`} />
               <Small label={p.remaining} value={formatMoney(remaining, currency)} />
               <Small
                 label={p.monthly}
@@ -201,7 +243,7 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
             </div>
           </section>
 
-          {activeGoals.length > 1 && (
+          {(activeGoals.length > 1 || completedGoals.length > 1) && (
             <section style={card}>
               <div style={header}>
                 <Target color="var(--blue)" />
@@ -209,7 +251,7 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
               </div>
 
               <div style={goalSwitcher}>
-                {activeGoals.map((goal) => (
+                {[...activeGoals, ...completedGoals].map((goal) => (
                   <button
                     key={goal.id}
                     onClick={() => setFocusedGoalId(goal.id)}
@@ -229,32 +271,56 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
           <section style={card}>
             <div style={header}>
               <Route color="var(--green)" />
-              <h2>{p.steps}</h2>
+              <div>
+                <h2>{p.steps}</h2>
+                <p style={mutedSmall}>{p.tapToValidate}</p>
+              </div>
             </div>
 
             <div style={stepList}>
-              {ensureSteps(focusedGoal, language).map((step, index) => (
-                <button
-                  key={step.id}
-                  onClick={() => toggleStep(step.id)}
-                  style={stepButton}
-                >
-                  <span style={stepIcon}>
-                    {step.done ? (
-                      <CheckCircle color="var(--green)" />
-                    ) : (
-                      <Circle color="var(--text-muted)" />
-                    )}
-                  </span>
+              {steps.map((step, index) => {
+                const done = Boolean(step.done);
 
-                  <div style={{ flex: 1 }}>
-                    <strong>
-                      {index + 1}. {step.label}
-                    </strong>
-                    {step.done && <p style={doneText}>✓ {p.done}</p>}
-                  </div>
-                </button>
-              ))}
+                return (
+                  <button
+                    key={step.id}
+                    onClick={() => toggleStep(step.id)}
+                    style={{
+                      ...stepButton,
+                      borderColor: done ? "var(--green)" : "var(--border)",
+                      background: done
+                        ? "rgba(34,197,94,.12)"
+                        : "var(--bg-panel)",
+                      transform:
+                        justCheckedStepId === step.id ? "scale(.99)" : "scale(1)",
+                    }}
+                    aria-pressed={done}
+                  >
+                    <span
+                      style={{
+                        ...stepIcon,
+                        borderColor: done ? "var(--green)" : "var(--border)",
+                        background: done ? "rgba(34,197,94,.16)" : "var(--bg-card)",
+                      }}
+                    >
+                      {done ? (
+                        <CheckCircle color="var(--green)" size={26} />
+                      ) : (
+                        <Circle color="var(--text-muted)" size={26} />
+                      )}
+                    </span>
+
+                    <div style={{ flex: 1 }}>
+                      <strong>
+                        {index + 1}. {step.label}
+                      </strong>
+                      <p style={done ? doneText : todoText}>
+                        {done ? `✓ ${p.done}` : `○ ${p.notDone}`}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </section>
 
@@ -291,13 +357,41 @@ function getDefaultSteps(language) {
         "Séjour et dépenses",
         "Marge de sécurité",
       ],
-      maison: ["Plan du projet", "Matériaux", "Travaux", "Équipement", "Finition"],
+      maison: [
+        "Terrain",
+        "Fondation",
+        "Murs",
+        "Toiture",
+        "Électricité",
+        "Finition",
+      ],
+      auto: [
+        "Véhicule choisi",
+        "Mise de fonds",
+        "Financement",
+        "Assurance",
+        "Achat",
+      ],
       dette: [
         "Solde confirmé",
         "Taux identifié",
         "Paiement mensuel fixé",
         "Premier palier atteint",
         "Solde à zéro",
+      ],
+      epargne: [
+        "Compte séparé",
+        "Premier dépôt",
+        "3 mois",
+        "6 mois",
+        "12 mois",
+      ],
+      business: [
+        "Idée clarifiée",
+        "Budget minimum",
+        "Matériel ou formation",
+        "Premier lancement",
+        "Projet opérationnel",
       ],
       libre: [
         "Objectif défini",
@@ -308,14 +402,35 @@ function getDefaultSteps(language) {
       ],
     },
     EN: {
-      voyage: ["Passport / documents", "Ticket", "Bags", "Stay and expenses", "Safety margin"],
-      maison: ["Project plan", "Materials", "Work", "Equipment", "Finishing"],
+      voyage: [
+        "Passport / documents",
+        "Ticket",
+        "Bags",
+        "Stay and expenses",
+        "Safety margin",
+      ],
+      maison: ["Land", "Foundation", "Walls", "Roof", "Electricity", "Finishing"],
+      auto: ["Vehicle chosen", "Down payment", "Financing", "Insurance", "Purchase"],
       dette: [
         "Balance confirmed",
         "Rate identified",
         "Monthly payment set",
         "First milestone reached",
         "Zero balance",
+      ],
+      epargne: [
+        "Separate account",
+        "First deposit",
+        "3 months",
+        "6 months",
+        "12 months",
+      ],
+      business: [
+        "Idea clarified",
+        "Minimum budget",
+        "Equipment or training",
+        "First launch",
+        "Project operating",
       ],
       libre: [
         "Goal defined",
@@ -333,13 +448,41 @@ function getDefaultSteps(language) {
         "Estadía y gastos",
         "Margen de seguridad",
       ],
-      maison: ["Plan del proyecto", "Materiales", "Trabajos", "Equipamiento", "Finalización"],
+      maison: [
+        "Terreno",
+        "Fundación",
+        "Muros",
+        "Techo",
+        "Electricidad",
+        "Finalización",
+      ],
+      auto: [
+        "Vehículo elegido",
+        "Pago inicial",
+        "Financiamiento",
+        "Seguro",
+        "Compra",
+      ],
       dette: [
         "Saldo confirmado",
         "Tasa identificada",
         "Pago mensual fijado",
         "Primer hito alcanzado",
         "Saldo en cero",
+      ],
+      epargne: [
+        "Cuenta separada",
+        "Primer depósito",
+        "3 meses",
+        "6 meses",
+        "12 meses",
+      ],
+      business: [
+        "Idea aclarada",
+        "Presupuesto mínimo",
+        "Material o formación",
+        "Primer lanzamiento",
+        "Proyecto operativo",
       ],
       libre: [
         "Objetivo definido",
@@ -354,30 +497,46 @@ function getDefaultSteps(language) {
   return labels[language] || labels.FR;
 }
 
+function normalizeCategory(category) {
+  if (["voyage", "travel", "trip"].includes(category)) return "voyage";
+  if (["maison", "home", "house", "hypotheque", "mortgage"].includes(category)) {
+    return "maison";
+  }
+  if (["auto", "car"].includes(category)) return "auto";
+  if (["dette", "debt"].includes(category)) return "dette";
+  if (["epargne", "savings", "ahorro"].includes(category)) return "epargne";
+  if (["business", "project", "projet"].includes(category)) return "business";
+  return "libre";
+}
+
 function ensureSteps(goal, language = "FR") {
   if (Array.isArray(goal?.pathSteps) && goal.pathSteps.length > 0) {
-    return goal.pathSteps;
+    return goal.pathSteps.map((step, index) => ({
+      id: step.id || `step-${index + 1}`,
+      label: step.label || step.title || `Étape ${index + 1}`,
+      done: Boolean(step.done),
+      completedAt: step.completedAt || null,
+    }));
   }
 
   const labels = getDefaultSteps(language);
-  const category =
-    goal?.category === "voyage" ||
-    goal?.category === "maison" ||
-    goal?.category === "dette"
-      ? goal.category
-      : "libre";
+  const category = normalizeCategory(goal?.category);
 
   const ids = {
     voyage: ["passport", "ticket", "bags", "stay", "security"],
-    maison: ["plan", "materials", "work", "equipment", "finish"],
+    maison: ["land", "foundation", "walls", "roof", "electricity", "finish"],
+    auto: ["vehicle", "downpayment", "financing", "insurance", "purchase"],
     dette: ["balance", "rate", "payment", "threshold", "zero"],
+    epargne: ["account", "first", "three", "six", "twelve"],
+    business: ["idea", "budget", "equipment", "launch", "operating"],
     libre: ["start", "plan", "first", "mid", "victory"],
   };
 
   return labels[category].map((label, index) => ({
-    id: ids[category][index],
+    id: ids[category][index] || `step-${index + 1}`,
     label,
     done: false,
+    completedAt: null,
   }));
 }
 
@@ -393,14 +552,20 @@ function getProgress(goal, language = "FR") {
   const target = Number(goal.targetAmount || 0);
   if (target <= 0) return 0;
 
-  return Math.min(100, Math.round((Number(goal.currentAmount || 0) / target) * 100));
+  return Math.min(
+    100,
+    Math.round((Number(goal.currentAmount || 0) / target) * 100)
+  );
 }
 
 function getRemaining(goal, language = "FR") {
   if (!goal) return 0;
   if (getProgress(goal, language) >= 100) return 0;
 
-  return Math.max(0, Number(goal.targetAmount || 0) - Number(goal.currentAmount || 0));
+  return Math.max(
+    0,
+    Number(goal.targetAmount || 0) - Number(goal.currentAmount || 0)
+  );
 }
 
 function getNextStep(goal, language = "FR") {
@@ -485,7 +650,7 @@ const progressFill = {
 
 const statGrid = {
   display: "grid",
-  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
   gap: "8px",
   marginTop: "14px",
 };
@@ -531,19 +696,22 @@ const stepList = {
 
 const stepButton = {
   width: "100%",
-  background: "var(--bg-panel)",
   border: "1px solid var(--border)",
   borderRadius: "16px",
   color: "var(--text-main)",
   padding: "14px",
   display: "flex",
-  gap: "10px",
+  gap: "12px",
   alignItems: "center",
   textAlign: "left",
+  transition: "transform .12s ease, border-color .12s ease, background .12s ease",
 };
 
 const stepIcon = {
-  width: "30px",
+  width: "42px",
+  height: "42px",
+  borderRadius: "999px",
+  border: "1px solid var(--border)",
   display: "grid",
   placeItems: "center",
   flex: "0 0 auto",
@@ -579,6 +747,13 @@ const greenButton = {
 
 const doneText = {
   color: "var(--green)",
+  fontSize: "13px",
+  marginTop: "5px",
+  fontWeight: 800,
+};
+
+const todoText = {
+  color: "var(--text-muted)",
   fontSize: "13px",
   marginTop: "5px",
   fontWeight: 800,
