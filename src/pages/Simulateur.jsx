@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  Banknote,
   Briefcase,
   Calculator,
   Car,
   CheckCircle,
   Clock,
   CreditCard,
+  GraduationCap,
   HeartHandshake,
   Home,
   PiggyBank,
@@ -15,18 +17,26 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react";
+
 import { cleanMoneyInput, formatMoney } from "../utils/formatters";
 import { getText } from "../data/translations";
+import { getObjectiveTemplate } from "../data/objectiveTemplates";
+import {
+  calculateFinancedAmount,
+  calculateLoanPayment,
+  calculateMortgage,
+  estimateDebtPayoff,
+} from "../utils/financingCalculator";
 
 const pageText = {
   FR: {
     title: "Simuler un objectif",
     subtitle:
-      "Chaque objectif adapte maintenant ses critères, son parcours et ses recommandations.",
+      "Chaque objectif adapte ses critères, son parcours, ses taux et ses recommandations.",
     selectedGoal: "Objectif choisi",
     chooseFromGoals: "Choisir depuis Mes objectifs",
     goalName: "Nom de l’objectif",
-    amount: "Montant cible",
+    targetAmount: "Montant principal",
     current: "Montant déjà disponible",
     monthly: "Contribution possible par mois",
     result: "Résultat de simulation",
@@ -52,17 +62,33 @@ const pageText = {
     activatedMessage: "est maintenant actif et relié au parcours",
     criteriaTitle: "Critères adaptés",
     criteriaHint:
-      "Les montants, les étapes et les conseils changent selon le type d’objectif choisi.",
+      "Les montants, les étapes, les taux et les conseils changent selon le type d’objectif.",
     advice: "Conseil OnJarama",
+    acquisitionMode: "Mode d’acquisition",
+    cash: "Comptant",
+    financing: "Financement",
+    mixed: "Mixte",
+    interestRate: "Taux d’intérêt annuel (%)",
+    loanTerm: "Durée du financement (mois)",
+    downPayment: "Mise de fonds",
+    financedAmount: "Montant financé",
+    monthlyPayment: "Paiement mensuel estimé",
+    totalInterest: "Intérêts estimés",
+    realCost: "Coût réel estimé",
+    mortgageYears: "Amortissement hypothécaire (années)",
+    minimumPayment: "Paiement minimum",
+    plannedPayment: "Paiement prévu",
+    payoffTime: "Temps de remboursement",
+    emergencyMonths: "Mois de dépenses à couvrir",
   },
   EN: {
     title: "Simulate a goal",
     subtitle:
-      "Each goal now adapts its criteria, path and recommendations.",
+      "Each goal adapts its criteria, path, rates and recommendations.",
     selectedGoal: "Selected goal",
     chooseFromGoals: "Choose from My goals",
     goalName: "Goal name",
-    amount: "Target amount",
+    targetAmount: "Main amount",
     current: "Amount already available",
     monthly: "Possible monthly contribution",
     result: "Simulation result",
@@ -88,17 +114,33 @@ const pageText = {
     activatedMessage: "is now active and linked to the path",
     criteriaTitle: "Adapted criteria",
     criteriaHint:
-      "Amounts, steps and advice change depending on the selected goal type.",
+      "Amounts, steps, rates and advice change depending on the goal type.",
     advice: "OnJarama advice",
+    acquisitionMode: "Acquisition mode",
+    cash: "Cash",
+    financing: "Financing",
+    mixed: "Mixed",
+    interestRate: "Annual interest rate (%)",
+    loanTerm: "Financing term (months)",
+    downPayment: "Down payment",
+    financedAmount: "Financed amount",
+    monthlyPayment: "Estimated monthly payment",
+    totalInterest: "Estimated interest",
+    realCost: "Estimated real cost",
+    mortgageYears: "Mortgage amortization (years)",
+    minimumPayment: "Minimum payment",
+    plannedPayment: "Planned payment",
+    payoffTime: "Payoff time",
+    emergencyMonths: "Months of expenses to cover",
   },
   ES: {
     title: "Simular un objetivo",
     subtitle:
-      "Cada objetivo ahora adapta sus criterios, recorrido y recomendaciones.",
+      "Cada objetivo adapta sus criterios, recorrido, tasas y recomendaciones.",
     selectedGoal: "Objetivo elegido",
     chooseFromGoals: "Elegir desde Mis objetivos",
     goalName: "Nombre del objetivo",
-    amount: "Monto objetivo",
+    targetAmount: "Monto principal",
     current: "Monto ya disponible",
     monthly: "Contribución posible por mes",
     result: "Resultado de simulación",
@@ -124,355 +166,171 @@ const pageText = {
     activatedMessage: "ahora está activo y vinculado al recorrido",
     criteriaTitle: "Criterios adaptados",
     criteriaHint:
-      "Los montos, etapas y consejos cambian según el tipo de objetivo elegido.",
+      "Los montos, etapas, tasas y consejos cambian según el tipo de objetivo.",
     advice: "Consejo OnJarama",
+    acquisitionMode: "Modo de adquisición",
+    cash: "Contado",
+    financing: "Financiamiento",
+    mixed: "Mixto",
+    interestRate: "Tasa anual (%)",
+    loanTerm: "Duración del financiamiento (meses)",
+    downPayment: "Pago inicial",
+    financedAmount: "Monto financiado",
+    monthlyPayment: "Pago mensual estimado",
+    totalInterest: "Intereses estimados",
+    realCost: "Costo real estimado",
+    mortgageYears: "Amortización hipotecaria (años)",
+    minimumPayment: "Pago mínimo",
+    plannedPayment: "Pago previsto",
+    payoffTime: "Tiempo de pago",
+    emergencyMonths: "Meses de gastos a cubrir",
   },
 };
 
-function getCategoryConfig(language = "FR") {
-  const configs = {
-    FR: {
-      voyage: {
-        title: "Voyage",
-        subtitle: "Billet, séjour, famille et marge de sécurité.",
-        amountLabel: "Budget voyage total",
-        currentLabel: "Montant déjà mis de côté",
-        monthlyLabel: "Montant possible par mois",
-        defaultAmount: 3500,
-        defaultMonthly: 500,
-        advice:
-          "Séparez billet, séjour et marge de sécurité pour éviter les surprises avant le départ.",
-        steps: [
-          "Documents / passeport",
-          "Billet estimé",
-          "Bagages et achats nécessaires",
-          "Budget séjour",
-          "Marge de sécurité",
-        ],
-      },
-      maison: {
-        title: "Maison",
-        subtitle: "Construction, rénovation, terrain ou projet solaire.",
-        amountLabel: "Budget maison ou travaux",
-        currentLabel: "Montant déjà disponible",
-        monthlyLabel: "Contribution possible par mois",
-        defaultAmount: 10000,
-        defaultMonthly: 700,
-        advice:
-          "Découpez le projet en phases : sécurité, matériaux, travaux, équipement, finition.",
-        steps: ["Plan du projet", "Matériaux", "Main-d’œuvre", "Équipement", "Finition"],
-      },
-      auto: {
-        title: "Auto",
-        subtitle: "Achat, réparation, remplacement ou mise de fonds.",
-        amountLabel: "Budget auto",
-        currentLabel: "Mise de fonds déjà disponible",
-        monthlyLabel: "Montant possible par mois",
-        defaultAmount: 8000,
-        defaultMonthly: 450,
-        advice:
-          "Incluez toujours taxes, inspection, assurance et imprévus dans le budget auto.",
-        steps: ["Budget total", "Inspection / recherche", "Mise de fonds", "Assurance", "Achat ou réparation"],
-      },
-      dette: {
-        title: "Dette",
-        subtitle: "Carte, prêt personnel, marge ou remboursement prioritaire.",
-        amountLabel: "Solde à rembourser",
-        currentLabel: "Montant déjà remboursé",
-        monthlyLabel: "Paiement mensuel possible",
-        defaultAmount: 5000,
-        defaultMonthly: 500,
-        advice:
-          "Priorisez la dette au taux le plus élevé pour réduire le coût total plus vite.",
-        steps: [
-          "Solde confirmé",
-          "Taux identifié",
-          "Paiement mensuel fixé",
-          "Premier palier atteint",
-          "Solde à zéro",
-        ],
-      },
-      epargne: {
-        title: "Épargne",
-        subtitle: "Fonds d’urgence, sécurité ou réserve familiale.",
-        amountLabel: "Objectif d’épargne",
-        currentLabel: "Épargne déjà disponible",
-        monthlyLabel: "Épargne possible par mois",
-        defaultAmount: 3000,
-        defaultMonthly: 250,
-        advice:
-          "Commencez par un coussin simple, puis augmentez le rythme quand il devient stable.",
-        steps: [
-          "Compte ou enveloppe séparée",
-          "Premier dépôt",
-          "25 % atteint",
-          "75 % atteint",
-          "Coussin complété",
-        ],
-      },
-      famille: {
-        title: "Famille",
-        subtitle: "Soutien, événement, école ou besoin important.",
-        amountLabel: "Budget familial",
-        currentLabel: "Montant déjà préparé",
-        monthlyLabel: "Contribution possible par mois",
-        defaultAmount: 2500,
-        defaultMonthly: 300,
-        advice:
-          "Gardez une marge pour les imprévus familiaux et évitez de mélanger ce budget au courant.",
-        steps: ["Besoin défini", "Budget confirmé", "Premier palier", "Préparation", "Objectif réalisé"],
-      },
-      business: {
-        title: "Projet personnel",
-        subtitle: "Formation, lancement, matériel, commerce ou projet libre.",
-        amountLabel: "Budget du projet",
-        currentLabel: "Capital déjà disponible",
-        monthlyLabel: "Investissement possible par mois",
-        defaultAmount: 4000,
-        defaultMonthly: 350,
-        advice:
-          "Validez d’abord le minimum nécessaire, puis financez le projet par étapes.",
-        steps: [
-          "Idée clarifiée",
-          "Budget minimum validé",
-          "Matériel ou formation",
-          "Premier lancement",
-          "Projet opérationnel",
-        ],
-      },
-      libre: {
-        title: "Objectif libre",
-        subtitle: "Un objectif totalement personnalisé.",
-        amountLabel: "Montant cible",
-        currentLabel: "Montant déjà disponible",
-        monthlyLabel: "Contribution possible par mois",
-        defaultAmount: 1000,
-        defaultMonthly: 150,
-        advice:
-          "Définissez un montant clair, une date réaliste et un premier palier simple.",
-        steps: ["Objectif défini", "Plan de financement", "Premier palier", "Milieu du parcours", "Objectif atteint"],
-      },
+const templateDetails = {
+  voyage: {
+    subtitle: {
+      FR: "Billet, séjour, famille et marge de sécurité.",
+      EN: "Ticket, stay, family and safety margin.",
+      ES: "Boleto, estadía, familia y margen de seguridad.",
     },
-    EN: {
-      voyage: {
-        title: "Travel",
-        subtitle: "Ticket, stay, family and safety margin.",
-        amountLabel: "Total travel budget",
-        currentLabel: "Amount already saved",
-        monthlyLabel: "Possible monthly amount",
-        defaultAmount: 3500,
-        defaultMonthly: 500,
-        advice:
-          "Separate ticket, stay and safety margin to avoid surprises before departure.",
-        steps: ["Documents / passport", "Estimated ticket", "Bags and essentials", "Stay budget", "Safety margin"],
-      },
-      maison: {
-        title: "Home",
-        subtitle: "Construction, renovation, land or solar project.",
-        amountLabel: "Home or work budget",
-        currentLabel: "Amount already available",
-        monthlyLabel: "Possible monthly contribution",
-        defaultAmount: 10000,
-        defaultMonthly: 700,
-        advice:
-          "Break the project into phases: safety, materials, work, equipment and finishing.",
-        steps: ["Project plan", "Materials", "Labor", "Equipment", "Finishing"],
-      },
-      auto: {
-        title: "Car",
-        subtitle: "Purchase, repair, replacement or down payment.",
-        amountLabel: "Car budget",
-        currentLabel: "Down payment already available",
-        monthlyLabel: "Possible monthly amount",
-        defaultAmount: 8000,
-        defaultMonthly: 450,
-        advice:
-          "Always include taxes, inspection, insurance and surprises in the car budget.",
-        steps: ["Total budget", "Inspection / search", "Down payment", "Insurance", "Purchase or repair"],
-      },
-      dette: {
-        title: "Debt",
-        subtitle: "Card, personal loan, credit line or priority repayment.",
-        amountLabel: "Balance to repay",
-        currentLabel: "Amount already repaid",
-        monthlyLabel: "Possible monthly payment",
-        defaultAmount: 5000,
-        defaultMonthly: 500,
-        advice:
-          "Prioritize the highest-rate debt to reduce the total cost faster.",
-        steps: ["Balance confirmed", "Rate identified", "Monthly payment set", "First milestone reached", "Zero balance"],
-      },
-      epargne: {
-        title: "Savings",
-        subtitle: "Emergency fund, security or family reserve.",
-        amountLabel: "Savings target",
-        currentLabel: "Savings already available",
-        monthlyLabel: "Possible monthly savings",
-        defaultAmount: 3000,
-        defaultMonthly: 250,
-        advice:
-          "Start with a simple cushion, then increase the rhythm once it feels stable.",
-        steps: ["Separate account or envelope", "First deposit", "25% reached", "75% reached", "Cushion completed"],
-      },
-      famille: {
-        title: "Family",
-        subtitle: "Support, event, school or important need.",
-        amountLabel: "Family budget",
-        currentLabel: "Amount already prepared",
-        monthlyLabel: "Possible monthly contribution",
-        defaultAmount: 2500,
-        defaultMonthly: 300,
-        advice:
-          "Keep a margin for family surprises and avoid mixing this budget with daily spending.",
-        steps: ["Need defined", "Budget confirmed", "First milestone", "Preparation", "Goal achieved"],
-      },
-      business: {
-        title: "Personal project",
-        subtitle: "Training, launch, equipment, business or open project.",
-        amountLabel: "Project budget",
-        currentLabel: "Capital already available",
-        monthlyLabel: "Possible monthly investment",
-        defaultAmount: 4000,
-        defaultMonthly: 350,
-        advice:
-          "Validate the minimum needed first, then fund the project step by step.",
-        steps: ["Idea clarified", "Minimum budget validated", "Equipment or training", "First launch", "Project operating"],
-      },
-      libre: {
-        title: "Custom goal",
-        subtitle: "A fully personalized goal.",
-        amountLabel: "Target amount",
-        currentLabel: "Amount already available",
-        monthlyLabel: "Possible monthly contribution",
-        defaultAmount: 1000,
-        defaultMonthly: 150,
-        advice:
-          "Define a clear amount, a realistic date and a simple first milestone.",
-        steps: ["Goal defined", "Funding plan", "First milestone", "Mid-path", "Goal reached"],
-      },
+    advice: {
+      FR: "Séparez billet, séjour et marge de sécurité pour éviter les surprises.",
+      EN: "Separate ticket, stay and safety margin to avoid surprises.",
+      ES: "Separa boleto, estadía y margen para evitar sorpresas.",
     },
-    ES: {
-      voyage: {
-        title: "Viaje",
-        subtitle: "Boleto, estadía, familia y margen de seguridad.",
-        amountLabel: "Presupuesto total del viaje",
-        currentLabel: "Monto ya ahorrado",
-        monthlyLabel: "Monto posible por mes",
-        defaultAmount: 3500,
-        defaultMonthly: 500,
-        advice:
-          "Separa boleto, estadía y margen de seguridad para evitar sorpresas antes de salir.",
-        steps: ["Documentos / pasaporte", "Boleto estimado", "Equipaje y compras", "Presupuesto de estadía", "Margen de seguridad"],
-      },
-      maison: {
-        title: "Casa",
-        subtitle: "Construcción, renovación, terreno o proyecto solar.",
-        amountLabel: "Presupuesto de casa o trabajos",
-        currentLabel: "Monto ya disponible",
-        monthlyLabel: "Contribución posible por mes",
-        defaultAmount: 10000,
-        defaultMonthly: 700,
-        advice:
-          "Divide el proyecto en fases: seguridad, materiales, trabajos, equipo y finalización.",
-        steps: ["Plan del proyecto", "Materiales", "Mano de obra", "Equipamiento", "Finalización"],
-      },
-      auto: {
-        title: "Auto",
-        subtitle: "Compra, reparación, reemplazo o pago inicial.",
-        amountLabel: "Presupuesto auto",
-        currentLabel: "Pago inicial ya disponible",
-        monthlyLabel: "Monto posible por mes",
-        defaultAmount: 8000,
-        defaultMonthly: 450,
-        advice:
-          "Incluye siempre impuestos, inspección, seguro e imprevistos en el presupuesto auto.",
-        steps: ["Presupuesto total", "Inspección / búsqueda", "Pago inicial", "Seguro", "Compra o reparación"],
-      },
-      dette: {
-        title: "Deuda",
-        subtitle: "Tarjeta, préstamo personal, línea de crédito o pago prioritario.",
-        amountLabel: "Saldo a pagar",
-        currentLabel: "Monto ya pagado",
-        monthlyLabel: "Pago mensual posible",
-        defaultAmount: 5000,
-        defaultMonthly: 500,
-        advice:
-          "Prioriza la deuda con la tasa más alta para reducir el costo total más rápido.",
-        steps: ["Saldo confirmado", "Tasa identificada", "Pago mensual fijado", "Primer hito alcanzado", "Saldo en cero"],
-      },
-      epargne: {
-        title: "Ahorro",
-        subtitle: "Fondo de emergencia, seguridad o reserva familiar.",
-        amountLabel: "Objetivo de ahorro",
-        currentLabel: "Ahorro ya disponible",
-        monthlyLabel: "Ahorro posible por mes",
-        defaultAmount: 3000,
-        defaultMonthly: 250,
-        advice:
-          "Comienza con un colchón simple y aumenta el ritmo cuando sea estable.",
-        steps: ["Cuenta o sobre separado", "Primer depósito", "25% alcanzado", "75% alcanzado", "Colchón completado"],
-      },
-      famille: {
-        title: "Familia",
-        subtitle: "Apoyo, evento, escuela o necesidad importante.",
-        amountLabel: "Presupuesto familiar",
-        currentLabel: "Monto ya preparado",
-        monthlyLabel: "Contribución posible por mes",
-        defaultAmount: 2500,
-        defaultMonthly: 300,
-        advice:
-          "Guarda un margen para imprevistos familiares y evita mezclar este presupuesto con gastos diarios.",
-        steps: ["Necesidad definida", "Presupuesto confirmado", "Primer hito", "Preparación", "Objetivo realizado"],
-      },
-      business: {
-        title: "Proyecto personal",
-        subtitle: "Formación, lanzamiento, material, comercio o proyecto libre.",
-        amountLabel: "Presupuesto del proyecto",
-        currentLabel: "Capital ya disponible",
-        monthlyLabel: "Inversión posible por mes",
-        defaultAmount: 4000,
-        defaultMonthly: 350,
-        advice:
-          "Valida primero el mínimo necesario y financia el proyecto por etapas.",
-        steps: ["Idea aclarada", "Presupuesto mínimo validado", "Material o formación", "Primer lanzamiento", "Proyecto operativo"],
-      },
-      libre: {
-        title: "Objetivo libre",
-        subtitle: "Un objetivo totalmente personalizado.",
-        amountLabel: "Monto objetivo",
-        currentLabel: "Monto ya disponible",
-        monthlyLabel: "Contribución posible por mes",
-        defaultAmount: 1000,
-        defaultMonthly: 150,
-        advice:
-          "Define un monto claro, una fecha realista y un primer hito simple.",
-        steps: ["Objetivo definido", "Plan de financiación", "Primer hito", "Mitad del recorrido", "Objetivo alcanzado"],
-      },
+  },
+  maison: {
+    subtitle: {
+      FR: "Construction, rénovation, terrain, finition ou projet solaire.",
+      EN: "Construction, renovation, land, finishing or solar project.",
+      ES: "Construcción, renovación, terreno, finalización o proyecto solar.",
     },
-  };
-
-  return configs[language] || configs.FR;
-}
+    advice: {
+      FR: "Découpez la maison en phases : terrain, structure, toiture, énergie, finition.",
+      EN: "Break the home project into phases: land, structure, roof, energy, finishing.",
+      ES: "Divide la casa en fases: terreno, estructura, techo, energía y finalización.",
+    },
+  },
+  auto: {
+    subtitle: {
+      FR: "Achat, réparation, remplacement, mise de fonds ou financement.",
+      EN: "Purchase, repair, replacement, down payment or financing.",
+      ES: "Compra, reparación, reemplazo, pago inicial o financiamiento.",
+    },
+    advice: {
+      FR: "Ajoutez toujours taxes, assurance, inspection et intérêts au coût réel.",
+      EN: "Always include taxes, insurance, inspection and interest in the real cost.",
+      ES: "Incluye impuestos, seguro, inspección e intereses en el costo real.",
+    },
+  },
+  dette: {
+    subtitle: {
+      FR: "Carte, prêt personnel, marge ou remboursement prioritaire.",
+      EN: "Card, personal loan, credit line or priority repayment.",
+      ES: "Tarjeta, préstamo, línea de crédito o pago prioritario.",
+    },
+    advice: {
+      FR: "Priorisez le taux le plus élevé pour réduire le coût total plus vite.",
+      EN: "Prioritize the highest rate to reduce total cost faster.",
+      ES: "Prioriza la tasa más alta para reducir el costo total más rápido.",
+    },
+  },
+  epargne: {
+    subtitle: {
+      FR: "Fonds d’urgence, sécurité ou réserve familiale.",
+      EN: "Emergency fund, security or family reserve.",
+      ES: "Fondo de emergencia, seguridad o reserva familiar.",
+    },
+    advice: {
+      FR: "Visez d’abord 3 mois, puis 6 mois, puis 12 mois de dépenses.",
+      EN: "Aim first for 3 months, then 6 months, then 12 months of expenses.",
+      ES: "Apunta primero a 3 meses, luego 6 meses, luego 12 meses de gastos.",
+    },
+  },
+  hypotheque: {
+    subtitle: {
+      FR: "Mise de fonds, taux, amortissement et paiement hypothécaire.",
+      EN: "Down payment, rate, amortization and mortgage payment.",
+      ES: "Pago inicial, tasa, amortización y pago hipotecario.",
+    },
+    advice: {
+      FR: "Même un petit changement de taux peut changer fortement le coût réel.",
+      EN: "Even a small rate change can strongly affect the real cost.",
+      ES: "Un pequeño cambio de tasa puede afectar mucho el costo real.",
+    },
+  },
+  etudes: {
+    subtitle: {
+      FR: "Formation, frais, matériel, livres et inscription.",
+      EN: "Training, fees, equipment, books and registration.",
+      ES: "Formación, costos, material, libros e inscripción.",
+    },
+    advice: {
+      FR: "Incluez les frais cachés : matériel, transport, livres et marge.",
+      EN: "Include hidden costs: equipment, transport, books and margin.",
+      ES: "Incluye costos ocultos: material, transporte, libros y margen.",
+    },
+  },
+  mariage: {
+    subtitle: {
+      FR: "Salle, invités, cérémonie, voyage et marge.",
+      EN: "Venue, guests, ceremony, trip and margin.",
+      ES: "Sala, invitados, ceremonia, viaje y margen.",
+    },
+    advice: {
+      FR: "Fixez une limite claire par poste pour éviter que le budget explose.",
+      EN: "Set a clear limit per category to avoid budget drift.",
+      ES: "Define un límite claro por categoría para evitar excesos.",
+    },
+  },
+  business: {
+    subtitle: {
+      FR: "Capital de départ, équipement, marketing et fonds de roulement.",
+      EN: "Startup capital, equipment, marketing and operating fund.",
+      ES: "Capital inicial, equipo, marketing y fondo operativo.",
+    },
+    advice: {
+      FR: "Financez d’abord le minimum viable, puis augmentez par étapes.",
+      EN: "Fund the minimum viable setup first, then grow step by step.",
+      ES: "Financia primero lo mínimo viable y luego crece por etapas.",
+    },
+  },
+};
 
 function normalizeCategory(category) {
   if (category === "project" || category === "projet" || category === "business") {
     return "business";
   }
-
   if (category === "savings" || category === "ahorro" || category === "epargne") {
     return "epargne";
   }
-
   if (category === "family" || category === "familia" || category === "famille") {
     return "famille";
   }
-
   if (category === "car" || category === "auto") return "auto";
   if (category === "home" || category === "house" || category === "maison") return "maison";
   if (category === "travel" || category === "trip" || category === "voyage") return "voyage";
   if (category === "debt" || category === "dette") return "dette";
+  if (category === "mortgage" || category === "hypotheque") return "hypotheque";
+  if (category === "studies" || category === "etudes") return "etudes";
+  if (category === "wedding" || category === "mariage") return "mariage";
 
-  return category || "libre";
+  return category || "voyage";
+}
+
+function getTemplate(category, language) {
+  const safeCategory = normalizeCategory(category);
+  const base = getObjectiveTemplate(safeCategory, language);
+  const details = templateDetails[safeCategory] || templateDetails.voyage;
+
+  return {
+    ...base,
+    id: safeCategory,
+    title: base.label,
+    subtitle: details.subtitle?.[language] || details.subtitle?.FR || "",
+    advice: details.advice?.[language] || details.advice?.FR || "",
+  };
 }
 
 function Simulateur({
@@ -487,26 +345,27 @@ function Simulateur({
   const p = pageText[language] || pageText.FR;
   const currency = settings?.currency || "CAD";
   const goals = Array.isArray(selectedGoals) ? selectedGoals : [];
-  const categoryConfig = getCategoryConfig(language);
 
-  const defaultTemplate = {
-    id: "voyage",
-    ...categoryConfig.voyage,
-  };
+  const defaultTemplate = getTemplate("voyage", language);
 
   const [template, setTemplate] = useState(defaultTemplate);
   const [title, setTitle] = useState(defaultTemplate.title);
-  const [targetAmount, setTargetAmount] = useState(
-    String(defaultTemplate.defaultAmount)
-  );
+  const [targetAmount, setTargetAmount] = useState(String(defaultTemplate.defaultAmount));
   const [currentAmount, setCurrentAmount] = useState("0");
-  const [monthlyContribution, setMonthlyContribution] = useState(
-    String(defaultTemplate.defaultMonthly)
-  );
+  const [monthlyContribution, setMonthlyContribution] = useState(String(defaultTemplate.defaultMonthly));
   const [activatedGoalId, setActivatedGoalId] = useState(null);
 
+  const [acquisitionMode, setAcquisitionMode] = useState("cash");
+  const [downPayment, setDownPayment] = useState("0");
+  const [interestRate, setInterestRate] = useState("0");
+  const [loanTermMonths, setLoanTermMonths] = useState("60");
+  const [mortgageYears, setMortgageYears] = useState("25");
+  const [minimumPayment, setMinimumPayment] = useState("0");
+  const [emergencyMonths, setEmergencyMonths] = useState("3");
+
   const currentCategory = normalizeCategory(template.id);
-  const currentConfig = categoryConfig[currentCategory] || categoryConfig.libre;
+  const currentTemplate = getTemplate(currentCategory, language);
+  const hasFinancing = ["auto", "maison", "hypotheque", "dette"].includes(currentCategory);
 
   useEffect(() => {
     const rawTemplate = localStorage.getItem("onjaramaGoalToSimulate");
@@ -516,22 +375,15 @@ function Simulateur({
       try {
         const parsed = JSON.parse(rawTemplate);
         const category = normalizeCategory(parsed.id || parsed.category);
-        const config = categoryConfig[category] || categoryConfig.libre;
-        const safe = {
-          id: category,
-          ...config,
-          ...parsed,
-          title: parsed.title || config.title,
-          subtitle: parsed.subtitle || config.subtitle,
-          defaultAmount: Number(parsed.defaultAmount || config.defaultAmount),
-          defaultMonthly: Number(parsed.defaultMonthly || config.defaultMonthly),
-        };
+        const nextTemplate = getTemplate(category, language);
 
-        setTemplate(safe);
-        setTitle(safe.title || config.title);
-        setTargetAmount(String(safe.defaultAmount || config.defaultAmount));
-        setMonthlyContribution(String(safe.defaultMonthly || config.defaultMonthly));
+        setTemplate(nextTemplate);
+        setTitle(parsed.title || nextTemplate.title);
+        setTargetAmount(String(parsed.defaultAmount || nextTemplate.defaultAmount));
+        setMonthlyContribution(String(parsed.defaultMonthly || nextTemplate.defaultMonthly));
         setCurrentAmount("0");
+        setDownPayment("0");
+        setInterestRate(category === "dette" ? "19.99" : "0");
         setActivatedGoalId(null);
         localStorage.removeItem("onjaramaGoalToSimulate");
         return;
@@ -544,38 +396,84 @@ function Simulateur({
       const goal = goals.find((item) => String(item.id) === String(legacyGoalId));
 
       if (goal) {
-        const category = normalizeCategory(goal.category || "libre");
-        const config = categoryConfig[category] || categoryConfig.libre;
+        const category = normalizeCategory(goal.category || "voyage");
+        const nextTemplate = getTemplate(category, language);
 
-        setTemplate({
-          id: category,
-          ...config,
-          title: goal.categoryLabel || config.title,
-          subtitle: goal.option || config.subtitle || p.existingGoal,
-          defaultAmount: Number(goal.targetAmount || config.defaultAmount),
-          defaultMonthly:
-            Number(goal.monthlyContribution || 0) || config.defaultMonthly,
-        });
+        setTemplate(nextTemplate);
         setTitle(goal.title || p.goalFallback);
-        setTargetAmount(String(goal.targetAmount || config.defaultAmount));
+        setTargetAmount(String(goal.targetAmount || nextTemplate.defaultAmount));
         setCurrentAmount(String(goal.currentAmount || 0));
-        setMonthlyContribution(
-          String(goal.monthlyContribution || config.defaultMonthly)
-        );
+        setMonthlyContribution(String(goal.monthlyContribution || nextTemplate.defaultMonthly));
         setActivatedGoalId(null);
       }
 
       localStorage.removeItem("onjaramaSimulatorGoalId");
     }
-  }, [goals, language]);
+  }, [goals, language, p.goalFallback]);
 
   const target = Number(targetAmount || 0);
   const current = Number(currentAmount || 0);
   const monthly = Number(monthlyContribution || 0);
+  const down = Number(downPayment || 0);
+  const rate = Number(interestRate || 0);
+  const term = Number(loanTermMonths || 0);
+  const mortgageTermYears = Number(mortgageYears || 25);
+  const plannedDebtPayment = currentCategory === "dette" ? monthly : Number(minimumPayment || monthly || 0);
+
+  const financedAmount = useMemo(() => {
+    if (!hasFinancing) return 0;
+    if (currentCategory === "dette") return target;
+    return calculateFinancedAmount(target, down);
+  }, [hasFinancing, currentCategory, target, down]);
+
+  const loanResult = useMemo(() => {
+    if (!hasFinancing) {
+      return { monthlyPayment: 0, totalPaid: 0, totalInterest: 0 };
+    }
+
+    if (currentCategory === "hypotheque" || currentCategory === "maison") {
+      return calculateMortgage({
+        propertyPrice: target,
+        downPayment: down,
+        annualRate: rate,
+        amortizationYears: mortgageTermYears,
+      });
+    }
+
+    if (currentCategory === "dette") {
+      return estimateDebtPayoff({
+        balance: target,
+        annualRate: rate,
+        monthlyPayment: plannedDebtPayment,
+      });
+    }
+
+    return calculateLoanPayment({
+      principal: financedAmount,
+      annualRate: rate,
+      months: term,
+    });
+  }, [
+    hasFinancing,
+    currentCategory,
+    target,
+    down,
+    rate,
+    mortgageTermYears,
+    plannedDebtPayment,
+    financedAmount,
+    term,
+  ]);
+
+  const realCost = useMemo(() => {
+    if (!hasFinancing) return target;
+    if (currentCategory === "dette") return loanResult.totalPaid || target;
+    return target + Number(loanResult.totalInterest || 0);
+  }, [hasFinancing, currentCategory, target, loanResult]);
+
   const remaining = Math.max(0, target - current);
   const monthsNeeded = monthly > 0 ? Math.ceil(remaining / monthly) : 0;
-  const progress =
-    target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+  const progress = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
 
   const estimatedDate = useMemo(
     () => estimateDate(monthsNeeded, language),
@@ -609,18 +507,33 @@ function Simulateur({
       id: Date.now(),
       title: title.trim(),
       category: currentCategory,
-      categoryLabel: currentConfig.title,
-      option: currentConfig.subtitle,
+      categoryLabel: currentTemplate.title,
+      option: currentTemplate.subtitle,
       targetAmount: target,
       currentAmount: Math.min(current, target),
       targetDate: monthsNeeded > 0 ? getIsoTargetDate(monthsNeeded) : "",
       highlighted: goals.length === 0,
       archived: false,
       status: "active",
-      source: "simulation_v15_1",
+      source: "simulation_v15_5",
       createdAt: now,
       activatedAt: now,
       monthlyContribution: monthly,
+      financing: {
+        acquisitionMode,
+        downPayment: down,
+        interestRate: rate,
+        loanTermMonths: term,
+        mortgageYears: mortgageTermYears,
+        financedAmount,
+        monthlyPayment: loanResult.monthlyPayment || 0,
+        totalInterest: loanResult.totalInterest || 0,
+        totalPaid: loanResult.totalPaid || 0,
+        realCost,
+        minimumPayment: Number(minimumPayment || 0),
+        plannedPayment: plannedDebtPayment,
+        emergencyMonths: Number(emergencyMonths || 0),
+      },
       simulation: {
         category: currentCategory,
         targetAmount: target,
@@ -629,6 +542,7 @@ function Simulateur({
         remaining,
         monthsNeeded,
         estimatedDate,
+        realCost,
         createdAt: now,
       },
       pathSteps,
@@ -671,7 +585,7 @@ function Simulateur({
           <div>
             <p style={eyebrow}>{p.selectedGoal}</p>
             <h2>{title || p.noGoal}</h2>
-            <p style={mutedSmall}>{currentConfig.subtitle}</p>
+            <p style={mutedSmall}>{currentTemplate.subtitle}</p>
           </div>
         </div>
 
@@ -692,7 +606,7 @@ function Simulateur({
 
         <p style={adviceBox}>
           <strong>{p.advice} : </strong>
-          {currentConfig.advice}
+          {currentTemplate.advice}
         </p>
       </section>
 
@@ -703,13 +617,9 @@ function Simulateur({
         </div>
 
         <label>{p.goalName}</label>
-        <input
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          style={input}
-        />
+        <input value={title} onChange={(event) => setTitle(event.target.value)} style={input} />
 
-        <label>{currentConfig.amountLabel}</label>
+        <label>{p.targetAmount}</label>
         <input
           value={targetAmount}
           onChange={(event) => setTargetAmount(clean(event.target.value))}
@@ -717,7 +627,7 @@ function Simulateur({
           style={input}
         />
 
-        <label>{currentConfig.currentLabel}</label>
+        <label>{p.current}</label>
         <input
           value={currentAmount}
           onChange={(event) => setCurrentAmount(clean(event.target.value))}
@@ -725,14 +635,144 @@ function Simulateur({
           style={input}
         />
 
-        <label>{currentConfig.monthlyLabel}</label>
+        <label>{p.monthly}</label>
         <input
           value={monthlyContribution}
           onChange={(event) => setMonthlyContribution(clean(event.target.value))}
           inputMode="decimal"
           style={input}
         />
+
+        {currentCategory === "epargne" && (
+          <>
+            <label>{p.emergencyMonths}</label>
+            <select
+              value={emergencyMonths}
+              onChange={(event) => setEmergencyMonths(event.target.value)}
+              style={input}
+            >
+              <option value="3">3</option>
+              <option value="6">6</option>
+              <option value="12">12</option>
+            </select>
+          </>
+        )}
       </section>
+
+      {hasFinancing && (
+        <section style={financingCard}>
+          <div style={header}>
+            <Banknote color="var(--gold)" />
+            <h2>{p.acquisitionMode}</h2>
+          </div>
+
+          {currentCategory !== "dette" && (
+            <div style={modeGrid}>
+              <button
+                onClick={() => setAcquisitionMode("cash")}
+                style={acquisitionMode === "cash" ? selectedModeButton : modeButton}
+              >
+                {p.cash}
+              </button>
+              <button
+                onClick={() => setAcquisitionMode("financing")}
+                style={acquisitionMode === "financing" ? selectedModeButton : modeButton}
+              >
+                {p.financing}
+              </button>
+              <button
+                onClick={() => setAcquisitionMode("mixed")}
+                style={acquisitionMode === "mixed" ? selectedModeButton : modeButton}
+              >
+                {p.mixed}
+              </button>
+            </div>
+          )}
+
+          {currentCategory !== "dette" && acquisitionMode !== "cash" && (
+            <>
+              <label>{p.downPayment}</label>
+              <input
+                value={downPayment}
+                onChange={(event) => setDownPayment(clean(event.target.value))}
+                inputMode="decimal"
+                style={input}
+              />
+            </>
+          )}
+
+          <label>{p.interestRate}</label>
+          <input
+            value={interestRate}
+            onChange={(event) => setInterestRate(clean(event.target.value))}
+            inputMode="decimal"
+            style={input}
+          />
+
+          {currentCategory === "dette" ? (
+            <>
+              <label>{p.minimumPayment}</label>
+              <input
+                value={minimumPayment}
+                onChange={(event) => setMinimumPayment(clean(event.target.value))}
+                inputMode="decimal"
+                style={input}
+              />
+
+              <label>{p.plannedPayment}</label>
+              <input
+                value={monthlyContribution}
+                onChange={(event) => setMonthlyContribution(clean(event.target.value))}
+                inputMode="decimal"
+                style={input}
+              />
+            </>
+          ) : currentCategory === "maison" || currentCategory === "hypotheque" ? (
+            <>
+              <label>{p.mortgageYears}</label>
+              <select
+                value={mortgageYears}
+                onChange={(event) => setMortgageYears(event.target.value)}
+                style={input}
+              >
+                <option value="15">15</option>
+                <option value="20">20</option>
+                <option value="25">25</option>
+                <option value="30">30</option>
+              </select>
+            </>
+          ) : (
+            <>
+              <label>{p.loanTerm}</label>
+              <select
+                value={loanTermMonths}
+                onChange={(event) => setLoanTermMonths(event.target.value)}
+                style={input}
+              >
+                <option value="36">36</option>
+                <option value="48">48</option>
+                <option value="60">60</option>
+                <option value="72">72</option>
+                <option value="84">84</option>
+              </select>
+            </>
+          )}
+
+          <div style={resultGrid}>
+            <Result label={p.financedAmount} value={formatMoney(financedAmount, currency)} />
+            <Result
+              label={currentCategory === "dette" ? p.payoffTime : p.monthlyPayment}
+              value={
+                currentCategory === "dette"
+                  ? `${loanResult.months || "—"} ${p.months}`
+                  : formatMoney(loanResult.monthlyPayment || 0, currency)
+              }
+            />
+            <Result label={p.totalInterest} value={formatMoney(loanResult.totalInterest || 0, currency)} />
+            <Result label={p.realCost} value={formatMoney(realCost || 0, currency)} />
+          </div>
+        </section>
+      )}
 
       <section style={resultCard}>
         <div style={header}>
@@ -744,7 +784,7 @@ function Simulateur({
         </div>
 
         <div style={resultGrid}>
-          <Result label={currentConfig.amountLabel} value={formatMoney(target, currency)} />
+          <Result label={p.targetAmount} value={formatMoney(target, currency)} />
           <Result label={p.remaining} value={formatMoney(remaining, currency)} />
           <Result label={p.timeNeeded} value={`${monthsNeeded || "—"} ${p.months}`} />
           <Result label={p.date} value={estimatedDate} />
@@ -779,10 +819,7 @@ function Simulateur({
 
         <div style={scenarioGrid}>
           {scenarios.map((scenario) => (
-            <div
-              key={scenario.label}
-              style={{ ...scenarioCard, borderColor: scenario.color }}
-            >
+            <div key={scenario.label} style={{ ...scenarioCard, borderColor: scenario.color }}>
               <strong style={{ color: scenario.color }}>{scenario.label}</strong>
               <small style={mutedSmall}>
                 {formatMoney(scenario.monthly, currency)} / {p.months}
@@ -823,6 +860,8 @@ function GoalIcon({ category }) {
   if (category === "epargne") return <PiggyBank color="var(--green)" />;
   if (category === "famille") return <HeartHandshake color="var(--purple)" />;
   if (category === "business") return <Briefcase color="var(--blue)" />;
+  if (category === "hypotheque") return <Home color="var(--gold)" />;
+  if (category === "etudes") return <GraduationCap color="var(--blue)" />;
   return <Target color="var(--gold)" />;
 }
 
@@ -837,8 +876,7 @@ function Result({ label, value }) {
 
 function buildScenario(label, monthly, remaining, language) {
   const safeMonthly = Math.max(0, Math.round(monthly || 0));
-  const months =
-    safeMonthly > 0 ? Math.ceil(Number(remaining || 0) / safeMonthly) : 0;
+  const months = safeMonthly > 0 ? Math.ceil(Number(remaining || 0) / safeMonthly) : 0;
 
   const colors = {
     Tranquille: "var(--green)",
@@ -866,18 +904,13 @@ function buildScenario(label, monthly, remaining, language) {
 
 function estimateDate(months, language) {
   if (!months || months <= 0) {
-    return language === "EN"
-      ? "To define"
-      : language === "ES"
-        ? "Por definir"
-        : "À définir";
+    return language === "EN" ? "To define" : language === "ES" ? "Por definir" : "À définir";
   }
 
   const date = new Date();
   date.setMonth(date.getMonth() + months);
 
-  const locale =
-    language === "EN" ? "en-CA" : language === "ES" ? "es-CA" : "fr-CA";
+  const locale = language === "EN" ? "en-CA" : language === "ES" ? "es-CA" : "fr-CA";
 
   return date.toLocaleDateString(locale, {
     year: "numeric",
@@ -892,11 +925,10 @@ function getIsoTargetDate(months) {
 }
 
 function buildPathSteps(category, title, language = "FR") {
-  const config = getCategoryConfig(language)[category] || getCategoryConfig(language).libre;
+  const template = getObjectiveTemplate(category, language);
+  const ids = ["start", "second", "third", "fourth", "fifth", "victory"];
 
-  const ids = ["start", "second", "third", "fourth", "victory"];
-
-  return config.steps.map((label, index) => ({
+  return template.steps.map((label, index) => ({
     id: ids[index] || `step-${index + 1}`,
     label:
       category === "libre" && index === 0 && title
@@ -926,6 +958,13 @@ const criteriaCard = {
   borderColor: "var(--gold)",
   background:
     "linear-gradient(135deg, rgba(212,175,55,.12), rgba(56,189,248,.06), var(--bg-card))",
+};
+
+const financingCard = {
+  ...card,
+  borderColor: "var(--gold)",
+  background:
+    "linear-gradient(135deg, rgba(212,175,55,.13), rgba(239,68,68,.05), var(--bg-card))",
 };
 
 const resultCard = {
@@ -981,6 +1020,29 @@ const ghostButton = {
   alignItems: "center",
   justifyContent: "center",
   gap: "8px",
+};
+
+const modeGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  gap: "8px",
+  marginBottom: "12px",
+};
+
+const modeButton = {
+  padding: "11px",
+  borderRadius: "14px",
+  border: "1px solid var(--border)",
+  background: "var(--bg-panel)",
+  color: "var(--text-main)",
+  fontWeight: 900,
+};
+
+const selectedModeButton = {
+  ...modeButton,
+  borderColor: "var(--gold)",
+  background: "rgba(212,175,55,.13)",
+  color: "var(--gold)",
 };
 
 const resultGrid = {
