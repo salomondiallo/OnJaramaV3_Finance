@@ -1,838 +1,486 @@
+import { useEffect, useMemo, useState } from "react";
 import {
   Calculator,
-  Car,
-  ChevronRight,
+  CheckCircle,
+  Clock,
   CreditCard,
   Home,
-  PiggyBank,
   Plane,
-  RefreshCw,
+  Route,
   ShieldCheck,
-  Sparkles,
   Target,
   TrendingUp,
-  X,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { cleanMoneyInput, formatMoney } from "../utils/formatters";
+import { getText } from "../data/translations";
 
-function Simulateur({
-  financeData,
-  selectedGoals,
-  setSelectedGoals,
-  setCurrentPage,
-  settings,
-}) {
-  const goals = Array.isArray(selectedGoals)
-    ? selectedGoals.filter((goal) => !goal.archived)
-    : [];
-  const debts = Array.isArray(financeData?.debts) ? financeData.debts : [];
+const pageText = {
+  FR: {
+    title: "Simuler un objectif",
+    subtitle:
+      "Calculez le coût, le temps et l’effort avant d’activer un objectif.",
+    selectedGoal: "Objectif choisi",
+    chooseFromGoals: "Choisir depuis Mes objectifs",
+    amount: "Coût estimé",
+    current: "Montant déjà disponible",
+    monthly: "Contribution possible par mois",
+    result: "Résultat de simulation",
+    timeNeeded: "Temps estimé",
+    months: "mois",
+    ready: "Prêt à activer",
+    activate: "Activer cet objectif",
+    activated: "Objectif activé. Le parcours associé est prêt.",
+    goPath: "Voir le parcours",
+    scenario: "Scénarios de rythme",
+    noGoal: "Aucun objectif choisi.",
+    calm: "Tranquille",
+    balanced: "Équilibré",
+    dynamic: "Dynamique",
+    fierce: "Féroce",
+    pathPreview: "Parcours associé",
+    projection: "Projection",
+  },
+  EN: {
+    title: "Simulate a goal",
+    subtitle: "Calculate cost, time and effort before activating a goal.",
+    selectedGoal: "Selected goal",
+    chooseFromGoals: "Choose from My goals",
+    amount: "Estimated cost",
+    current: "Amount already available",
+    monthly: "Possible monthly contribution",
+    result: "Simulation result",
+    timeNeeded: "Estimated time",
+    months: "months",
+    ready: "Ready to activate",
+    activate: "Activate this goal",
+    activated: "Goal activated. The related path is ready.",
+    goPath: "View path",
+    scenario: "Rhythm scenarios",
+    noGoal: "No goal selected.",
+    calm: "Calm",
+    balanced: "Balanced",
+    dynamic: "Dynamic",
+    fierce: "Fierce",
+    pathPreview: "Related path",
+    projection: "Projection",
+  },
+  ES: {
+    title: "Simular un objetivo",
+    subtitle: "Calcula costo, tiempo y esfuerzo antes de activar un objetivo.",
+    selectedGoal: "Objetivo elegido",
+    chooseFromGoals: "Elegir desde Mis objetivos",
+    amount: "Costo estimado",
+    current: "Monto ya disponible",
+    monthly: "Contribución posible por mes",
+    result: "Resultado de simulación",
+    timeNeeded: "Tiempo estimado",
+    months: "meses",
+    ready: "Listo para activar",
+    activate: "Activar este objetivo",
+    activated: "Objetivo activado. El recorrido asociado está listo.",
+    goPath: "Ver recorrido",
+    scenario: "Escenarios de ritmo",
+    noGoal: "Ningún objetivo elegido.",
+    calm: "Tranquilo",
+    balanced: "Equilibrado",
+    dynamic: "Dinámico",
+    fierce: "Feroz",
+    pathPreview: "Recorrido asociado",
+    projection: "Proyección",
+  },
+};
+
+const fallbackGoal = {
+  id: "voyage",
+  title: "Voyage",
+  subtitle: "Billet, séjour et marge de sécurité.",
+  defaultAmount: 3500,
+  defaultMonthly: 500,
+};
+
+function Simulateur({ selectedGoals, setSelectedGoals, setCurrentPage, settings, addActivity }) {
+  const t = getText(settings);
+  const language = settings?.language || "FR";
+  const p = pageText[language] || pageText.FR;
   const currency = settings?.currency || "CAD";
+  const goals = Array.isArray(selectedGoals) ? selectedGoals : [];
 
-  const [monthlyAmount, setMonthlyAmount] = useState("500");
-  const [years, setYears] = useState("1");
-  const [selectedGoalId, setSelectedGoalId] = useState(null);
-  const [showGoalPicker, setShowGoalPicker] = useState(false);
-  const [confirmMessage, setConfirmMessage] = useState("");
+  const [template, setTemplate] = useState(fallbackGoal);
+  const [title, setTitle] = useState(fallbackGoal.title);
+  const [targetAmount, setTargetAmount] = useState(String(fallbackGoal.defaultAmount));
+  const [currentAmount, setCurrentAmount] = useState("0");
+  const [monthlyContribution, setMonthlyContribution] = useState(
+    String(fallbackGoal.defaultMonthly)
+  );
+  const [activatedGoalId, setActivatedGoalId] = useState(null);
 
   useEffect(() => {
-    const storedGoalId = localStorage.getItem("onjaramaSimulatorGoalId");
-    if (!storedGoalId) return;
+    const rawTemplate = localStorage.getItem("onjaramaGoalToSimulate");
+    const legacyGoalId = localStorage.getItem("onjaramaSimulatorGoalId");
 
-    const goal = goals.find((item) => String(item.id) === String(storedGoalId));
-    if (!goal) return;
+    if (rawTemplate) {
+      try {
+        const parsed = JSON.parse(rawTemplate);
+        const safe = { ...fallbackGoal, ...parsed };
+        setTemplate(safe);
+        setTitle(safe.title || fallbackGoal.title);
+        setTargetAmount(String(safe.defaultAmount || fallbackGoal.defaultAmount));
+        setMonthlyContribution(String(safe.defaultMonthly || fallbackGoal.defaultMonthly));
+        setCurrentAmount("0");
+        localStorage.removeItem("onjaramaGoalToSimulate");
+        return;
+      } catch {
+        localStorage.removeItem("onjaramaGoalToSimulate");
+      }
+    }
 
-    const remaining = getGoalRemaining(goal);
-    const monthlyHint =
-      Number(goal.monthlyContribution || 0) ||
-      estimateMonthlyNeed(goal) ||
-      Math.max(50, Math.ceil(remaining / 12));
-
-    setSelectedGoalId(goal.id);
-    setMonthlyAmount(String(monthlyHint));
-    setYears("1");
-    localStorage.removeItem("onjaramaSimulatorGoalId");
+    if (legacyGoalId) {
+      const goal = goals.find((item) => String(item.id) === String(legacyGoalId));
+      if (goal) {
+        setTemplate({
+          id: goal.category || "libre",
+          title: goal.title,
+          subtitle: goal.option || goal.categoryLabel || "Objectif existant",
+          defaultAmount: Number(goal.targetAmount || 0),
+          defaultMonthly: Number(goal.monthlyContribution || 0) || 250,
+        });
+        setTitle(goal.title || "Objectif");
+        setTargetAmount(String(goal.targetAmount || 0));
+        setCurrentAmount(String(goal.currentAmount || 0));
+        setMonthlyContribution(String(goal.monthlyContribution || 250));
+      }
+      localStorage.removeItem("onjaramaSimulatorGoalId");
+    }
   }, [goals]);
 
-  const selectedGoal = goals.find(
-    (goal) => String(goal.id) === String(selectedGoalId)
+  const target = Number(targetAmount || 0);
+  const current = Number(currentAmount || 0);
+  const monthly = Number(monthlyContribution || 0);
+  const remaining = Math.max(0, target - current);
+  const monthsNeeded = monthly > 0 ? Math.ceil(remaining / monthly) : 0;
+  const progress = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+  const estimatedDate = useMemo(
+    () => estimateDate(monthsNeeded, language),
+    [monthsNeeded, language]
+  );
+  const pathSteps = useMemo(() => buildPathSteps(template.id, title), [template.id, title]);
+  const scenarios = useMemo(
+    () => [
+      buildScenario(p.calm, monthly * 0.75, remaining, language),
+      buildScenario(p.balanced, monthly, remaining, language),
+      buildScenario(p.dynamic, monthly * 1.25, remaining, language),
+      buildScenario(p.fierce, monthly * 1.5, remaining, language),
+    ],
+    [monthly, remaining, language, p]
   );
 
-  const monthly = Number(monthlyAmount || 0);
-  const durationYears = Number(years || 0);
-  const months = Math.max(1, durationYears * 12);
-  const totalSaved = monthly * months;
-
-  const debtTotal = debts.reduce(
-    (sum, debt) => sum + Number(debt.balance || 0),
-    0
-  );
-
-  const debtReduction = Math.min(totalSaved, debtTotal);
-  const selectedRemaining = selectedGoal ? getGoalRemaining(selectedGoal) : 0;
-  const selectedCoverage =
-    selectedGoal && selectedRemaining > 0
-      ? Math.min(100, Math.round((totalSaved / selectedRemaining) * 100))
-      : 0;
-
-  const scenarios = useMemo(() => {
-    if (!selectedGoal) return [];
-    const remaining = getGoalRemaining(selectedGoal);
-    return [
-      buildScenario("Tranquille", monthly * 0.75, remaining),
-      buildScenario("Équilibré", monthly, remaining),
-      buildScenario("Dynamique", monthly * 1.25, remaining),
-      buildScenario("Féroce", monthly * 1.5, remaining),
-    ];
-  }, [selectedGoal, monthly]);
-
-  const goalOptions = [
-    {
-      id: "maison",
-      title: "Maison",
-      subtitle: "Préparer achat, construction ou rénovation",
-      icon: <Home />,
-      color: "var(--green)",
-    },
-    {
-      id: "voyage",
-      title: "Voyage",
-      subtitle: "Préparer un voyage ou un retour au pays",
-      icon: <Plane />,
-      color: "var(--blue)",
-    },
-    {
-      id: "dette",
-      title: "Dette",
-      subtitle: "Neutraliser une dette ou un crédit",
-      icon: <CreditCard />,
-      color: "var(--red)",
-    },
-    {
-      id: "auto",
-      title: "Voiture",
-      subtitle: "Financer un véhicule ou une réparation",
-      icon: <Car />,
-      color: "var(--gold)",
-    },
-    {
-      id: "liberte",
-      title: "Fonds d’urgence",
-      subtitle: "Sécuriser vos imprévus",
-      icon: <ShieldCheck />,
-      color: "var(--purple)",
-    },
-    {
-      id: "personnalise",
-      title: "Objectif libre",
-      subtitle: "Créer un objectif personnalisé",
-      icon: <Target />,
-      color: "var(--gold)",
-    },
-  ];
-
-  function cleanInput(value) {
-    return value.replace(/[^\d]/g, "");
+  function clean(value) {
+    return cleanMoneyInput ? cleanMoneyInput(value) : value.replace(/[^\d.]/g, "");
   }
 
-  function money(value) {
-    return Number(value || 0).toLocaleString("fr-CA", {
-      maximumFractionDigits: 0,
-    });
-  }
+  function activateGoal() {
+    if (target <= 0 || !title.trim()) return;
 
-  function selectGoal(goal) {
-    const remaining = getGoalRemaining(goal);
-    const monthlyHint =
-      Number(goal.monthlyContribution || 0) ||
-      estimateMonthlyNeed(goal) ||
-      Math.max(50, Math.ceil(remaining / 12));
-
-    setSelectedGoalId(goal.id);
-    setMonthlyAmount(String(monthlyHint));
-    setYears("1");
-    setShowGoalPicker(false);
-  }
-
-  function saveSimulationToGoal() {
-    if (!selectedGoal || totalSaved <= 0) return;
-
-    setSelectedGoals(
-      selectedGoals.map((goal) => {
-        if (goal.id !== selectedGoal.id) {
-          return { ...goal, highlighted: false };
-        }
-
-        return {
-          ...goal,
-          highlighted: true,
-          monthlyContribution: monthly,
-          simulation: {
-            monthlyAmount: monthly,
-            years: durationYears,
-            months,
-            totalSaved,
-            coverage: selectedCoverage,
-            estimatedEnd: selectedRemaining > 0 ? estimateCompletionDate(selectedRemaining, monthly) : "Atteint",
-            createdAt: new Date().toISOString(),
-          },
-        };
-      })
-    );
-
-    setConfirmMessage(`Simulation enregistrée pour ${selectedGoal.title}.`);
-
-    window.setTimeout(() => {
-      setConfirmMessage("");
-    }, 2200);
-  }
-
-  function addSimulationToGoal(option) {
-    if (totalSaved <= 0) return;
-
-    const shouldHighlight = selectedGoals.length === 0;
-
-    const updatedGoals = selectedGoals.map((goal) => ({
-      ...goal,
-      highlighted: shouldHighlight ? false : goal.highlighted,
-    }));
-
+    const now = new Date().toISOString();
     const newGoal = {
       id: Date.now(),
-      title: option.title,
-      category: option.id,
-      option: `Simulation : ${money(monthly)} $ / mois pendant ${durationYears} an${durationYears > 1 ? "s" : ""}`,
-      targetAmount: totalSaved,
-      currentAmount: 0,
-      targetDate: "",
-      highlighted: shouldHighlight,
+      title: title.trim(),
+      category: template.id || "libre",
+      categoryLabel: template.title,
+      option: template.subtitle,
+      targetAmount: target,
+      currentAmount: Math.min(current, target),
+      targetDate: monthsNeeded > 0 ? getIsoTargetDate(monthsNeeded) : "",
+      highlighted: goals.length === 0,
       archived: false,
-      source: "simulateur",
-      monthlyAmount: monthly,
+      status: "active",
+      source: "simulation_v12_2",
+      createdAt: now,
+      activatedAt: now,
       monthlyContribution: monthly,
-      years: durationYears,
-      createdAt: new Date().toISOString(),
+      simulation: {
+        targetAmount: target,
+        currentAmount: current,
+        monthlyContribution: monthly,
+        remaining,
+        monthsNeeded,
+        estimatedDate,
+        createdAt: now,
+      },
+      pathSteps,
     };
 
-    setSelectedGoals([...updatedGoals, newGoal]);
-    setSelectedGoalId(newGoal.id);
-    setShowGoalPicker(false);
-    setConfirmMessage(`${option.title} ajouté à vos objectifs.`);
+    setSelectedGoals?.([
+      ...goals.map((goal) => ({
+        ...goal,
+        highlighted: goals.length === 0 ? false : goal.highlighted,
+      })),
+      newGoal,
+    ]);
 
-    window.setTimeout(() => {
-      setConfirmMessage("");
-    }, 2200);
+    setActivatedGoalId(newGoal.id);
+    localStorage.setItem("onjaramaPathGoalId", String(newGoal.id));
+
+    addActivity?.(
+      "objectif",
+      "Objectif activé",
+      `${newGoal.title} est maintenant actif et relié au parcours.`
+    );
+  }
+
+  function goPath() {
+    if (activatedGoalId) {
+      localStorage.setItem("onjaramaPathGoalId", String(activatedGoalId));
+    }
+    setCurrentPage?.("parcours");
   }
 
   return (
-    <div className="native-page">
-      <h1>Simulateur</h1>
+    <div className="native-page" style={page}>
+      <h1>{t.simulateur || p.title}</h1>
+      <p style={muted}>{p.subtitle}</p>
 
-      <p style={muted}>
-        Testez plusieurs chemins avant de valider votre plan de match.
-      </p>
-
-      {selectedGoal && (
-        <section style={selectedGoalCard}>
-          <div style={header}>
-            <Target color="var(--gold)" />
-            <div>
-              <p style={eyebrow}>Objectif en simulation</p>
-              <h2>{selectedGoal.title}</h2>
-              <p style={muted}>
-                Reste : {money(selectedRemaining)} {currency}
-              </p>
-            </div>
-          </div>
-
-          <div style={miniBarBg}>
-            <div
-              style={{
-                ...miniBarFill,
-                width: `${getGoalProgress(selectedGoal)}%`,
-                background: "var(--green)",
-              }}
-            />
-          </div>
-
-          <button onClick={() => setShowGoalPicker(true)} style={ghostButton}>
-            <RefreshCw size={17} />
-            Changer d’objectif
-          </button>
-        </section>
-      )}
-
-      {!selectedGoal && (
-        <button onClick={() => setShowGoalPicker(true)} style={addToGoalBtn}>
-          <span style={{ color: "var(--gold)" }}>
-            <Target />
-          </span>
-
+      <section style={selectedCard}>
+        <div style={header}>
+          <GoalIcon category={template.id} />
           <div>
-            <strong>Choisir un objectif à simuler</strong>
-            <small>Objectifs et Simulateur travaillent ensemble.</small>
+            <p style={eyebrow}>{p.selectedGoal}</p>
+            <h2>{title || p.noGoal}</h2>
+            <p style={mutedSmall}>{template.subtitle}</p>
           </div>
+        </div>
 
-          <ChevronRight />
+        <button onClick={() => setCurrentPage?.("objectifs")} style={ghostButton}>
+          <Target size={17} />
+          {p.chooseFromGoals}
         </button>
-      )}
-
-      <section style={miniIntro}>
-        <Mini icon={<Target />} title="Destination" color="var(--green)" />
-        <Mini icon={<Calculator />} title="Scénarios" color="var(--blue)" />
-        <Mini icon={<ShieldCheck />} title="Plan de match" color="var(--purple)" />
       </section>
 
       <section style={card}>
         <div style={header}>
           <Calculator color="var(--blue)" />
-          <h2>{selectedGoal ? "Simulation de l’objectif" : "Simulation libre"}</h2>
+          <h2>{p.projection}</h2>
         </div>
 
-        <label>Contribution mensuelle</label>
+        <label>Nom de l’objectif</label>
+        <input value={title} onChange={(event) => setTitle(event.target.value)} style={input} />
 
-        <div style={inputWrap}>
-          <input
-            value={monthlyAmount}
-            onChange={(event) => setMonthlyAmount(cleanInput(event.target.value))}
-            style={input}
-            inputMode="numeric"
-          />
-          <span style={suffix}>$</span>
-        </div>
+        <label>{p.amount}</label>
+        <input
+          value={targetAmount}
+          onChange={(event) => setTargetAmount(clean(event.target.value))}
+          inputMode="decimal"
+          style={input}
+        />
 
-        <label>Durée de simulation</label>
+        <label>{p.current}</label>
+        <input
+          value={currentAmount}
+          onChange={(event) => setCurrentAmount(clean(event.target.value))}
+          inputMode="decimal"
+          style={input}
+        />
 
-        <div style={inputWrap}>
-          <input
-            value={years}
-            onChange={(event) => setYears(cleanInput(event.target.value))}
-            style={input}
-            inputMode="numeric"
-          />
-          <span style={suffix}>an{durationYears > 1 ? "s" : ""}</span>
-        </div>
-
-        <div style={result}>
-          <p style={muted}>Capital projeté</p>
-
-          <h1 style={{ color: "var(--green)" }}>
-            {money(totalSaved)} $
-          </h1>
-        </div>
-
-        {selectedGoal && (
-          <>
-            <Info
-              label="Couverture de l’objectif"
-              value={`${selectedCoverage}%`}
-              color={selectedCoverage >= 100 ? "var(--green)" : "var(--gold)"}
-            />
-            <Info
-              label="Date estimée"
-              value={estimateCompletionDate(selectedRemaining, monthly)}
-              color="var(--blue)"
-            />
-
-            <button onClick={saveSimulationToGoal} style={saveButton}>
-              Enregistrer dans le Plan de Match
-            </button>
-          </>
-        )}
-      </section>
-
-      {confirmMessage && (
-        <section style={confirmBox} className="action-confirm">
-          <ShieldCheck color="var(--green)" />
-          <strong>{confirmMessage}</strong>
-        </section>
-      )}
-
-      {selectedGoal && (
-        <section style={card}>
-          <div style={header}>
-            <TrendingUp color="var(--green)" />
-            <h2>Comparaison des rythmes</h2>
-          </div>
-
-          <div style={scenarioGrid}>
-            {scenarios.map((scenario) => (
-              <div key={scenario.label} style={{ ...scenarioCard, borderColor: scenario.color }}>
-                <strong style={{ color: scenario.color }}>{scenario.label}</strong>
-                <small style={muted}>Contribution : {money(scenario.monthly)} $ / mois</small>
-                <small style={muted}>Fin estimée : {scenario.end}</small>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <section style={card}>
-        <div style={header}>
-          <TrendingUp color="var(--green)" />
-          <h2>Projection générale</h2>
-        </div>
-
-        <Info label="Épargne totale" value={`${money(totalSaved)} $`} />
-        <Info label="Dette actuelle" value={`${money(debtTotal)} $`} />
-        <Info
-          label="Dette pouvant être remboursée"
-          value={`${money(debtReduction)} $`}
+        <label>{p.monthly}</label>
+        <input
+          value={monthlyContribution}
+          onChange={(event) => setMonthlyContribution(clean(event.target.value))}
+          inputMode="decimal"
+          style={input}
         />
       </section>
 
-      <section style={goalCard}>
-        <Target color="var(--gold)" />
-        <h2>Lecture OnJarama</h2>
+      <section style={resultCard}>
+        <div style={header}>
+          <TrendingUp color="var(--green)" />
+          <div>
+            <p style={eyebrow}>{p.result}</p>
+            <h2>{p.ready}</h2>
+          </div>
+        </div>
 
-        <p style={muted}>
-          {selectedGoal
-            ? `Avec ${money(monthly)} $ par mois, ${selectedGoal.title} devient un objectif mesurable et comparable.`
-            : `Avec ${money(monthly)} $ par mois pendant ${durationYears} an${durationYears > 1 ? "s" : ""}, vous pourriez accumuler environ ${money(totalSaved)} ${currency}.`}
-        </p>
+        <div style={resultGrid}>
+          <Result label={p.amount} value={formatMoney(target, currency)} />
+          <Result label="Reste" value={formatMoney(remaining, currency)} />
+          <Result label={p.timeNeeded} value={`${monthsNeeded || "—"} ${p.months}`} />
+          <Result label="Date" value={estimatedDate} />
+        </div>
 
-        <button onClick={() => setCurrentPage("monplan")} style={planButton}>
-          Voir le Plan de Match
-        </button>
+        <div style={progressBg}>
+          <div style={{ ...progressFill, width: `${progress}%` }} />
+        </div>
+
+        {!activatedGoalId ? (
+          <button onClick={activateGoal} style={activateButton}>
+            <CheckCircle size={18} />
+            {p.activate}
+          </button>
+        ) : (
+          <div style={activatedBox}>
+            <ShieldCheck color="var(--green)" />
+            <strong>{p.activated}</strong>
+            <button onClick={goPath} style={pathButton}>
+              <Route size={17} />
+              {p.goPath}
+            </button>
+          </div>
+        )}
       </section>
 
-      <button onClick={() => setShowGoalPicker(true)} style={addToGoalBtn}>
-        <span style={{ color: "var(--gold)" }}>
-          <Target />
-        </span>
-
-        <div>
-          <strong>Ajouter ou choisir un objectif</strong>
-          <small>Transformer cette simulation en destination concrète.</small>
+      <section style={card}>
+        <div style={header}>
+          <Clock color="var(--gold)" />
+          <h2>{p.scenario}</h2>
         </div>
-
-        <ChevronRight />
-      </button>
-
-      {showGoalPicker && (
-        <div style={modalOverlay}>
-          <section style={modal}>
-            <button
-              onClick={() => setShowGoalPicker(false)}
-              style={closeBtn}
-              aria-label="Fermer"
-            >
-              <X />
-            </button>
-
-            <h2>Choisir un objectif</h2>
-
-            {goals.length > 0 && (
-              <>
-                <p style={muted}>Objectifs existants</p>
-                <div style={goalList}>
-                  {goals.map((goal) => (
-                    <button
-                      key={goal.id}
-                      onClick={() => selectGoal(goal)}
-                      style={goalOption}
-                    >
-                      <span style={{ ...goalIcon, color: "var(--gold)" }}>
-                        <Target />
-                      </span>
-
-                      <div>
-                        <strong>{goal.title}</strong>
-                        <small>{money(getGoalRemaining(goal))} $ restants</small>
-                      </div>
-
-                      <ChevronRight size={20} />
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-
-            <p style={muted}>Créer depuis la simulation</p>
-
-            <div style={goalList}>
-              {goalOptions.map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => addSimulationToGoal(option)}
-                  style={goalOption}
-                >
-                  <span style={{ ...goalIcon, color: option.color }}>
-                    {option.icon}
-                  </span>
-
-                  <div>
-                    <strong>{option.title}</strong>
-                    <small>{option.subtitle}</small>
-                  </div>
-
-                  <ChevronRight size={20} />
-                </button>
-              ))}
+        <div style={scenarioGrid}>
+          {scenarios.map((scenario) => (
+            <div key={scenario.label} style={{ ...scenarioCard, borderColor: scenario.color }}>
+              <strong style={{ color: scenario.color }}>{scenario.label}</strong>
+              <small style={mutedSmall}>{formatMoney(scenario.monthly, currency)} / mois</small>
+              <small style={mutedSmall}>{scenario.months} {p.months}</small>
+              <small style={mutedSmall}>{scenario.date}</small>
             </div>
-
-            <button
-              onClick={() => {
-                setShowGoalPicker(false);
-                setCurrentPage("objectifs");
-              }}
-              style={viewGoalsBtn}
-            >
-              Configurer dans Objectifs
-            </button>
-          </section>
+          ))}
         </div>
-      )}
+      </section>
+
+      <section style={card}>
+        <div style={header}>
+          <Route color="var(--gold)" />
+          <h2>{p.pathPreview}</h2>
+        </div>
+        <div style={stepsList}>
+          {pathSteps.map((step, index) => (
+            <div key={step.id} style={stepLine}>
+              <span style={stepNumber}>{index + 1}</span>
+              <strong>{step.label}</strong>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
 
-function Info({ label, value, color = "var(--text-main)" }) {
+function GoalIcon({ category }) {
+  const props = { color: "var(--gold)" };
+  if (category === "voyage") return <Plane {...props} />;
+  if (category === "maison") return <Home color="var(--green)" />;
+  if (category === "dette") return <CreditCard color="var(--red)" />;
+  return <Target {...props} />;
+}
+
+function Result({ label, value }) {
   return (
-    <div style={row}>
-      <span style={muted}>{label}</span>
-      <strong style={{ color }}>{value}</strong>
+    <div style={resultItem}>
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }
 
-function Mini({ icon, title, color }) {
-  return (
-    <div style={miniItem}>
-      <span style={{ color }}>{icon}</span>
-      <strong>{title}</strong>
-    </div>
-  );
-}
-
-function getGoalRemaining(goal) {
-  return Math.max(
-    0,
-    Number(goal?.targetAmount || 0) - Number(goal?.currentAmount || 0)
-  );
-}
-
-function getGoalProgress(goal) {
-  const target = Number(goal?.targetAmount || 0);
-  if (target <= 0) return 0;
-
-  return Math.min(
-    100,
-    Math.round((Number(goal?.currentAmount || 0) / target) * 100)
-  );
-}
-
-function estimateMonthlyNeed(goal) {
-  const remaining = getGoalRemaining(goal);
-  if (remaining <= 0) return 0;
-
-  if (!goal.targetDate) return 0;
-
-  const months = monthsUntil(goal.targetDate);
-  if (months <= 0) return remaining;
-
-  return Math.ceil(remaining / months);
-}
-
-function monthsUntil(dateValue) {
-  const target = new Date(dateValue);
-  if (Number.isNaN(target.getTime())) return 0;
-
-  const now = new Date();
-  const years = target.getFullYear() - now.getFullYear();
-  const months = target.getMonth() - now.getMonth();
-
-  return Math.max(1, years * 12 + months + 1);
-}
-
-function estimateCompletionDate(remaining, monthly) {
-  const amount = Number(remaining || 0);
-  const payment = Number(monthly || 0);
-
-  if (amount <= 0) return "Atteint";
-  if (payment <= 0) return "À définir";
-
-  const months = Math.ceil(amount / payment);
-  const date = new Date();
-  date.setMonth(date.getMonth() + months);
-
-  return date.toLocaleDateString("fr-CA", {
-    year: "numeric",
-    month: "short",
-  });
-}
-
-function buildScenario(label, monthly, remaining) {
-  const rounded = Math.max(0, Math.round(monthly || 0));
+function buildScenario(label, monthly, remaining, language) {
+  const safeMonthly = Math.max(0, Math.round(monthly || 0));
+  const months = safeMonthly > 0 ? Math.ceil(Number(remaining || 0) / safeMonthly) : 0;
   const colors = {
     Tranquille: "var(--green)",
+    Calm: "var(--green)",
+    Tranquilo: "var(--green)",
     Équilibré: "var(--gold)",
+    Balanced: "var(--gold)",
+    Equilibrado: "var(--gold)",
     Dynamique: "var(--blue)",
+    Dynamic: "var(--blue)",
+    Dinámico: "var(--blue)",
     Féroce: "var(--red)",
+    Fierce: "var(--red)",
+    Feroz: "var(--red)",
   };
 
   return {
     label,
-    monthly: rounded,
-    end: estimateCompletionDate(remaining, rounded),
+    monthly: safeMonthly,
+    months,
+    date: estimateDate(months, language),
     color: colors[label] || "var(--gold)",
   };
 }
 
-const miniIntro = {
-  display: "grid",
-  gridTemplateColumns: "repeat(3, 1fr)",
-  gap: "10px",
-  marginTop: "18px",
-};
+function estimateDate(months, language) {
+  if (!months || months <= 0) return "À définir";
+  const date = new Date();
+  date.setMonth(date.getMonth() + months);
+  const locale = language === "EN" ? "en-CA" : language === "ES" ? "es-CA" : "fr-CA";
+  return date.toLocaleDateString(locale, { year: "numeric", month: "short" });
+}
 
-const miniItem = {
-  display: "grid",
-  gap: "8px",
-  fontSize: "13px",
-};
+function getIsoTargetDate(months) {
+  const date = new Date();
+  date.setMonth(date.getMonth() + Number(months || 0));
+  return date.toISOString().slice(0, 10);
+}
 
-const card = {
-  background: "var(--bg-card)",
-  border: "1px solid var(--border)",
-  borderRadius: "22px",
-  padding: "20px",
-  marginTop: "20px",
-};
+function buildPathSteps(category, title) {
+  if (category === "voyage") {
+    return [
+      { id: "passport", label: "Passeport / documents", done: false },
+      { id: "ticket", label: "Billet", done: false },
+      { id: "bags", label: "Bagages", done: false },
+      { id: "stay", label: "Séjour et dépenses", done: false },
+      { id: "security", label: "Marge de sécurité", done: false },
+    ];
+  }
 
-const selectedGoalCard = {
-  background:
-    "linear-gradient(135deg, rgba(212,175,55,.18), rgba(56,189,248,.08), var(--bg-card))",
-  border: "1px solid var(--gold)",
-  borderRadius: "22px",
-  padding: "20px",
-  marginTop: "14px",
-};
+  if (category === "maison") {
+    return [
+      { id: "plan", label: "Plan du projet", done: false },
+      { id: "materials", label: "Matériaux", done: false },
+      { id: "work", label: "Travaux", done: false },
+      { id: "equipment", label: "Équipement", done: false },
+      { id: "finish", label: "Finition", done: false },
+    ];
+  }
 
-const goalCard = {
-  background: "linear-gradient(135deg,#2a210b,var(--bg-card))",
-  border: "1px solid var(--gold)",
-  borderRadius: "22px",
-  padding: "20px",
-  marginTop: "20px",
-};
+  if (category === "dette") {
+    return [
+      { id: "balance", label: "Solde confirmé", done: false },
+      { id: "rate", label: "Taux identifié", done: false },
+      { id: "payment", label: "Paiement mensuel fixé", done: false },
+      { id: "threshold", label: "Premier palier atteint", done: false },
+      { id: "zero", label: "Solde à zéro", done: false },
+    ];
+  }
 
-const header = {
-  display: "flex",
-  alignItems: "center",
-  gap: "10px",
-  marginBottom: "14px",
-};
+  return [
+    { id: "start", label: `${title || "Objectif"} défini`, done: false },
+    { id: "plan", label: "Plan de financement", done: false },
+    { id: "first", label: "Premier palier", done: false },
+    { id: "mid", label: "Milieu du parcours", done: false },
+    { id: "victory", label: "Objectif atteint", done: false },
+  ];
+}
 
-const eyebrow = {
-  margin: 0,
-  color: "var(--gold)",
-  fontSize: "12px",
-  fontWeight: "900",
-  textTransform: "uppercase",
-};
-
-const inputWrap = {
-  display: "grid",
-  gridTemplateColumns: "1fr auto",
-  alignItems: "center",
-  border: "1px solid var(--border)",
-  background: "var(--bg-panel)",
-  borderRadius: "14px",
-  paddingRight: "14px",
-  marginTop: "8px",
-  marginBottom: "14px",
-};
-
-const input = {
-  width: "100%",
-  padding: "14px",
-  borderRadius: "12px",
-  border: "none",
-  background: "transparent",
-  color: "var(--text-main)",
-  outline: "none",
-};
-
-const suffix = {
-  color: "var(--text-main)",
-  fontWeight: "bold",
-};
-
-const result = {
-  marginTop: "10px",
-};
-
-const row = {
-  display: "flex",
-  justifyContent: "space-between",
-  gap: "12px",
-  padding: "12px 0",
-  borderBottom: "1px solid rgba(255,255,255,.08)",
-};
-
-const addToGoalBtn = {
-  width: "100%",
-  background: "var(--bg-card)",
-  border: "1px solid var(--gold)",
-  borderRadius: "18px",
-  color: "var(--text-main)",
-  padding: "16px",
-  marginTop: "16px",
-  display: "grid",
-  gridTemplateColumns: "32px 1fr auto",
-  gap: "12px",
-  alignItems: "center",
-  textAlign: "left",
-};
-
-const saveButton = {
-  width: "100%",
-  marginTop: "14px",
-  padding: "14px",
-  borderRadius: "14px",
-  border: "none",
-  background: "var(--green)",
-  color: "white",
-  fontWeight: "900",
-};
-
-const planButton = {
-  width: "100%",
-  marginTop: "14px",
-  padding: "14px",
-  borderRadius: "14px",
-  border: "1px solid var(--gold)",
-  background: "rgba(212,175,55,.14)",
-  color: "var(--gold)",
-  fontWeight: "900",
-};
-
-const ghostButton = {
-  width: "100%",
-  marginTop: "12px",
-  padding: "12px",
-  borderRadius: "14px",
-  border: "1px solid var(--border)",
-  background: "var(--bg-panel)",
-  color: "var(--text-main)",
-  fontWeight: "900",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "8px",
-};
-
-const confirmBox = {
-  background: "rgba(34,197,94,.14)",
-  border: "1px solid var(--green)",
-  borderRadius: "16px",
-  padding: "14px",
-  marginTop: "14px",
-  display: "flex",
-  gap: "10px",
-  alignItems: "center",
-};
-
-const scenarioGrid = {
-  display: "grid",
-  gap: "10px",
-};
-
-const scenarioCard = {
-  background: "var(--bg-panel)",
-  border: "1px solid var(--border)",
-  borderRadius: "16px",
-  padding: "12px",
-  display: "grid",
-  gap: "5px",
-};
-
-const miniBarBg = {
-  height: "10px",
-  background: "var(--bg-panel)",
-  borderRadius: "999px",
-  overflow: "hidden",
-};
-
-const miniBarFill = {
-  height: "100%",
-  borderRadius: "999px",
-};
-
-const modalOverlay = {
-  position: "fixed",
-  inset: 0,
-  background: "rgba(0,0,0,.55)",
-  zIndex: 2000,
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "flex-end",
-};
-
-const modal = {
-  width: "100%",
-  maxWidth: "540px",
-  maxHeight: "88dvh",
-  overflowY: "auto",
-  background: "var(--bg-main)",
-  borderTop: "1px solid var(--border)",
-  borderRadius: "28px 28px 0 0",
-  padding: "24px",
-  position: "relative",
-};
-
-const closeBtn = {
-  position: "absolute",
-  top: "18px",
-  right: "18px",
-  width: "42px",
-  height: "42px",
-  borderRadius: "999px",
-  border: "1px solid var(--border)",
-  background: "var(--bg-card)",
-  color: "var(--text-main)",
-  display: "grid",
-  placeItems: "center",
-};
-
-const goalList = {
-  display: "grid",
-  gap: "10px",
-  marginTop: "12px",
-};
-
-const goalOption = {
-  width: "100%",
-  background: "var(--bg-card)",
-  border: "1px solid var(--border)",
-  borderRadius: "18px",
-  color: "var(--text-main)",
-  padding: "14px",
-  display: "grid",
-  gridTemplateColumns: "42px 1fr auto",
-  gap: "12px",
-  alignItems: "center",
-  textAlign: "left",
-};
-
-const goalIcon = {
-  display: "grid",
-  placeItems: "center",
-};
-
-const viewGoalsBtn = {
-  width: "100%",
-  marginTop: "18px",
-  padding: "14px",
-  borderRadius: "16px",
-  border: "1px solid var(--blue)",
-  background: "rgba(56,189,248,.12)",
-  color: "var(--blue)",
-  fontWeight: "bold",
-};
-
-const muted = {
-  color: "var(--text-muted)",
-};
+const page = { display: "flex", flexDirection: "column", gap: "16px" };
+const card = { background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "22px", padding: "18px" };
+const selectedCard = { ...card, borderColor: "var(--gold)", background: "linear-gradient(135deg, rgba(212,175,55,.15), var(--bg-card))" };
+const resultCard = { ...card, borderColor: "var(--green)", background: "linear-gradient(135deg, rgba(34,197,94,.14), var(--bg-card))" };
+const header = { display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" };
+const eyebrow = { color: "var(--gold)", fontSize: "12px", fontWeight: 900, margin: 0, textTransform: "uppercase" };
+const input = { width: "100%", marginTop: "8px", marginBottom: "12px", padding: "14px", borderRadius: "14px", border: "1px solid var(--border)", background: "var(--bg-panel)", color: "var(--text-main)" };
+const ghostButton = { width: "100%", padding: "12px", borderRadius: "14px", border: "1px solid var(--gold)", background: "rgba(212,175,55,.12)", color: "var(--gold)", fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" };
+const resultGrid = { display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px" };
+const resultItem = { background: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "14px", padding: "12px", display: "grid", gap: "5px" };
+const progressBg = { height: "10px", background: "var(--bg-panel)", borderRadius: "999px", overflow: "hidden", marginTop: "14px" };
+const progressFill = { height: "100%", borderRadius: "999px", background: "var(--green)" };
+const activateButton = { width: "100%", marginTop: "14px", padding: "14px", borderRadius: "14px", border: "none", background: "var(--green)", color: "white", fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" };
+const activatedBox = { marginTop: "14px", background: "rgba(34,197,94,.12)", border: "1px solid var(--green)", borderRadius: "16px", padding: "14px", display: "grid", gap: "12px" };
+const pathButton = { width: "100%", padding: "12px", borderRadius: "14px", border: "1px solid var(--gold)", background: "rgba(212,175,55,.12)", color: "var(--gold)", fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" };
+const scenarioGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "10px" };
+const scenarioCard = { background: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "16px", padding: "12px", display: "grid", gap: "5px" };
+const stepsList = { display: "grid", gap: "10px" };
+const stepLine = { background: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "14px", padding: "12px", display: "flex", gap: "10px", alignItems: "center" };
+const stepNumber = { width: "28px", height: "28px", borderRadius: "999px", border: "1px solid var(--gold)", color: "var(--gold)", display: "grid", placeItems: "center", fontWeight: 900 };
+const muted = { color: "var(--text-muted)", marginTop: "8px" };
+const mutedSmall = { color: "var(--text-muted)", fontSize: "13px", marginTop: "5px" };
 
 export default Simulateur;
