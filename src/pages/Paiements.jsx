@@ -20,11 +20,19 @@ import { getText } from "../data/translations";
 const pageText = {
   FR: {
     title: "Paiements",
-    subtitle:
-      "Suivez vos paiements programmés, vos prélèvements prévus et leur impact sur vos objectifs.",
-    smartPayments: "Paiements intelligents",
-    scheduledPayments: "Paiements programmés",
+    subtitle: "Suivez vos paiements, retards, échéances et priorités du mois.",
+    smartScore: "Score paiements",
+    thisWeek: "Cette semaine",
+    thisMonth: "Ce mois",
+    totalPlanned: "Total prévu",
+    totalPaid: "Total payé",
+    totalRemaining: "Total restant",
+    smartAction: "Action recommandée aujourd'hui",
+    noSmartAction: "Aucune action urgente aujourd'hui.",
     addPayment: "Ajouter un paiement",
+    scheduledPayments: "Paiements programmés",
+    history: "Historique des paiements",
+    noHistory: "Aucun paiement appliqué pour le moment.",
     name: "Nom",
     type: "Type",
     amount: "Montant",
@@ -33,12 +41,8 @@ const pageText = {
     linkedDebt: "Dette liée",
     active: "Actif",
     inactive: "Inactif",
-    afterPayment: "Solde estimé après paiement",
-    totalThisMonth: "Total prévu ce mois-ci",
-    totalActive: "Paiements actifs",
-    noPayment: "Aucun paiement programmé.",
     save: "Ajouter",
-    resetForm: "Réinitialiser le formulaire",
+    resetForm: "Réinitialiser",
     weekly: "Hebdomadaire",
     biweekly: "Aux 2 semaines",
     monthly: "Mensuel",
@@ -48,32 +52,49 @@ const pageText = {
     saving: "Épargne",
     project: "Projet",
     other: "Autre",
-    overdue: "En retard",
-    dueSoon: "Bientôt dû",
+    overdue: "Retard",
+    dueSoon: "À venir",
     upToDate: "À jour",
-    paid: "Effectué",
+    paid: "Payé",
     apply: "Appliquer",
-    minimum: "Minimum",
-    recommended: "Recommandé",
-    accelerated: "Accéléré",
-    smartAction: "Action recommandée aujourd'hui",
-    noSmartAction: "Aucune action urgente aujourd'hui.",
-    estimatedEnd: "Fin estimée",
-    impactTitle: "Impact sur les objectifs",
-    monthsEarlier: "mois plus tôt",
-    balanceAfter: "Solde après paiement",
-    urgent: "Urgent",
-    important: "Important",
-    stable: "Stable",
+    noPayment: "Aucun paiement programmé.",
     noDebtLinked: "Aucune dette liée",
+    afterPayment: "Solde estimé après paiement",
+    all: "Tous",
+    upcoming: "À venir",
+    late: "Retards",
+    paidFilter: "Payés",
+    today: "Aujourd'hui",
+    inDays: "Dans",
+    days: "jours",
+    paymentIn: "Paiement dans",
+    overdueBy: "En retard de",
+    plannedToday: "Paiement prévu aujourd’hui.",
+    noDate: "Aucune date",
+    logement: "Logement",
+    transport: "Transport",
+    telecom: "Télécommunications",
+    insurance: "Assurances",
+    subscription: "Abonnements",
+    excellent: "Tous les paiements sont sous contrôle.",
+    warning: "Quelques paiements demandent votre attention.",
+    critical: "Des paiements sont en retard.",
   },
   EN: {
     title: "Payments",
-    subtitle:
-      "Track scheduled payments, upcoming withdrawals and their impact on your goals.",
-    smartPayments: "Smart payments",
-    scheduledPayments: "Scheduled payments",
+    subtitle: "Track payments, delays, due dates and monthly priorities.",
+    smartScore: "Payment score",
+    thisWeek: "This week",
+    thisMonth: "This month",
+    totalPlanned: "Total planned",
+    totalPaid: "Total paid",
+    totalRemaining: "Total remaining",
+    smartAction: "Today's recommended action",
+    noSmartAction: "No urgent action today.",
     addPayment: "Add payment",
+    scheduledPayments: "Scheduled payments",
+    history: "Payment history",
+    noHistory: "No applied payment yet.",
     name: "Name",
     type: "Type",
     amount: "Amount",
@@ -82,12 +103,8 @@ const pageText = {
     linkedDebt: "Linked debt",
     active: "Active",
     inactive: "Inactive",
-    afterPayment: "Estimated balance after payment",
-    totalThisMonth: "Total planned this month",
-    totalActive: "Active payments",
-    noPayment: "No scheduled payment.",
     save: "Add",
-    resetForm: "Reset form",
+    resetForm: "Reset",
     weekly: "Weekly",
     biweekly: "Biweekly",
     monthly: "Monthly",
@@ -98,31 +115,48 @@ const pageText = {
     project: "Project",
     other: "Other",
     overdue: "Overdue",
-    dueSoon: "Due soon",
+    dueSoon: "Upcoming",
     upToDate: "Up to date",
     paid: "Paid",
     apply: "Apply",
-    minimum: "Minimum",
-    recommended: "Recommended",
-    accelerated: "Accelerated",
-    smartAction: "Today's recommended action",
-    noSmartAction: "No urgent action today.",
-    estimatedEnd: "Estimated end",
-    impactTitle: "Impact on goals",
-    monthsEarlier: "months earlier",
-    balanceAfter: "Balance after payment",
-    urgent: "Urgent",
-    important: "Important",
-    stable: "Stable",
+    noPayment: "No scheduled payment.",
     noDebtLinked: "No linked debt",
+    afterPayment: "Estimated balance after payment",
+    all: "All",
+    upcoming: "Upcoming",
+    late: "Overdue",
+    paidFilter: "Paid",
+    today: "Today",
+    inDays: "In",
+    days: "days",
+    paymentIn: "Payment in",
+    overdueBy: "Overdue by",
+    plannedToday: "Payment planned today.",
+    noDate: "No date",
+    logement: "Housing",
+    transport: "Transport",
+    telecom: "Telecom",
+    insurance: "Insurance",
+    subscription: "Subscriptions",
+    excellent: "All payments are under control.",
+    warning: "Some payments need your attention.",
+    critical: "Some payments are overdue.",
   },
   ES: {
     title: "Pagos",
-    subtitle:
-      "Sigue tus pagos programados, retiros previstos y su impacto en tus objetivos.",
-    smartPayments: "Pagos inteligentes",
-    scheduledPayments: "Pagos programados",
+    subtitle: "Sigue pagos, atrasos, fechas y prioridades del mes.",
+    smartScore: "Puntaje de pagos",
+    thisWeek: "Esta semana",
+    thisMonth: "Este mes",
+    totalPlanned: "Total previsto",
+    totalPaid: "Total pagado",
+    totalRemaining: "Total restante",
+    smartAction: "Acción recomendada hoy",
+    noSmartAction: "Ninguna acción urgente hoy.",
     addPayment: "Agregar un pago",
+    scheduledPayments: "Pagos programados",
+    history: "Historial de pagos",
+    noHistory: "Ningún pago aplicado por ahora.",
     name: "Nombre",
     type: "Tipo",
     amount: "Monto",
@@ -131,12 +165,8 @@ const pageText = {
     linkedDebt: "Deuda vinculada",
     active: "Activo",
     inactive: "Inactivo",
-    afterPayment: "Saldo estimado después del pago",
-    totalThisMonth: "Total previsto este mes",
-    totalActive: "Pagos activos",
-    noPayment: "No hay pago programado.",
     save: "Agregar",
-    resetForm: "Reiniciar formulario",
+    resetForm: "Reiniciar",
     weekly: "Semanal",
     biweekly: "Cada 2 semanas",
     monthly: "Mensual",
@@ -146,24 +176,33 @@ const pageText = {
     saving: "Ahorro",
     project: "Proyecto",
     other: "Otro",
-    overdue: "Atrasado",
+    overdue: "Atraso",
     dueSoon: "Próximo",
     upToDate: "Al día",
     paid: "Pagado",
     apply: "Aplicar",
-    minimum: "Mínimo",
-    recommended: "Recomendado",
-    accelerated: "Acelerado",
-    smartAction: "Acción recomendada hoy",
-    noSmartAction: "Ninguna acción urgente hoy.",
-    estimatedEnd: "Fin estimado",
-    impactTitle: "Impacto en objetivos",
-    monthsEarlier: "meses antes",
-    balanceAfter: "Saldo después del pago",
-    urgent: "Urgente",
-    important: "Importante",
-    stable: "Estable",
+    noPayment: "No hay pago programado.",
     noDebtLinked: "Sin deuda vinculada",
+    afterPayment: "Saldo estimado después del pago",
+    all: "Todos",
+    upcoming: "Próximos",
+    late: "Atrasos",
+    paidFilter: "Pagados",
+    today: "Hoy",
+    inDays: "En",
+    days: "días",
+    paymentIn: "Pago en",
+    overdueBy: "Atrasado por",
+    plannedToday: "Pago previsto hoy.",
+    noDate: "Sin fecha",
+    logement: "Vivienda",
+    transport: "Transporte",
+    telecom: "Telecomunicaciones",
+    insurance: "Seguros",
+    subscription: "Suscripciones",
+    excellent: "Todos los pagos están bajo control.",
+    warning: "Algunos pagos requieren atención.",
+    critical: "Hay pagos atrasados.",
   },
 };
 
@@ -186,7 +225,8 @@ function Paiements({
   addActivity,
 }) {
   const t = getText(settings);
-  const p = pageText[settings?.language || "FR"] || pageText.FR;
+  const language = settings?.language || "FR";
+  const p = pageText[language] || pageText.FR;
   const currency = settings?.currency || "CAD";
   const safeFinanceData = financeData || {};
   const debts = Array.isArray(safeFinanceData.debts) ? safeFinanceData.debts : [];
@@ -199,11 +239,54 @@ function Paiements({
     }
   });
 
-  const payments = Array.isArray(scheduledPayments)
-    ? scheduledPayments
-    : localPayments;
+  const [paymentHistory, setPaymentHistory] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("onjaramaPaymentHistory")) || [];
+    } catch {
+      return [];
+    }
+  });
 
   const [form, setForm] = useState(emptyPayment);
+  const [filter, setFilter] = useState("all");
+
+  const payments = Array.isArray(scheduledPayments) ? scheduledPayments : localPayments;
+  const activePayments = payments.filter((payment) => payment.active);
+
+  const enrichedPayments = activePayments.map((payment) => ({
+    ...payment,
+    status: getPaymentStatus(payment, p),
+    category: getPaymentCategory(payment, p),
+  }));
+
+  const paymentStats = getPaymentStats(enrichedPayments);
+  const smartScore = getPaymentScore(paymentStats);
+  const smartMessage =
+    smartScore >= 90 ? p.excellent : smartScore >= 70 ? p.warning : p.critical;
+
+  const weekPayments = enrichedPayments
+    .filter((payment) => {
+      const days = getDaysUntil(payment.nextDate);
+      return days !== null && days >= 0 && days <= 7;
+    })
+    .sort((a, b) => getDaysUntil(a.nextDate) - getDaysUntil(b.nextDate));
+
+  const monthSummary = getMonthSummary({
+    payments: enrichedPayments,
+    history: paymentHistory,
+  });
+
+  const smartAction = getSmartAction(enrichedPayments, p, currency);
+
+  const visiblePayments = payments.filter((payment) => {
+    const status = getPaymentStatus(payment, p);
+
+    if (filter === "late") return status.key === "overdue";
+    if (filter === "upcoming") return status.key === "dueSoon" || status.key === "upToDate";
+    if (filter === "paid") return Boolean(payment.lastPaidAt);
+
+    return true;
+  });
 
   function updatePayments(nextPayments) {
     if (typeof setScheduledPayments === "function") {
@@ -212,53 +295,13 @@ function Paiements({
     }
 
     setLocalPayments(nextPayments);
-    localStorage.setItem(
-      "onjaramaScheduledPayments",
-      JSON.stringify(nextPayments)
-    );
+    localStorage.setItem("onjaramaScheduledPayments", JSON.stringify(nextPayments));
   }
 
-  const activePayments = payments.filter((payment) => payment.active);
-
-  const paymentStats = useMemo(() => {
-    return activePayments.reduce(
-      (stats, payment) => {
-        const status = getPaymentStatus(payment, p);
-
-        if (status.key === "overdue") stats.overdue += 1;
-        if (status.key === "dueSoon") stats.dueSoon += 1;
-        if (status.key === "upToDate") stats.upToDate += 1;
-
-        return stats;
-      },
-      {
-        overdue: 0,
-        dueSoon: 0,
-        upToDate: 0,
-      }
-    );
-  }, [activePayments, p]);
-
-  const monthlyEstimate = useMemo(() => {
-    return activePayments.reduce((total, payment) => {
-      const amount = Number(payment.amount || 0);
-
-      if (payment.frequency === "weekly") return total + amount * 4;
-      if (payment.frequency === "biweekly") return total + amount * 2;
-      if (payment.frequency === "monthly") return total + amount;
-
-      return total + amount;
-    }, 0);
-  }, [activePayments]);
-
-  const smartDebtPlans = useMemo(() => {
-    return debts
-      .filter((debt) => Number(debt.balance || 0) > 0)
-      .map((debt) => buildDebtPlan(debt))
-      .sort((a, b) => b.priorityScore - a.priorityScore);
-  }, [debts]);
-
-  const smartAction = getSmartAction(activePayments, smartDebtPlans, p, currency);
+  function updateHistory(nextHistory) {
+    setPaymentHistory(nextHistory);
+    localStorage.setItem("onjaramaPaymentHistory", JSON.stringify(nextHistory));
+  }
 
   function addPayment() {
     if (!form.name || !form.amount) return;
@@ -273,18 +316,13 @@ function Paiements({
 
     updatePayments([...payments, newPayment]);
 
-    addActivity?.(
-      "paiement",
-      "Paiement programmé",
-      `${newPayment.name} a été ajouté aux paiements.`
-    );
+    addActivity?.("paiement", "Paiement programmé", `${newPayment.name} a été ajouté.`);
 
     setForm(emptyPayment);
   }
 
   function removePayment(id) {
     const payment = payments.find((item) => item.id === id);
-
     updatePayments(payments.filter((item) => item.id !== id));
 
     addActivity?.(
@@ -295,11 +333,11 @@ function Paiements({
   }
 
   function togglePayment(id) {
-    const updatedPayments = payments.map((payment) =>
-      payment.id === id ? { ...payment, active: !payment.active } : payment
+    updatePayments(
+      payments.map((payment) =>
+        payment.id === id ? { ...payment, active: !payment.active } : payment
+      )
     );
-
-    updatePayments(updatedPayments);
   }
 
   function applyPayment(payment) {
@@ -311,10 +349,7 @@ function Paiements({
 
         return {
           ...debt,
-          balance: Math.max(
-            0,
-            Number(debt.balance || 0) - Number(payment.amount || 0)
-          ),
+          balance: Math.max(0, Number(debt.balance || 0) - Number(payment.amount || 0)),
         };
       });
 
@@ -324,19 +359,33 @@ function Paiements({
       });
     }
 
+    const paidAt = new Date().toISOString();
     const nextDate = getNextPaymentDate(payment.nextDate, payment.frequency);
 
-    const updatedPayments = payments.map((item) =>
-      item.id === payment.id
-        ? {
-            ...item,
-            nextDate,
-            lastPaidAt: new Date().toISOString(),
-          }
-        : item
+    updatePayments(
+      payments.map((item) =>
+        item.id === payment.id
+          ? {
+              ...item,
+              nextDate,
+              lastPaidAt: paidAt,
+            }
+          : item
+      )
     );
 
-    updatePayments(updatedPayments);
+    updateHistory([
+      {
+        id: `${payment.id}-${Date.now()}`,
+        paymentId: payment.id,
+        name: payment.name,
+        type: payment.type,
+        amount: Number(payment.amount || 0),
+        linkedDebtName: payment.linkedDebtName || "",
+        paidAt,
+      },
+      ...paymentHistory,
+    ]);
 
     addActivity?.(
       "paiement",
@@ -347,7 +396,6 @@ function Paiements({
 
   function getEstimatedDebtBalance(payment) {
     const debt = debts.find((item) => item.name === payment.linkedDebtName);
-
     if (!debt) return null;
 
     return Math.max(0, Number(debt.balance || 0) - Number(payment.amount || 0));
@@ -357,6 +405,27 @@ function Paiements({
     <div className="native-page">
       <h1>{t.paiements || p.title}</h1>
       <p style={muted}>{p.subtitle}</p>
+
+      <section style={scoreCard(smartScore)}>
+        <div style={header}>
+          <ShieldCheck color={getScoreColor(smartScore)} />
+          <div>
+            <p style={eyebrow}>{p.smartScore}</p>
+            <h2 style={{ color: getScoreColor(smartScore) }}>{smartScore}%</h2>
+            <p style={mutedSmall}>{smartMessage}</p>
+          </div>
+        </div>
+
+        <div style={barBg}>
+          <div
+            style={{
+              ...barFill,
+              width: `${smartScore}%`,
+              background: getScoreColor(smartScore),
+            }}
+          />
+        </div>
+      </section>
 
       <section style={smartActionCard}>
         <div style={header}>
@@ -371,68 +440,65 @@ function Paiements({
       <section style={smartCard}>
         <div style={header}>
           <Clock3 color="var(--gold)" />
-          <h2>{p.smartPayments}</h2>
+          <h2>{p.thisWeek}</h2>
         </div>
 
-        <div style={smartGrid}>
-          <SmartStat
-            icon={<AlertTriangle />}
-            label={p.overdue}
-            value={paymentStats.overdue}
-            color="var(--red)"
-          />
+        {weekPayments.length === 0 ? (
+          <p style={muted}>{p.noSmartAction}</p>
+        ) : (
+          <div style={weekList}>
+            {weekPayments.map((payment) => (
+              <WeekPayment
+                key={payment.id}
+                payment={payment}
+                currency={currency}
+                text={p}
+              />
+            ))}
+          </div>
+        )}
+      </section>
 
-          <SmartStat
-            icon={<Calendar />}
-            label={p.dueSoon}
-            value={paymentStats.dueSoon}
+      <section style={card}>
+        <div style={header}>
+          <Calendar color="var(--green)" />
+          <h2>{p.thisMonth}</h2>
+        </div>
+
+        <div style={monthGrid}>
+          <InfoCard
+            icon={<Wallet />}
+            title={p.totalPlanned}
+            value={formatMoney(monthSummary.totalPlanned, currency)}
             color="var(--gold)"
           />
-
-          <SmartStat
+          <InfoCard
             icon={<CheckCircle />}
-            label={p.upToDate}
-            value={paymentStats.upToDate}
+            title={p.totalPaid}
+            value={formatMoney(monthSummary.totalPaid, currency)}
             color="var(--green)"
+          />
+          <InfoCard
+            icon={<AlertTriangle />}
+            title={p.totalRemaining}
+            value={formatMoney(monthSummary.totalRemaining, currency)}
+            color={monthSummary.totalRemaining > 0 ? "var(--gold)" : "var(--green)"}
           />
         </div>
       </section>
 
-      {smartDebtPlans.length > 0 && (
-        <section style={card}>
-          <div style={header}>
-            <Flame color="var(--red)" />
-            <h2>{p.impactTitle}</h2>
-          </div>
+      <section style={smartCard}>
+        <div style={header}>
+          <Clock3 color="var(--gold)" />
+          <h2>{t.paiements || p.title}</h2>
+        </div>
 
-          <div style={debtPlanGrid}>
-            {smartDebtPlans.map((plan) => (
-              <DebtPlanCard
-                key={plan.name}
-                plan={plan}
-                text={p}
-                currency={currency}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      <div className="grid-2" style={grid}>
-        <InfoCard
-          icon={<Wallet />}
-          title={p.totalThisMonth}
-          value={formatMoney(monthlyEstimate, currency)}
-          color="var(--green)"
-        />
-
-        <InfoCard
-          icon={<CheckCircle />}
-          title={p.totalActive}
-          value={activePayments.length}
-          color="var(--gold)"
-        />
-      </div>
+        <div style={smartGrid}>
+          <SmartStat icon={<AlertTriangle />} label={p.overdue} value={paymentStats.overdue} color="var(--red)" />
+          <SmartStat icon={<Calendar />} label={p.dueSoon} value={paymentStats.dueSoon} color="var(--gold)" />
+          <SmartStat icon={<CheckCircle />} label={p.upToDate} value={paymentStats.upToDate} color="var(--green)" />
+        </div>
+      </section>
 
       <section style={card}>
         <div style={header}>
@@ -444,16 +510,12 @@ function Paiements({
         <input
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
-          placeholder="Fairstone, Modulo, Assurance..."
+          placeholder="Loyer, Hydro, Fairstone..."
           style={input}
         />
 
         <label>{p.type}</label>
-        <select
-          value={form.type}
-          onChange={(e) => setForm({ ...form, type: e.target.value })}
-          style={input}
-        >
+        <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} style={input}>
           <option value="debt">{p.debt}</option>
           <option value="bill">{p.bill}</option>
           <option value="saving">{p.saving}</option>
@@ -464,20 +526,14 @@ function Paiements({
         <label>{p.amount}</label>
         <input
           value={form.amount}
-          onChange={(e) =>
-            setForm({ ...form, amount: cleanMoneyInput(e.target.value) })
-          }
+          onChange={(e) => setForm({ ...form, amount: cleanMoneyInput(e.target.value) })}
           inputMode="decimal"
-          placeholder="227.75"
+          placeholder="100"
           style={input}
         />
 
         <label>{p.frequency}</label>
-        <select
-          value={form.frequency}
-          onChange={(e) => setForm({ ...form, frequency: e.target.value })}
-          style={input}
-        >
+        <select value={form.frequency} onChange={(e) => setForm({ ...form, frequency: e.target.value })} style={input}>
           <option value="weekly">{p.weekly}</option>
           <option value="biweekly">{p.biweekly}</option>
           <option value="monthly">{p.monthly}</option>
@@ -495,9 +551,7 @@ function Paiements({
         <label>{p.linkedDebt}</label>
         <select
           value={form.linkedDebtName}
-          onChange={(e) =>
-            setForm({ ...form, linkedDebtName: e.target.value })
-          }
+          onChange={(e) => setForm({ ...form, linkedDebtName: e.target.value })}
           style={input}
         >
           <option value="">—</option>
@@ -525,28 +579,27 @@ function Paiements({
           <h2>{p.scheduledPayments}</h2>
         </div>
 
-        {payments.length === 0 && <p style={muted}>{p.noPayment}</p>}
+        <div style={filterRow}>
+          <FilterButton active={filter === "all"} onClick={() => setFilter("all")} label={p.all} />
+          <FilterButton active={filter === "upcoming"} onClick={() => setFilter("upcoming")} label={p.upcoming} />
+          <FilterButton active={filter === "late"} onClick={() => setFilter("late")} label={p.late} />
+          <FilterButton active={filter === "paid"} onClick={() => setFilter("paid")} label={p.paidFilter} />
+        </div>
 
-        {payments.map((payment) => {
-          const estimatedBalance = getEstimatedDebtBalance(payment);
+        {visiblePayments.length === 0 && <p style={muted}>{p.noPayment}</p>}
+
+        {visiblePayments.map((payment) => {
           const status = getPaymentStatus(payment, p);
-          const linkedPlan = smartDebtPlans.find(
-            (plan) => plan.name === payment.linkedDebtName
-          );
+          const category = getPaymentCategory(payment, p);
+          const estimatedBalance = getEstimatedDebtBalance(payment);
 
           return (
-            <div
-              key={payment.id}
-              style={{
-                ...paymentCard,
-                borderColor: status.color,
-              }}
-            >
+            <div key={payment.id} style={{ ...paymentCard, borderColor: status.color }}>
               <div style={paymentHeader}>
                 <div>
-                  <strong>{payment.name}</strong>
+                  <strong>{category.icon} {payment.name}</strong>
                   <p style={mutedSmall}>
-                    {formatMoney(payment.amount, currency)} •{" "}
+                    {formatMoney(payment.amount, currency)} • {category.label} •{" "}
                     {getFrequencyLabel(payment.frequency, p)}
                   </p>
                 </div>
@@ -563,54 +616,29 @@ function Paiements({
                 </button>
               </div>
 
-              <p style={mutedSmall}>
-                {p.nextDate} : {payment.nextDate || "—"}
-              </p>
+              <p style={mutedSmall}>{p.nextDate} : {payment.nextDate || "—"}</p>
 
               {status.message && (
-                <p
-                  style={{
-                    ...mutedSmall,
-                    color: status.color,
-                    fontWeight: "bold",
-                  }}
-                >
+                <p style={{ ...mutedSmall, color: status.color, fontWeight: "bold" }}>
                   {status.message}
                 </p>
               )}
 
-              {payment.linkedDebtName ? (
-                <p style={mutedSmall}>
-                  {p.linkedDebt} : {payment.linkedDebtName}
-                </p>
-              ) : (
-                <p style={mutedSmall}>{p.noDebtLinked}</p>
-              )}
+              <p style={mutedSmall}>
+                {payment.linkedDebtName
+                  ? `${p.linkedDebt} : ${payment.linkedDebtName}`
+                  : p.noDebtLinked}
+              </p>
 
               {estimatedBalance !== null && (
                 <p style={mutedSmall}>
-                  {p.afterPayment} :{" "}
-                  <strong>{formatMoney(estimatedBalance, currency)}</strong>
+                  {p.afterPayment} : <strong>{formatMoney(estimatedBalance, currency)}</strong>
                 </p>
-              )}
-
-              {linkedPlan && (
-                <div style={miniPlan}>
-                  <Mini label={p.minimum} value={formatMoney(linkedPlan.minimum, currency)} />
-                  <Mini
-                    label={p.recommended}
-                    value={formatMoney(linkedPlan.recommended, currency)}
-                  />
-                  <Mini
-                    label={p.accelerated}
-                    value={formatMoney(linkedPlan.accelerated, currency)}
-                  />
-                </div>
               )}
 
               {payment.lastPaidAt && (
                 <p style={mutedSmall}>
-                  {p.paid} : {formatDate(payment.lastPaidAt)}
+                  {p.paid} : {formatDate(payment.lastPaidAt, language)}
                 </p>
               )}
 
@@ -619,10 +647,7 @@ function Paiements({
                   <Edit3 size={16} /> {p.apply}
                 </button>
 
-                <button
-                  onClick={() => removePayment(payment.id)}
-                  style={trashButton}
-                >
+                <button onClick={() => removePayment(payment.id)} style={trashButton}>
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -630,151 +655,192 @@ function Paiements({
           );
         })}
       </section>
+
+      <section style={card}>
+        <div style={header}>
+          <CreditCard color="var(--blue)" />
+          <h2>{p.history}</h2>
+        </div>
+
+        {paymentHistory.length === 0 && <p style={muted}>{p.noHistory}</p>}
+
+        {paymentHistory.slice(0, 12).map((item) => (
+          <div key={item.id} style={historyItem}>
+            <div>
+              <strong>{item.name}</strong>
+              <p style={mutedSmall}>{formatDate(item.paidAt, language)}</p>
+            </div>
+
+            <strong style={{ color: "var(--green)" }}>
+              {formatMoney(item.amount, currency)}
+            </strong>
+          </div>
+        ))}
+      </section>
     </div>
   );
 }
 
-function buildDebtPlan(debt) {
-  const balance = Number(debt.balance || 0);
-  const rate = Number(debt.interestRate || debt.rate || debt.apr || 0);
-  const minimum = Math.max(
-    25,
-    Number(debt.minimumPayment || debt.minPayment || debt.payment || 0) ||
-      Math.ceil(balance * 0.03)
+function getPaymentStats(payments) {
+  return payments.reduce(
+    (stats, payment) => {
+      if (payment.status.key === "overdue") stats.overdue += 1;
+      if (payment.status.key === "dueSoon") stats.dueSoon += 1;
+      if (payment.status.key === "upToDate") stats.upToDate += 1;
+      return stats;
+    },
+    { overdue: 0, dueSoon: 0, upToDate: 0 }
   );
-  const recommended = Math.max(minimum, Math.ceil(minimum * 2.25));
-  const accelerated = Math.max(recommended, Math.ceil(minimum * 4.6));
-  const minimumMonths = estimateMonths(balance, minimum);
-  const recommendedMonths = estimateMonths(balance, recommended);
-  const acceleratedMonths = estimateMonths(balance, accelerated);
+}
+
+function getPaymentScore(stats) {
+  const total = stats.overdue + stats.dueSoon + stats.upToDate;
+  if (total === 0) return 100;
+
+  const penalty = stats.overdue * 22 + stats.dueSoon * 7;
+  return Math.max(0, Math.min(100, 100 - penalty));
+}
+
+function getScoreColor(score) {
+  if (score >= 85) return "var(--green)";
+  if (score >= 65) return "var(--gold)";
+  return "var(--red)";
+}
+
+function getMonthSummary({ payments, history }) {
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const monthPayments = payments.filter((payment) => {
+    if (!payment.nextDate) return true;
+    const date = new Date(`${payment.nextDate}T12:00:00`);
+    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+  });
+
+  const totalPlanned = monthPayments.reduce(
+    (sum, payment) => sum + Number(payment.amount || 0),
+    0
+  );
+
+  const totalPaid = history
+    .filter((item) => {
+      const date = new Date(item.paidAt);
+      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+    })
+    .reduce((sum, item) => sum + Number(item.amount || 0), 0);
 
   return {
-    name: debt.name,
-    balance,
-    rate,
-    minimum,
-    recommended,
-    accelerated,
-    minimumMonths,
-    recommendedMonths,
-    acceleratedMonths,
-    recommendedGain: Math.max(0, minimumMonths - recommendedMonths),
-    acceleratedGain: Math.max(0, minimumMonths - acceleratedMonths),
-    priorityScore: rate * 10 + balance / 1000,
+    totalPlanned,
+    totalPaid,
+    totalRemaining: Math.max(0, totalPlanned - totalPaid),
   };
 }
 
-function estimateMonths(balance, monthlyPayment) {
-  if (!balance || !monthlyPayment) return 0;
+function getSmartAction(payments, p, currency) {
+  const overdue = payments.find((payment) => payment.status.key === "overdue");
+  if (overdue) return `${p.overdue} : ${overdue.name} — ${formatMoney(overdue.amount, currency)}.`;
 
-  return Math.max(1, Math.ceil(Number(balance || 0) / Number(monthlyPayment || 1)));
-}
-
-function getSmartAction(payments, plans, p, currency) {
-  const overdue = payments.find(
-    (payment) => payment.active && getPaymentStatus(payment, p).key === "overdue"
-  );
-
-  if (overdue) {
-    return `${p.overdue} : ${overdue.name} — ${formatMoney(
-      overdue.amount,
-      currency
-    )}.`;
-  }
-
-  const dueSoon = payments.find(
-    (payment) => payment.active && getPaymentStatus(payment, p).key === "dueSoon"
-  );
-
-  if (dueSoon) {
-    return `${p.dueSoon} : ${dueSoon.name} — ${formatMoney(
-      dueSoon.amount,
-      currency
-    )}.`;
-  }
-
-  const topPlan = plans[0];
-
-  if (topPlan) {
-    return `${topPlan.name} : ${p.recommended} ${formatMoney(
-      topPlan.recommended,
-      currency
-    )}.`;
-  }
+  const dueSoon = payments.find((payment) => payment.status.key === "dueSoon");
+  if (dueSoon) return `${p.dueSoon} : ${dueSoon.name} — ${formatMoney(dueSoon.amount, currency)}.`;
 
   return p.noSmartAction;
 }
 
+function getPaymentCategory(payment, p) {
+  const name = `${payment.name || ""} ${payment.type || ""}`.toLowerCase();
+
+  if (name.includes("loyer") || name.includes("rent") || name.includes("hypothèque")) {
+    return { icon: "🏠", label: p.logement };
+  }
+
+  if (name.includes("auto") || name.includes("transport") || name.includes("car")) {
+    return { icon: "🚗", label: p.transport };
+  }
+
+  if (name.includes("phone") || name.includes("internet") || name.includes("télé")) {
+    return { icon: "📱", label: p.telecom };
+  }
+
+  if (name.includes("assurance") || name.includes("insurance")) {
+    return { icon: "🛡️", label: p.insurance };
+  }
+
+  if (name.includes("netflix") || name.includes("prime") || name.includes("spotify")) {
+    return { icon: "📦", label: p.subscription };
+  }
+
+  if (payment.type === "debt") return { icon: "💳", label: p.debt };
+  if (payment.type === "saving") return { icon: "💰", label: p.saving };
+  if (payment.type === "project") return { icon: "🎯", label: p.project };
+
+  return { icon: "📌", label: p.other };
+}
+
 function getPaymentStatus(payment, p = pageText.FR) {
   if (!payment.active) {
-    return {
-      key: "inactive",
-      label: p.inactive || "Inactif",
-      color: "var(--red)",
-      message: "",
-    };
+    return { key: "inactive", label: p.inactive, color: "var(--red)", message: "" };
   }
 
   if (!payment.nextDate) {
-    return {
-      key: "upToDate",
-      label: p.upToDate || "À jour",
-      color: "var(--green)",
-      message: "Aucune échéance urgente.",
-    };
+    return { key: "upToDate", label: p.upToDate, color: "var(--green)", message: p.noDate };
   }
 
-  const today = new Date();
-  const dueDate = new Date(`${payment.nextDate}T12:00:00`);
+  const days = getDaysUntil(payment.nextDate);
 
-  today.setHours(12, 0, 0, 0);
-
-  const diffDays = Math.ceil(
-    (dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-  );
-
-  if (diffDays < 0) {
-    const lateDays = Math.abs(diffDays);
-
+  if (days < 0) {
+    const lateDays = Math.abs(days);
     return {
       key: "overdue",
-      label: p.overdue || "En retard",
+      label: p.overdue,
       color: "var(--red)",
-      message: `En retard de ${lateDays} jour${lateDays > 1 ? "s" : ""}.`,
+      message: `${p.overdueBy} ${lateDays} ${p.days}.`,
     };
   }
 
-  if (diffDays === 0) {
+  if (days === 0) {
     return {
       key: "dueSoon",
-      label: "Aujourd’hui",
+      label: p.today,
       color: "var(--gold)",
-      message: "Paiement prévu aujourd’hui.",
+      message: p.plannedToday,
     };
   }
 
-  if (diffDays <= 3) {
+  if (days <= 7) {
     return {
       key: "dueSoon",
-      label: p.dueSoon || "Bientôt dû",
+      label: p.dueSoon,
       color: "var(--gold)",
-      message: `Paiement dans ${diffDays} jour${diffDays > 1 ? "s" : ""}.`,
+      message: `${p.paymentIn} ${days} ${p.days}.`,
     };
   }
 
   return {
     key: "upToDate",
-    label: p.upToDate || "À jour",
+    label: p.upToDate,
     color: "var(--green)",
-    message: `Paiement dans ${diffDays} jours.`,
+    message: `${p.paymentIn} ${days} ${p.days}.`,
   };
+}
+
+function getDaysUntil(dateValue) {
+  if (!dateValue) return null;
+
+  const today = new Date();
+  const dueDate = new Date(`${dateValue}T12:00:00`);
+
+  if (Number.isNaN(dueDate.getTime())) return null;
+
+  today.setHours(12, 0, 0, 0);
+
+  return Math.ceil((dueDate.getTime() - today.getTime()) / 86400000);
 }
 
 function getNextPaymentDate(dateValue, frequency) {
   if (!dateValue || frequency === "custom") return dateValue;
 
   const date = new Date(`${dateValue}T12:00:00`);
-
   if (Number.isNaN(date.getTime())) return dateValue;
 
   if (frequency === "weekly") date.setDate(date.getDate() + 7);
@@ -791,85 +857,34 @@ function getFrequencyLabel(frequency, p) {
   return p.custom;
 }
 
-function formatDate(value) {
+function formatDate(value, language = "FR") {
   if (!value) return "—";
 
   const date = new Date(value);
-
   if (Number.isNaN(date.getTime())) return "—";
 
-  return date.toLocaleString("fr-CA", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-}
-
-function formatMonthEnd(months) {
-  if (!months) return "—";
-
-  const date = new Date();
-  date.setMonth(date.getMonth() + months);
-
-  return date.toLocaleDateString("fr-CA", {
-    year: "numeric",
-    month: "short",
-  });
-}
-
-function DebtPlanCard({ plan, text, currency }) {
-  const priority =
-    plan.rate >= 25 ? text.urgent : plan.rate >= 10 ? text.important : text.stable;
-  const priorityColor =
-    plan.rate >= 25 ? "var(--red)" : plan.rate >= 10 ? "var(--gold)" : "var(--green)";
-
-  return (
-    <div style={{ ...debtPlanCard, borderColor: priorityColor }}>
-      <div style={paymentHeader}>
-        <div>
-          <strong>{plan.name}</strong>
-          <p style={mutedSmall}>
-            {formatMoney(plan.balance, currency)} • {plan.rate || 0}%
-          </p>
-        </div>
-
-        <span
-          style={{
-            ...priorityPill,
-            borderColor: priorityColor,
-            color: priorityColor,
-          }}
-        >
-          {priority}
-        </span>
-      </div>
-
-      <div style={miniPlan}>
-        <Mini
-          label={text.minimum}
-          value={formatMoney(plan.minimum, currency)}
-          sub={`${text.estimatedEnd} : ${formatMonthEnd(plan.minimumMonths)}`}
-        />
-        <Mini
-          label={text.recommended}
-          value={formatMoney(plan.recommended, currency)}
-          sub={`${plan.recommendedGain} ${text.monthsEarlier}`}
-        />
-        <Mini
-          label={text.accelerated}
-          value={formatMoney(plan.accelerated, currency)}
-          sub={`${plan.acceleratedGain} ${text.monthsEarlier}`}
-        />
-      </div>
-    </div>
+  return date.toLocaleString(
+    language === "EN" ? "en-CA" : language === "ES" ? "es-CA" : "fr-CA",
+    {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }
   );
 }
 
-function Mini({ label, value, sub }) {
+function WeekPayment({ payment, currency, text }) {
+  const days = getDaysUntil(payment.nextDate);
+
   return (
-    <div style={miniBox}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-      {sub && <small>{sub}</small>}
+    <div style={{ ...weekItem, borderColor: payment.status.color }}>
+      <div>
+        <strong>{payment.category.icon} {payment.name}</strong>
+        <p style={mutedSmall}>
+          {days === 0 ? text.today : `${text.inDays} ${days} ${text.days}`}
+        </p>
+      </div>
+
+      <strong>{formatMoney(payment.amount, currency)}</strong>
     </div>
   );
 }
@@ -894,14 +909,32 @@ function SmartStat({ icon, label, value, color }) {
   );
 }
 
-const grid = {
-  gap: "12px",
-  marginTop: "18px",
-};
+function FilterButton({ active, label, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        ...filterButton,
+        borderColor: active ? "var(--gold)" : "var(--border)",
+        color: active ? "var(--gold)" : "var(--text-main)",
+        background: active ? "rgba(212,175,55,.12)" : "var(--bg-panel)",
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
+const scoreCard = (score) => ({
+  background: `linear-gradient(135deg, ${score >= 85 ? "rgba(34,197,94,.16)" : score >= 65 ? "rgba(212,175,55,.16)" : "rgba(239,68,68,.14)"}, var(--bg-card))`,
+  border: `1px solid ${getScoreColor(score)}`,
+  borderRadius: "24px",
+  padding: "20px",
+  marginTop: "20px",
+});
 
 const smartActionCard = {
-  background:
-    "linear-gradient(135deg, rgba(212,175,55,.16), rgba(34,197,94,.08), var(--bg-card))",
+  background: "linear-gradient(135deg, rgba(212,175,55,.16), rgba(34,197,94,.08), var(--bg-card))",
   border: "1px solid var(--gold)",
   borderRadius: "22px",
   padding: "20px",
@@ -914,23 +947,6 @@ const smartCard = {
   borderRadius: "22px",
   padding: "20px",
   marginTop: "20px",
-};
-
-const smartGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(3, 1fr)",
-  gap: "10px",
-  marginTop: "14px",
-};
-
-const smartStat = {
-  background: "var(--bg-panel)",
-  border: "1px solid var(--border)",
-  borderRadius: "16px",
-  padding: "12px",
-  display: "grid",
-  gap: "5px",
-  textAlign: "center",
 };
 
 const card = {
@@ -946,6 +962,71 @@ const header = {
   alignItems: "center",
   gap: "10px",
   marginBottom: "14px",
+};
+
+const eyebrow = {
+  color: "var(--gold)",
+  fontSize: "12px",
+  fontWeight: 900,
+  margin: 0,
+  textTransform: "uppercase",
+};
+
+const barBg = {
+  height: "10px",
+  background: "var(--bg-panel)",
+  borderRadius: "999px",
+  overflow: "hidden",
+};
+
+const barFill = {
+  height: "100%",
+  borderRadius: "999px",
+};
+
+const weekList = {
+  display: "grid",
+  gap: "10px",
+};
+
+const weekItem = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "12px",
+  display: "flex",
+  justifyContent: "space-between",
+  gap: "12px",
+  alignItems: "center",
+};
+
+const monthGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  gap: "10px",
+};
+
+const smartGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(3, 1fr)",
+  gap: "10px",
+};
+
+const smartStat = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "12px",
+  display: "grid",
+  gap: "5px",
+  textAlign: "center",
+};
+
+const infoCard = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "12px",
 };
 
 const input = {
@@ -989,50 +1070,20 @@ const secondaryBtn = {
   gap: "6px",
 };
 
-const infoCard = {
-  background: "var(--bg-card)",
-  border: "1px solid var(--border)",
-  borderRadius: "18px",
-  padding: "16px",
-};
-
-const debtPlanGrid = {
-  display: "grid",
-  gap: "12px",
-};
-
-const debtPlanCard = {
-  background: "var(--bg-panel)",
-  border: "1px solid var(--border)",
-  borderRadius: "18px",
-  padding: "16px",
-};
-
-const miniPlan = {
-  display: "grid",
-  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+const filterRow = {
+  display: "flex",
   gap: "8px",
-  marginTop: "12px",
+  overflowX: "auto",
+  paddingBottom: "4px",
+  marginBottom: "10px",
 };
 
-const miniBox = {
-  border: "1px solid var(--border)",
-  background: "var(--bg-card)",
-  borderRadius: "13px",
-  padding: "10px",
-  display: "grid",
-  gap: "4px",
-  fontSize: "12px",
-};
-
-const priorityPill = {
+const filterButton = {
   border: "1px solid var(--border)",
   borderRadius: "999px",
-  padding: "7px 10px",
-  height: "34px",
-  fontSize: "12px",
-  fontWeight: "900",
-  background: "var(--bg-card)",
+  padding: "9px 12px",
+  whiteSpace: "nowrap",
+  fontWeight: 900,
 };
 
 const paymentCard = {
@@ -1082,6 +1133,18 @@ const trashButton = {
   background: "transparent",
   color: "var(--red)",
   borderRadius: "13px",
+};
+
+const historyItem = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "12px",
+  marginTop: "10px",
+  display: "flex",
+  justifyContent: "space-between",
+  gap: "10px",
+  alignItems: "center",
 };
 
 const muted = {
