@@ -39,6 +39,12 @@ const pageText = {
     targetAmount: "Montant principal",
     current: "Montant déjà disponible",
     monthly: "Contribution possible par mois",
+    savingsTarget: "Montant visé d’épargne",
+    savingsCurrent: "Montant déjà épargné",
+    savingsMonthly: "Épargne possible par mois",
+    projectTarget: "Budget visé du projet",
+    projectCurrent: "Capital déjà disponible",
+    projectMonthly: "Investissement possible par mois",
     result: "Résultat de simulation",
     timeNeeded: "Temps estimé",
     months: "mois",
@@ -91,6 +97,12 @@ const pageText = {
     targetAmount: "Main amount",
     current: "Amount already available",
     monthly: "Possible monthly contribution",
+    savingsTarget: "Savings target amount",
+    savingsCurrent: "Amount already saved",
+    savingsMonthly: "Possible monthly savings",
+    projectTarget: "Target project budget",
+    projectCurrent: "Capital already available",
+    projectMonthly: "Possible monthly investment",
     result: "Simulation result",
     timeNeeded: "Estimated time",
     months: "months",
@@ -143,6 +155,12 @@ const pageText = {
     targetAmount: "Monto principal",
     current: "Monto ya disponible",
     monthly: "Contribución posible por mes",
+    savingsTarget: "Monto objetivo de ahorro",
+    savingsCurrent: "Monto ya ahorrado",
+    savingsMonthly: "Ahorro posible por mes",
+    projectTarget: "Presupuesto objetivo del proyecto",
+    projectCurrent: "Capital ya disponible",
+    projectMonthly: "Inversión posible por mes",
     result: "Resultado de simulación",
     timeNeeded: "Tiempo estimado",
     months: "meses",
@@ -264,7 +282,7 @@ const templateDetails = {
     subtitle: {
       FR: "Formation, frais, matériel, livres et inscription.",
       EN: "Training, fees, equipment, books and registration.",
-      ES: "Formación, costos, material, libros e inscripción.",
+      ES: "Formación, costos, material, libros y inscripción.",
     },
     advice: {
       FR: "Incluez les frais cachés : matériel, transport, livres et marge.",
@@ -333,6 +351,30 @@ function getTemplate(category, language) {
   };
 }
 
+function getFieldLabels(category, p) {
+  if (category === "epargne") {
+    return {
+      target: p.savingsTarget,
+      current: p.savingsCurrent,
+      monthly: p.savingsMonthly,
+    };
+  }
+
+  if (category === "business") {
+    return {
+      target: p.projectTarget,
+      current: p.projectCurrent,
+      monthly: p.projectMonthly,
+    };
+  }
+
+  return {
+    target: p.targetAmount,
+    current: p.current,
+    monthly: p.monthly,
+  };
+}
+
 function Simulateur({
   selectedGoals,
   setSelectedGoals,
@@ -365,6 +407,7 @@ function Simulateur({
 
   const currentCategory = normalizeCategory(template.id);
   const currentTemplate = getTemplate(currentCategory, language);
+  const fieldLabels = getFieldLabels(currentCategory, p);
   const hasFinancing = ["auto", "maison", "hypotheque", "dette"].includes(currentCategory);
 
   useEffect(() => {
@@ -515,7 +558,7 @@ function Simulateur({
       highlighted: goals.length === 0,
       archived: false,
       status: "active",
-      source: "simulation_v15_5",
+      source: "simulation_v15_5_1",
       createdAt: now,
       activatedAt: now,
       monthlyContribution: monthly,
@@ -619,7 +662,7 @@ function Simulateur({
         <label>{p.goalName}</label>
         <input value={title} onChange={(event) => setTitle(event.target.value)} style={input} />
 
-        <label>{p.targetAmount}</label>
+        <label>{fieldLabels.target}</label>
         <input
           value={targetAmount}
           onChange={(event) => setTargetAmount(clean(event.target.value))}
@@ -627,7 +670,7 @@ function Simulateur({
           style={input}
         />
 
-        <label>{p.current}</label>
+        <label>{fieldLabels.current}</label>
         <input
           value={currentAmount}
           onChange={(event) => setCurrentAmount(clean(event.target.value))}
@@ -635,7 +678,7 @@ function Simulateur({
           style={input}
         />
 
-        <label>{p.monthly}</label>
+        <label>{fieldLabels.monthly}</label>
         <input
           value={monthlyContribution}
           onChange={(event) => setMonthlyContribution(clean(event.target.value))}
@@ -784,7 +827,7 @@ function Simulateur({
         </div>
 
         <div style={resultGrid}>
-          <Result label={p.targetAmount} value={formatMoney(target, currency)} />
+          <Result label={fieldLabels.target} value={formatMoney(target, currency)} />
           <Result label={p.remaining} value={formatMoney(remaining, currency)} />
           <Result label={p.timeNeeded} value={`${monthsNeeded || "—"} ${p.months}`} />
           <Result label={p.date} value={estimatedDate} />
