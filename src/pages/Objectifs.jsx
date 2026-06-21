@@ -82,80 +82,53 @@ const pageText = {
   },
 };
 
-const goalCatalog = [
-  {
-    id: "voyage",
-    title: "Voyage",
-    subtitle: "Billet, séjour, famille, marge de sécurité.",
-    icon: <Plane />,
-    color: "var(--gold)",
-    defaultAmount: 3500,
-    defaultMonthly: 500,
-  },
-  {
-    id: "maison",
-    title: "Maison",
-    subtitle: "Construction, rénovation, terrain ou projet solaire.",
-    icon: <Home />,
-    color: "var(--green)",
-    defaultAmount: 10000,
-    defaultMonthly: 700,
-  },
-  {
-    id: "auto",
-    title: "Auto",
-    subtitle: "Achat, réparation, remplacement ou mise de fonds.",
-    icon: <Car />,
-    color: "var(--blue)",
-    defaultAmount: 8000,
-    defaultMonthly: 450,
-  },
-  {
-    id: "dette",
-    title: "Dette",
-    subtitle: "Carte, prêt personnel, marge ou remboursement prioritaire.",
-    icon: <CreditCard />,
-    color: "var(--red)",
-    defaultAmount: 5000,
-    defaultMonthly: 500,
-  },
-  {
-    id: "epargne",
-    title: "Épargne",
-    subtitle: "Fonds d’urgence, sécurité ou réserve familiale.",
-    icon: <PiggyBank />,
-    color: "var(--green)",
-    defaultAmount: 3000,
-    defaultMonthly: 250,
-  },
-  {
-    id: "famille",
-    title: "Famille",
-    subtitle: "Soutien, événement, école ou besoin important.",
-    icon: <Users />,
-    color: "var(--purple)",
-    defaultAmount: 2500,
-    defaultMonthly: 300,
-  },
-  {
-    id: "business",
-    title: "Projet personnel",
-    subtitle: "Formation, lancement, matériel ou projet libre.",
-    icon: <Briefcase />,
-    color: "var(--blue)",
-    defaultAmount: 4000,
-    defaultMonthly: 350,
-  },
-  {
-    id: "libre",
-    title: "Objectif libre",
-    subtitle: "Un objectif totalement personnalisé.",
-    icon: <Target />,
-    color: "var(--gold)",
-    defaultAmount: 1000,
-    defaultMonthly: 150,
-  },
-];
+function getGoalCatalog(language) {
+  const catalogText = {
+    FR: {
+      voyage: ["Voyage", "Billet, séjour, famille, marge de sécurité."],
+      maison: ["Maison", "Construction, rénovation, terrain ou projet solaire."],
+      auto: ["Auto", "Achat, réparation, remplacement ou mise de fonds."],
+      dette: ["Dette", "Carte, prêt personnel, marge ou remboursement prioritaire."],
+      epargne: ["Épargne", "Fonds d’urgence, sécurité ou réserve familiale."],
+      famille: ["Famille", "Soutien, événement, école ou besoin important."],
+      business: ["Projet personnel", "Formation, lancement, matériel ou projet libre."],
+      libre: ["Objectif libre", "Un objectif totalement personnalisé."],
+    },
+    EN: {
+      voyage: ["Travel", "Ticket, stay, family and safety margin."],
+      maison: ["Home", "Construction, renovation, land or solar project."],
+      auto: ["Car", "Purchase, repair, replacement or down payment."],
+      dette: ["Debt", "Card, personal loan, credit line or priority repayment."],
+      epargne: ["Savings", "Emergency fund, security or family reserve."],
+      famille: ["Family", "Support, event, school or important need."],
+      business: ["Personal project", "Training, launch, equipment or open project."],
+      libre: ["Custom goal", "A fully personalized goal."],
+    },
+    ES: {
+      voyage: ["Viaje", "Boleto, estadía, familia y margen de seguridad."],
+      maison: ["Casa", "Construcción, renovación, terreno o proyecto solar."],
+      auto: ["Auto", "Compra, reparación, reemplazo o pago inicial."],
+      dette: ["Deuda", "Tarjeta, préstamo personal, línea de crédito o pago prioritario."],
+      epargne: ["Ahorro", "Fondo de emergencia, seguridad o reserva familiar."],
+      famille: ["Familia", "Apoyo, evento, escuela o necesidad importante."],
+      business: ["Proyecto personal", "Formación, lanzamiento, material o proyecto libre."],
+      libre: ["Objetivo libre", "Un objetivo totalmente personalizado."],
+    },
+  };
+
+  const text = catalogText[language] || catalogText.FR;
+
+  return [
+    { id: "voyage", title: text.voyage[0], subtitle: text.voyage[1], icon: <Plane />, color: "var(--gold)", defaultAmount: 3500, defaultMonthly: 500 },
+    { id: "maison", title: text.maison[0], subtitle: text.maison[1], icon: <Home />, color: "var(--green)", defaultAmount: 10000, defaultMonthly: 700 },
+    { id: "auto", title: text.auto[0], subtitle: text.auto[1], icon: <Car />, color: "var(--blue)", defaultAmount: 8000, defaultMonthly: 450 },
+    { id: "dette", title: text.dette[0], subtitle: text.dette[1], icon: <CreditCard />, color: "var(--red)", defaultAmount: 5000, defaultMonthly: 500 },
+    { id: "epargne", title: text.epargne[0], subtitle: text.epargne[1], icon: <PiggyBank />, color: "var(--green)", defaultAmount: 3000, defaultMonthly: 250 },
+    { id: "famille", title: text.famille[0], subtitle: text.famille[1], icon: <Users />, color: "var(--purple)", defaultAmount: 2500, defaultMonthly: 300 },
+    { id: "business", title: text.business[0], subtitle: text.business[1], icon: <Briefcase />, color: "var(--blue)", defaultAmount: 4000, defaultMonthly: 350 },
+    { id: "libre", title: text.libre[0], subtitle: text.libre[1], icon: <Target />, color: "var(--gold)", defaultAmount: 1000, defaultMonthly: 150 },
+  ];
+}
 
 function Objectifs({ selectedGoals, settings, setCurrentPage }) {
   const t = getText(settings);
@@ -163,6 +136,7 @@ function Objectifs({ selectedGoals, settings, setCurrentPage }) {
   const p = pageText[language] || pageText.FR;
   const currency = settings?.currency || "CAD";
   const goals = Array.isArray(selectedGoals) ? selectedGoals : [];
+  const goalCatalog = getGoalCatalog(language);
 
   const activeGoals = useMemo(
     () =>

@@ -120,6 +120,7 @@ const pageText = {
     privacyText:
       "Aucune transaction bancaire n’est possible dans cette version. Les données restent locales tant que la synchronisation n’est pas activée.",
     openSettings: "Ouvrir les réglages",
+    status: "Statut", activeAccount: "Compte actif", goalFallback: "Objectif", shareTitle: "Découvre OnJarama Path, un coach financier intelligent.",
   },
 
   EN: {
@@ -217,6 +218,7 @@ const pageText = {
     privacyText:
       "No banking transaction is possible in this version. Data stays local until synchronization is enabled.",
     openSettings: "Open settings",
+    status: "Status", activeAccount: "Active account", goalFallback: "Goal", shareTitle: "Discover OnJarama Path, a smart financial coach.",
   },
 
   ES: {
@@ -314,6 +316,7 @@ const pageText = {
     privacyText:
       "No es posible realizar transacciones bancarias en esta versión. Los datos permanecen locales hasta activar la sincronización.",
     openSettings: "Abrir ajustes",
+    status: "Estado", activeAccount: "Cuenta activa", goalFallback: "Objetivo", shareTitle: "Descubre OnJarama Path, un coach financiero inteligente.",
   },
 };
 
@@ -361,7 +364,7 @@ function Profil({
     if (navigator.share) {
       navigator.share({
         title: "OnJarama Path",
-        text: "Découvre OnJarama Path, un coach financier intelligent.",
+        text: p.shareTitle,
         url: link,
       });
     } else {
@@ -414,14 +417,14 @@ function Profil({
           </strong>
         </div>
 
-        <InfoRow label="Statut" value={isConnected ? p.connected : p.guest} />
+        <InfoRow label={p.status} value={isConnected ? p.connected : p.guest} />
         <InfoRow
           label="Supabase"
           value={isConfigured ? p.cloudReady : p.cloudNotReady}
         />
 
         {isConnected && (
-          <InfoRow label={p.accountEmail} value={userEmail || "Compte actif"} />
+          <InfoRow label={p.accountEmail} value={userEmail || p.activeAccount} />
         )}
 
         <p style={muted}>
@@ -570,7 +573,7 @@ function Profil({
               <div>
                 <strong>{goal.title}</strong>
                 <p style={mutedSmall}>
-                  {goal.categoryLabel || goal.category || "Objectif"}
+                  {goal.categoryLabel || goal.category || p.goalFallback}
                 </p>
               </div>
             </div>
@@ -690,11 +693,11 @@ function isGoalAchieved(goal) {
   );
 }
 
-function formatHistoryDate(dateValue) {
+function formatHistoryDate(dateValue, language = "FR") {
   if (!dateValue) return "—";
   const date = new Date(dateValue);
   if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleDateString("fr-CA", {
+  return date.toLocaleDateString(language === "EN" ? "en-CA" : language === "ES" ? "es-CA" : "fr-CA", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -708,7 +711,7 @@ function HistoryItem({ goal, label, date, color }) {
       <div>
         <strong>{goal.title}</strong>
         <p style={mutedSmall}>
-          {goal.categoryLabel || goal.option || goal.category || "Objectif"}
+          {goal.categoryLabel || goal.option || goal.category || pageText.FR.goalFallback}
         </p>
         <p style={mutedSmall}>
           {label} : {formatHistoryDate(date)}

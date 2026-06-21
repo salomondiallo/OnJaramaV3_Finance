@@ -27,7 +27,6 @@ const pageText = {
     privacy: "Confidentialité active : données locales, lecture seule.",
     discipline: "Discipline OnJarama : une action claire à la fois.",
   },
-
   EN: {
     adviceDebt: "Prioritize the debt with the highest rate",
     adviceStart: "Add your numbers to generate your priority.",
@@ -42,7 +41,6 @@ const pageText = {
     privacy: "Privacy active: local data, read-only.",
     discipline: "OnJarama discipline: one clear action at a time.",
   },
-
   ES: {
     adviceDebt: "Prioriza la deuda con la tasa más alta",
     adviceStart: "Agrega tus datos para generar tu prioridad.",
@@ -82,17 +80,11 @@ function OnJaramaLive({ financeData, selectedGoals, settings }) {
 
   const priorityDebt = [...debts]
     .filter((debt) => Number(debt.balance || 0) > 0)
-    .sort(
-      (a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0)
-    )[0];
+    .sort((a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0))[0];
 
-  const totalDebt = debts.reduce(
-    (sum, debt) => sum + Number(debt.balance || 0),
-    0
-  );
+  const totalDebt = debts.reduce((sum, debt) => sum + Number(debt.balance || 0), 0);
 
-  const firstGoal =
-    activeGoals.find((goal) => goal.highlighted) || activeGoals[0];
+  const firstGoal = activeGoals.find((goal) => goal.highlighted) || activeGoals[0];
 
   const reachedGoal = activeGoals.find(
     (goal) =>
@@ -103,22 +95,20 @@ function OnJaramaLive({ financeData, selectedGoals, settings }) {
   const nearGoal = activeGoals.find((goal) => {
     const target = Number(goal.targetAmount || 0);
     const current = Number(goal.currentAmount || 0);
-
     if (target <= 0) return false;
-
     const progress = (current / target) * 100;
     return progress >= 90 && progress < 100;
   });
 
-  const simulatorGoal = activeGoals.find((goal) => goal.source === "simulateur");
+  const simulatorGoal = activeGoals.find(
+    (goal) => goal.source === "simulateur" || goal.source === "simulation_v12_2"
+  );
 
   const messages = [
     {
       icon: <Lightbulb size={16} />,
       color: "var(--gold)",
-      text: priorityDebt
-        ? `${p.adviceDebt} : ${priorityDebt.name}.`
-        : p.adviceStart,
+      text: priorityDebt ? `${p.adviceDebt} : ${priorityDebt.name}.` : p.adviceStart,
     },
     {
       icon: <CreditCard size={16} />,
@@ -133,9 +123,7 @@ function OnJaramaLive({ financeData, selectedGoals, settings }) {
     {
       icon: <Calendar size={16} />,
       color: "var(--blue)",
-      text: activePayment
-        ? `${p.payment} : ${activePayment.name}.`
-        : p.noPayment,
+      text: activePayment ? `${p.payment} : ${activePayment.name}.` : p.noPayment,
     },
     {
       icon: <ShieldCheck size={16} />,
@@ -177,7 +165,6 @@ function OnJaramaLive({ financeData, selectedGoals, settings }) {
     const timer = setInterval(() => {
       setIndex((current) => (current + 1) % messages.length);
     }, 5000);
-
     return () => clearInterval(timer);
   }, [messages.length]);
 
@@ -185,23 +172,11 @@ function OnJaramaLive({ financeData, selectedGoals, settings }) {
 
   return (
     <div style={banner}>
-      <span style={{ ...iconBox, color: currentMessage.color }}>
-        {currentMessage.icon}
-      </span>
-
-      <span style={messageText} title={currentMessage.text}>
-        {currentMessage.text}
-      </span>
-
+      <span style={{ ...iconBox, color: currentMessage.color }}>{currentMessage.icon}</span>
+      <span style={messageText} title={currentMessage.text}>{currentMessage.text}</span>
       <span style={dots}>
         {messages.map((_, itemIndex) => (
-          <span
-            key={itemIndex}
-            style={{
-              ...dot,
-              opacity: itemIndex === index ? 1 : 0.35,
-            }}
-          />
+          <span key={itemIndex} style={{ ...dot, opacity: itemIndex === index ? 1 : 0.35 }} />
         ))}
       </span>
     </div>
@@ -227,28 +202,9 @@ const banner = {
   overflow: "hidden",
 };
 
-const iconBox = {
-  display: "flex",
-  alignItems: "center",
-};
-
-const messageText = {
-  whiteSpace: "nowrap",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-};
-
-const dots = {
-  display: "flex",
-  gap: "4px",
-  alignItems: "center",
-};
-
-const dot = {
-  width: "5px",
-  height: "5px",
-  borderRadius: "50%",
-  background: "var(--gold)",
-};
+const iconBox = { display: "flex", alignItems: "center" };
+const messageText = { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
+const dots = { display: "flex", gap: "4px", alignItems: "center" };
+const dot = { width: "5px", height: "5px", borderRadius: "50%", background: "var(--gold)" };
 
 export default OnJaramaLive;

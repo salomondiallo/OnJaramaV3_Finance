@@ -344,9 +344,9 @@ function Reglages({
         <InfoRow label={t.creator} value="Thierno Diallo" />
         <InfoRow label="OnJarama" value={t.founder} />
         <InfoRow label="Version" value={t.appVersion} />
-        <InfoRow label="Écosystème" value={t.ecosystem} />
-        <InfoRow label="Origine" value={t.guineaQuebecCanada} />
-        <InfoRow label="Québec" value={t.proudlyQuebec} />
+        <InfoRow label={t.ecosystem} value={t.ecosystem} />
+        <InfoRow label={t.origin || "Origin"} value={t.guineaQuebecCanada} />
+        <InfoRow label={t.quebec || "Quebec"} value={t.proudlyQuebec} />
       </Tile>
 
       <Tile

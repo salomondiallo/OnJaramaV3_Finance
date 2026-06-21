@@ -24,6 +24,212 @@ import {
 import { useState } from "react";
 import { getText } from "../data/translations";
 
+
+const homeText = {
+  FR: {
+    start: "Départ",
+    amountsHidden: "Chiffres masqués",
+    heroSubtitle: "Situation, objectif, simulation, activation, parcours : votre chemin reste clair.",
+    startPoint: "Point de départ",
+    situationReady: "Situation renseignée. La prochaine étape est de cibler une destination.",
+    situationEmpty: "Ajoutez votre situation pour activer les objectifs et simulations.",
+    situation: "Situation",
+    objectives: "Objectifs",
+    simulation: "Simulation",
+    plan: "Plan",
+    chooseDestination: "Choisir ma destination",
+    openSituation: "Ouvrir Ma Situation",
+    nextAction: "Prochaine action recommandée",
+    nextVictory: "Prochaine victoire",
+    commandCenter: "Centre de commande",
+    situationScore: "Score situation",
+    toComplete: "À compléter",
+    discipline: "Discipline",
+    victories: "Victoires",
+    discoverText: "Les nouveautés OnJarama Path sont regroupées ici pour ne rien manquer.",
+    smartPlanning: "Mon Plan recommande l’action principale.",
+    premiumSimulator: "Rythmes Tranquille, Équilibré, Dynamique et Féroce.",
+    smartJourney: "Votre parcours devient une histoire claire.",
+    cloudSync: "Synchronisation Supabase bientôt disponible.",
+    viewPatchNotes: "Voir Patch Notes",
+    guideTips: "Guide & Astuces",
+    quickActions: "Actions rapides utiles",
+    addIncome: "Ajouter revenu",
+    fundingSource: "Origine des fonds",
+    addExpense: "Ajouter dépense",
+    fundDestination: "Destination des fonds",
+    addDebt: "Ajouter dette",
+    editableDebts: "Dettes modifiables",
+    simulateGoal: "Simuler objectif",
+    goalSimulation: "Objectif → Simulation",
+    progressTitle: "Progression OnJarama",
+    pathStarted: "🚩 Parcours démarré",
+    pathWillStart: "🚩 Votre parcours commencera dès votre première situation ou objectif.",
+    companion: "Compagnon financier",
+    destination: "Destination",
+    goalToChoose: "Objectif à choisir",
+    lastDeposit: "Dernier dépôt",
+    noDeposit: "Aucun dépôt enregistré",
+    lastVictory: "Dernière victoire",
+    noVictory: "Aucune victoire enregistrée",
+    action: "Action",
+    lastActivity: "Dernière activité",
+    private: "🔒 Privé",
+    demo: "🌍 Démo",
+    hide: "Masquer",
+    show: "Afficher",
+    debts: "Dettes",
+    sources: "Sources",
+    sourceSaved: "enregistrée",
+    sourceSavedPlural: "enregistrées",
+    atYourPace: "À votre rythme",
+    path: "Parcours",
+    continueTracking: "Continuer le suivi",
+    createGoal: "Créer un objectif",
+    security: "Sécurité",
+    protectedData: "Données protégées",
+    bankConnection: "Connexion bancaire",
+    soon: "Bientôt disponible",
+    connectDiscover: "Connect+ Découvre",
+    simulatorPremiumTitle: "Simulateur Premium",
+  },
+  EN: {
+    start: "Start",
+    amountsHidden: "Amounts hidden",
+    heroSubtitle: "Situation, goal, simulation, activation, path: your direction stays clear.",
+    startPoint: "Starting point",
+    situationReady: "Situation completed. The next step is to choose a destination.",
+    situationEmpty: "Add your situation to activate goals and simulations.",
+    situation: "Situation",
+    objectives: "Goals",
+    simulation: "Simulation",
+    plan: "Plan",
+    chooseDestination: "Choose my destination",
+    openSituation: "Open My Situation",
+    nextAction: "Recommended next action",
+    nextVictory: "Next victory",
+    commandCenter: "Command center",
+    situationScore: "Situation score",
+    toComplete: "To complete",
+    discipline: "Discipline",
+    victories: "Victories",
+    discoverText: "OnJarama Path updates are grouped here so you do not miss anything.",
+    smartPlanning: "My Plan recommends the main action.",
+    premiumSimulator: "Calm, Balanced, Dynamic and Fierce rhythms.",
+    smartJourney: "Your path becomes a clear story.",
+    cloudSync: "Supabase sync coming soon.",
+    viewPatchNotes: "View Patch Notes",
+    guideTips: "Guide & Tips",
+    quickActions: "Useful quick actions",
+    addIncome: "Add income",
+    fundingSource: "Funding source",
+    addExpense: "Add expense",
+    fundDestination: "Fund destination",
+    addDebt: "Add debt",
+    editableDebts: "Editable debts",
+    simulateGoal: "Simulate goal",
+    goalSimulation: "Goal → Simulation",
+    progressTitle: "OnJarama progress",
+    pathStarted: "🚩 Path started",
+    pathWillStart: "🚩 Your path will start with your first situation or goal.",
+    companion: "Financial companion",
+    destination: "Destination",
+    goalToChoose: "Goal to choose",
+    lastDeposit: "Last deposit",
+    noDeposit: "No deposit recorded",
+    lastVictory: "Last victory",
+    noVictory: "No victory recorded",
+    action: "Action",
+    lastActivity: "Last activity",
+    private: "🔒 Private",
+    demo: "🌍 Demo",
+    hide: "Hide",
+    show: "Show",
+    debts: "Debts",
+    sources: "Sources",
+    sourceSaved: "recorded",
+    sourceSavedPlural: "recorded",
+    atYourPace: "At your pace",
+    path: "Path",
+    continueTracking: "Continue tracking",
+    createGoal: "Create a goal",
+    security: "Security",
+    protectedData: "Protected data",
+    bankConnection: "Bank connection",
+    soon: "Coming soon",
+    connectDiscover: "Connect+ Discover",
+    simulatorPremiumTitle: "Premium Simulator",
+  },
+  ES: {
+    start: "Inicio",
+    amountsHidden: "Montos ocultos",
+    heroSubtitle: "Situación, objetivo, simulación, activación, recorrido: tu camino queda claro.",
+    startPoint: "Punto de partida",
+    situationReady: "Situación completada. El siguiente paso es elegir un destino.",
+    situationEmpty: "Agrega tu situación para activar objetivos y simulaciones.",
+    situation: "Situación",
+    objectives: "Objetivos",
+    simulation: "Simulación",
+    plan: "Plan",
+    chooseDestination: "Elegir mi destino",
+    openSituation: "Abrir Mi Situación",
+    nextAction: "Próxima acción recomendada",
+    nextVictory: "Próxima victoria",
+    commandCenter: "Centro de comando",
+    situationScore: "Puntaje de situación",
+    toComplete: "Por completar",
+    discipline: "Disciplina",
+    victories: "Victorias",
+    discoverText: "Las novedades de OnJarama Path están reunidas aquí para no perder nada.",
+    smartPlanning: "Mi Plan recomienda la acción principal.",
+    premiumSimulator: "Ritmos Tranquilo, Equilibrado, Dinámico y Feroz.",
+    smartJourney: "Tu recorrido se convierte en una historia clara.",
+    cloudSync: "Sincronización Supabase próximamente.",
+    viewPatchNotes: "Ver Patch Notes",
+    guideTips: "Guía y consejos",
+    quickActions: "Acciones rápidas útiles",
+    addIncome: "Agregar ingreso",
+    fundingSource: "Origen de fondos",
+    addExpense: "Agregar gasto",
+    fundDestination: "Destino de fondos",
+    addDebt: "Agregar deuda",
+    editableDebts: "Deudas editables",
+    simulateGoal: "Simular objetivo",
+    goalSimulation: "Objetivo → Simulación",
+    progressTitle: "Progreso OnJarama",
+    pathStarted: "🚩 Recorrido iniciado",
+    pathWillStart: "🚩 Tu recorrido comenzará con tu primera situación u objetivo.",
+    companion: "Compañero financiero",
+    destination: "Destino",
+    goalToChoose: "Objetivo por elegir",
+    lastDeposit: "Último depósito",
+    noDeposit: "Ningún depósito registrado",
+    lastVictory: "Última victoria",
+    noVictory: "Ninguna victoria registrada",
+    action: "Acción",
+    lastActivity: "Última actividad",
+    private: "🔒 Privado",
+    demo: "🌍 Demo",
+    hide: "Ocultar",
+    show: "Mostrar",
+    debts: "Deudas",
+    sources: "Fuentes",
+    sourceSaved: "registrada",
+    sourceSavedPlural: "registradas",
+    atYourPace: "A tu ritmo",
+    path: "Recorrido",
+    continueTracking: "Continuar seguimiento",
+    createGoal: "Crear un objetivo",
+    security: "Seguridad",
+    protectedData: "Datos protegidos",
+    bankConnection: "Conexión bancaria",
+    soon: "Próximamente",
+    connectDiscover: "Connect+ Descubre",
+    simulatorPremiumTitle: "Simulador Premium",
+  },
+};
+
+
 function Accueil({
   financeData,
   selectedGoals,
@@ -33,6 +239,8 @@ function Accueil({
   disciplineScore,
 }) {
   const t = getText(settings);
+  const language = settings?.language || "FR";
+  const p = homeText[language] || homeText.FR;
   const [showAmounts, setShowAmounts] = useState(false);
 
   const debts = Array.isArray(financeData?.debts) ? financeData.debts : [];
@@ -41,7 +249,7 @@ function Accueil({
 
   const discipline = disciplineScore || {
     score: 0,
-    label: "Départ",
+    label: p.start,
     hasActiveGoal: false,
     hasRecentActivity: false,
     hasRecentDeposit: false,
@@ -106,6 +314,7 @@ function Accueil({
     monthlySavings,
     monthlyAvailable,
     totalDebt,
+    language,
   });
 
   const nextAction = getNextAction({
@@ -113,6 +322,7 @@ function Accueil({
     mainGoal,
     closestGoal,
     monthlyIncome,
+    language,
   });
 
   const nextVictory = getNextVictory({
@@ -120,13 +330,14 @@ function Accueil({
     closestGoal,
     mainGoal,
     totalDebt,
+    language,
   });
 
   const sourceCount = getFinancialSourceCount({ monthlyIncome, financeData });
   const hasSources = sourceCount > 0;
 
   function money(value) {
-    if (!showAmounts) return "Chiffres masqués";
+    if (!showAmounts) return p.amountsHidden;
 
     return `${Number(value || 0).toLocaleString("fr-CA", {
       maximumFractionDigits: 2,
@@ -147,35 +358,35 @@ function Accueil({
         </h1>
 
         <p className="accueil-subtitle">
-          Situation, objectif, simulation, activation, parcours : votre chemin reste clair.
+          {p.heroSubtitle}
         </p>
       </section>
 
       <section className="accueil-headline" style={pathStartCard}>
         <div style={sectionHead}>
           <Route size={20} color={situationScore.color} />
-          <strong>Point de départ</strong>
+          <strong>{p.startPoint}</strong>
         </div>
 
         <p style={softText}>
           {monthlyIncome > 0
-            ? "Situation renseignée. La prochaine étape est de cibler une destination."
-            : "Ajoutez votre situation pour activer les objectifs et simulations."}
+            ? p.situationReady
+            : p.situationEmpty}
         </p>
 
         <div style={miniPathGrid}>
-          <MiniPathStep label="1" text="Situation" active={monthlyIncome > 0} />
+          <MiniPathStep label="1" text={p.situation} active={monthlyIncome > 0} />
           <MiniPathStep
             label="2"
-            text="Objectifs"
+            text={p.objectives}
             active={activeGoals.length > 0}
           />
           <MiniPathStep
             label="3"
-            text="Simulation"
+            text={p.simulation}
             active={Boolean(mainGoal?.simulation)}
           />
-          <MiniPathStep label="4" text="Plan" active={Boolean(mainGoal)} />
+          <MiniPathStep label="4" text={p.plan} active={Boolean(mainGoal)} />
         </div>
 
         <button
@@ -188,14 +399,14 @@ function Accueil({
           className="primary-action"
           style={{ marginTop: 12 }}
         >
-          {monthlyIncome > 0 ? "Choisir ma destination" : "Ouvrir Ma Situation"}
+          {monthlyIncome > 0 ? p.chooseDestination : p.openSituation}
         </button>
       </section>
 
       <section className="accueil-headline" style={nextActionCard}>
         <div style={sectionHead}>
           <Target size={20} color="var(--green)" />
-          <strong>Prochaine action recommandée</strong>
+          <strong>{p.nextAction}</strong>
         </div>
 
         <p style={softText}>
@@ -216,7 +427,7 @@ function Accueil({
       <section className="accueil-headline" style={nextVictoryCard}>
         <div style={sectionHead}>
           <Trophy size={20} color="var(--gold)" />
-          <strong>Prochaine victoire</strong>
+          <strong>{p.nextVictory}</strong>
         </div>
 
         <p style={softText}>
@@ -247,34 +458,34 @@ function Accueil({
       <section className="accueil-headline" style={commandCenter}>
         <div style={sectionHead}>
           <Sparkles size={20} color="var(--gold)" />
-          <strong>Centre de commande</strong>
+          <strong>{p.commandCenter}</strong>
         </div>
 
         <div style={commandGrid}>
           <CommandStat
             icon={<Gauge size={18} />}
-            label="Score situation"
-            value={situationScore.isReady ? `${situationScore.score}%` : "À compléter"}
+            label={p.situationScore}
+            value={situationScore.isReady ? `${situationScore.score}%` : p.toComplete}
             color={situationScore.color}
           />
 
           <CommandStat
             icon={<Flag size={18} />}
-            label="Discipline"
+            label={p.discipline}
             value={`${discipline.score}%`}
             color={getDisciplineColor(discipline.score)}
           />
 
           <CommandStat
             icon={<Target size={18} />}
-            label="Objectifs"
+            label={p.objectives}
             value={`${activeGoals.length}`}
             color="var(--gold)"
           />
 
           <CommandStat
             icon={<Trophy size={18} />}
-            label="Victoires"
+            label={p.victories}
             value={`${achievedGoals.length}`}
             color="var(--green)"
           />
@@ -284,36 +495,36 @@ function Accueil({
       <section className="accueil-headline" style={connectDiscoverCard}>
         <div style={sectionHead}>
           <Sparkles size={20} color="var(--gold)" />
-          <strong>Connect+ Découvre</strong>
+          <strong>{p.connectDiscover}</strong>
         </div>
 
         <p style={softText}>
-          Les nouveautés OnJarama Path sont regroupées ici pour ne rien manquer.
+          {p.discoverText}
         </p>
 
         <div style={discoverGrid}>
           <DiscoverItem
             icon={<Brain size={17} />}
             title="Smart Planning"
-            text="Mon Plan recommande l’action principale."
+            text={p.smartPlanning}
             color="var(--gold)"
           />
           <DiscoverItem
             icon={<Calculator size={17} />}
-            title="Simulateur Premium"
-            text="Rythmes Tranquille, Équilibré, Dynamique et Féroce."
+            title={p.simulatorPremiumTitle}
+            text={p.premiumSimulator}
             color="var(--blue)"
           />
           <DiscoverItem
             icon={<Route size={17} />}
             title="Smart Journey"
-            text="Votre parcours devient une histoire claire."
+            text={p.smartJourney}
             color="var(--green)"
           />
           <DiscoverItem
             icon={<Cloud size={17} />}
             title="Cloud Sync"
-            text="Synchronisation Supabase bientôt disponible."
+            text={p.cloudSync}
             color="var(--purple)"
           />
         </div>
@@ -324,12 +535,12 @@ function Accueil({
             style={discoverButton}
           >
             <Sparkles size={16} />
-            Voir Patch Notes
+            {p.viewPatchNotes}
           </button>
 
           <button onClick={() => setCurrentPage("guide")} style={guideButton}>
             <BookOpen size={16} />
-            Guide & Astuces
+            {p.guideTips}
           </button>
         </div>
       </section>
@@ -337,31 +548,31 @@ function Accueil({
       <section className="accueil-headline" style={quickActionsCard}>
         <div style={sectionHead}>
           <Sparkles size={20} color="var(--gold)" />
-          <strong>Actions rapides utiles</strong>
+          <strong>{p.quickActions}</strong>
         </div>
 
         <div style={quickActionsGrid}>
           <QuickActionButton
-            label="Ajouter revenu"
-            text="Origine des fonds"
+            label={p.addIncome}
+            text={p.fundingSource}
             color="var(--green)"
             onClick={() => setCurrentPage("situation", "origine-fonds")}
           />
           <QuickActionButton
-            label="Ajouter dépense"
-            text="Destination des fonds"
+            label={p.addExpense}
+            text={p.fundDestination}
             color="var(--red)"
             onClick={() => setCurrentPage("situation", "destination-fonds")}
           />
           <QuickActionButton
-            label="Ajouter dette"
-            text="Dettes modifiables"
+            label={p.addDebt}
+            text={p.editableDebts}
             color="var(--gold)"
             onClick={() => setCurrentPage("situation", "dettes")}
           />
           <QuickActionButton
-            label="Simuler objectif"
-            text="Objectif → Simulation"
+            label={p.simulateGoal}
+            text={p.goalSimulation}
             color="var(--blue)"
             onClick={() => setCurrentPage("simulateur")}
           />
@@ -371,43 +582,43 @@ function Accueil({
       <section className="accueil-headline" style={progressFlagCard}>
         <div style={sectionHead}>
           <Flag size={20} color="var(--gold)" />
-          <strong>Progression OnJarama</strong>
+          <strong>{p.progressTitle}</strong>
         </div>
 
         <p style={softText}>
           {firstGoal
-            ? `🚩 Parcours démarré ${getStartedLabel(firstGoal.createdAt)}.`
-            : "🚩 Votre parcours commencera dès votre première situation ou objectif."}
+            ? `${p.pathStarted} ${getStartedLabel(firstGoal.createdAt, language)}.`
+            : p.pathWillStart}
         </p>
       </section>
 
       <section className="accueil-headline" style={companionCard}>
         <div style={sectionHead}>
           <Route size={20} color="var(--gold)" />
-          <strong>Compagnon financier</strong>
+          <strong>{p.companion}</strong>
         </div>
 
         <div style={companionGrid}>
           <CompanionLine
             icon="📊"
-            label="Destination"
-            value={mainGoal ? mainGoal.title : "Objectif à choisir"}
+            label={p.destination}
+            value={mainGoal ? mainGoal.title : p.goalToChoose}
           />
           <CompanionLine
             icon="💰"
-            label="Dernier dépôt"
-            value={lastDeposit ? lastDeposit.message : "Aucun dépôt enregistré"}
+            label={p.lastDeposit}
+            value={lastDeposit ? lastDeposit.message : p.noDeposit}
           />
           <CompanionLine
             icon="🏆"
-            label="Dernière victoire"
+            label={p.lastVictory}
             value={
               lastVictory?.message ||
               lastVictory?.title ||
-              "Aucune victoire enregistrée"
+              p.noVictory
             }
           />
-          <CompanionLine icon="➡️" label="Action" value={nextAction.title} />
+          <CompanionLine icon="➡️" label={p.action} value={nextAction.title} />
         </div>
       </section>
 
@@ -415,7 +626,7 @@ function Accueil({
         <section className="accueil-headline">
           <div style={sectionHead}>
             <Sparkles size={20} color="var(--blue)" />
-            <strong>Dernière activité</strong>
+            <strong>{p.lastActivity}</strong>
           </div>
 
           <p style={softText}>
@@ -434,22 +645,22 @@ function Accueil({
       </div>
 
       <section className="accueil-safe-row">
-        <span className="accueil-badge">🔒 Privé</span>
-        <span className="accueil-badge">🌍 Démo</span>
+        <span className="accueil-badge">{p.private}</span>
+        <span className="accueil-badge">{p.demo}</span>
 
         <button
           onClick={() => setShowAmounts(!showAmounts)}
           className="eye-action"
         >
           {showAmounts ? <EyeOff size={16} /> : <Eye size={16} />}
-          {showAmounts ? "Masquer" : "Afficher"}
+          {showAmounts ? p.hide : p.show}
         </button>
       </section>
 
       <section className="accueil-grid">
         <QuickTile
           icon={<CreditCard />}
-          title="Dettes"
+          title={p.debts}
           text={money(totalDebt)}
           color="var(--red)"
           onClick={() => setCurrentPage("situation", "dettes")}
@@ -457,11 +668,11 @@ function Accueil({
 
         <QuickTile
           icon={<PiggyBank />}
-          title="Sources"
+          title={p.sources}
           text={
             hasSources
-              ? `${sourceCount} enregistrée${sourceCount > 1 ? "s" : ""}`
-              : "À votre rythme"
+              ? `${sourceCount} ${sourceCount > 1 ? p.sourceSavedPlural : p.sourceSaved}`
+              : p.atYourPace
           }
           color={hasSources ? "var(--green)" : "var(--gold)"}
           onClick={() => setCurrentPage("situation", "origine-fonds")}
@@ -469,16 +680,16 @@ function Accueil({
 
         <QuickTile
           icon={<Target />}
-          title="Parcours"
-          text={mainGoal ? "Continuer le suivi" : "Créer un objectif"}
+          title={p.path}
+          text={mainGoal ? p.continueTracking : p.createGoal}
           color="var(--green)"
           onClick={() => setCurrentPage(mainGoal ? "parcours" : "objectifs")}
         />
 
         <QuickTile
           icon={<ShieldCheck />}
-          title="Sécurité"
-          text="Données protégées"
+          title={p.security}
+          text={p.protectedData}
           color="var(--purple)"
           onClick={() => setCurrentPage("profil")}
         />
@@ -487,8 +698,8 @@ function Accueil({
       <section className="accueil-headline" style={bankMiniCard}>
         <div style={sectionHeadCompact}>
           <Landmark size={18} color="var(--gold)" />
-          <strong>Connexion bancaire</strong>
-          <span style={miniBadge}>Bientôt disponible</span>
+          <strong>{p.bankConnection}</strong>
+          <span style={miniBadge}>{p.soon}</span>
         </div>
       </section>
     </div>
@@ -549,7 +760,19 @@ function getFinancialSourceCount({ monthlyIncome, financeData }) {
   return monthlyIncome > 0 ? 1 : 0;
 }
 
-function getNextVictory({ priorityDebt, closestGoal, mainGoal, totalDebt }) {
+function getNextVictory({ priorityDebt, closestGoal, mainGoal, totalDebt, language = "FR" }) {
+  const x = {
+    FR: {
+      threshold: "avant le prochain palier.", debtReady: "Dette prête à être finalisée.", achieved: "Objectif atteint. Une victoire à célébrer.", completed: "complété", remaining: "restants", seeDebt: "Voir mes dettes", seeGoals: "Voir Objectifs", seePlan: "Voir Mon Plan", mainText: "Objectif principal identifié. Ajoutez une progression pour créer la prochaine victoire.", debtReduction: "Réduction des dettes", debtText: "Créez un objectif dette pour suivre votre prochaine victoire.", createGoal: "Créer un objectif", firstGoal: "Premier objectif", firstText: "Ajoutez une destination pour activer votre prochaine victoire."
+    },
+    EN: {
+      threshold: "before the next milestone.", debtReady: "Debt ready to be finalized.", achieved: "Goal reached. A victory to celebrate.", completed: "completed", remaining: "remaining", seeDebt: "View my debts", seeGoals: "View Goals", seePlan: "View My Plan", mainText: "Main goal identified. Add progress to create the next victory.", debtReduction: "Debt reduction", debtText: "Create a debt goal to track your next victory.", createGoal: "Create a goal", firstGoal: "First goal", firstText: "Add a destination to activate your next victory."
+    },
+    ES: {
+      threshold: "antes del próximo hito.", debtReady: "Deuda lista para finalizar.", achieved: "Objetivo alcanzado. Una victoria para celebrar.", completed: "completado", remaining: "restantes", seeDebt: "Ver mis deudas", seeGoals: "Ver objetivos", seePlan: "Ver Mi Plan", mainText: "Objetivo principal identificado. Agrega progreso para crear la próxima victoria.", debtReduction: "Reducción de deudas", debtText: "Crea un objetivo de deuda para seguir tu próxima victoria.", createGoal: "Crear un objetivo", firstGoal: "Primer objetivo", firstText: "Agrega un destino para activar tu próxima victoria."
+    },
+  }[language] || {};
+
   if (priorityDebt) {
     const balance = Number(priorityDebt.balance || 0);
     const nextThreshold = Math.max(0, Math.floor((balance - 1) / 1000) * 1000);
@@ -566,11 +789,11 @@ function getNextVictory({ priorityDebt, closestGoal, mainGoal, totalDebt }) {
       title: priorityDebt.name,
       text:
         remainingToThreshold > 0
-          ? `${remainingToThreshold.toLocaleString("fr-CA", {
+          ? `${remainingToThreshold.toLocaleString(language === "EN" ? "en-CA" : language === "ES" ? "es-CA" : "fr-CA", {
               maximumFractionDigits: 0,
-            })} $ avant le prochain palier.`
-          : "Dette prête à être finalisée.",
-      button: "Voir mes dettes",
+            })} $ ${x.threshold}`
+          : x.debtReady,
+      button: x.seeDebt,
       page: "dettes",
       progress,
       color: "var(--gold)",
@@ -582,12 +805,12 @@ function getNextVictory({ priorityDebt, closestGoal, mainGoal, totalDebt }) {
       title: closestGoal.title,
       text:
         closestGoal.progress >= 100
-          ? "Objectif atteint. Une victoire à célébrer."
-          : `${closestGoal.progress}% complété • ${closestGoal.remaining.toLocaleString(
-              "fr-CA",
+          ? x.achieved
+          : `${closestGoal.progress}% ${x.completed} • ${closestGoal.remaining.toLocaleString(
+              language === "EN" ? "en-CA" : language === "ES" ? "es-CA" : "fr-CA",
               { maximumFractionDigits: 0 }
-            )} $ restants.`,
-      button: "Voir Objectifs",
+            )} $ ${x.remaining}.`,
+      button: x.seeGoals,
       page: "objectifs",
       progress: closestGoal.progress,
       color: closestGoal.progress >= 80 ? "var(--green)" : "var(--blue)",
@@ -597,8 +820,8 @@ function getNextVictory({ priorityDebt, closestGoal, mainGoal, totalDebt }) {
   if (mainGoal) {
     return {
       title: mainGoal.title,
-      text: "Objectif principal identifié. Ajoutez une progression pour créer la prochaine victoire.",
-      button: "Voir Mon Plan",
+      text: x.mainText,
+      button: x.seePlan,
       page: "monplan",
       progress: 12,
       color: "var(--gold)",
@@ -607,9 +830,9 @@ function getNextVictory({ priorityDebt, closestGoal, mainGoal, totalDebt }) {
 
   if (totalDebt > 0) {
     return {
-      title: "Réduction des dettes",
-      text: "Créez un objectif dette pour suivre votre prochaine victoire.",
-      button: "Créer un objectif",
+      title: x.debtReduction,
+      text: x.debtText,
+      button: x.createGoal,
       page: "objectifs",
       progress: 8,
       color: "var(--red)",
@@ -617,67 +840,43 @@ function getNextVictory({ priorityDebt, closestGoal, mainGoal, totalDebt }) {
   }
 
   return {
-    title: "Premier objectif",
-    text: "Ajoutez une destination pour activer votre prochaine victoire.",
-    button: "Créer un objectif",
+    title: x.firstGoal,
+    text: x.firstText,
+    button: x.createGoal,
     page: "objectifs",
     progress: 0,
     color: "var(--gold)",
   };
 }
 
-function getNextAction({ totalDebt, mainGoal, closestGoal, monthlyIncome }) {
+function getNextAction({ totalDebt, mainGoal, closestGoal, monthlyIncome, language = "FR" }) {
+  const x = {
+    FR: { completeSituation: "Compléter votre situation", completeText: "Ajoutez vos revenus et vos sorties pour activer une lecture plus précise.", openSituation: "Ouvrir Ma Situation", createDebtGoal: "Créer un objectif dette", debtGoalText: "Votre dette existe déjà dans Situation. L’étape suivante est d’en faire une destination mesurable.", openGoals: "Ouvrir Objectifs", simulateBest: "Simuler le meilleur chemin", simulateText: "Comparez les rythmes pour avancer sans perdre votre cap.", openSimulator: "Ouvrir Simulateur", finalize: "Finaliser", progress: "Progression", closeVictory: "Vous êtes proche d’une victoire.", seePlan: "Voir Mon Plan", advance: "Avancer", keepFocus: "Gardez le cap sur votre objectif principal.", firstGoal: "Créer votre premier objectif", firstText: "Ajoutez une destination pour que OnJarama Path construise votre parcours." },
+    EN: { completeSituation: "Complete your situation", completeText: "Add your income and outflows to activate a more precise view.", openSituation: "Open My Situation", createDebtGoal: "Create a debt goal", debtGoalText: "Your debt already exists in Situation. The next step is to make it a measurable destination.", openGoals: "Open Goals", simulateBest: "Simulate the best path", simulateText: "Compare rhythms to move forward without losing direction.", openSimulator: "Open Simulator", finalize: "Finalize", progress: "Progress", closeVictory: "You are close to a victory.", seePlan: "View My Plan", advance: "Advance", keepFocus: "Keep focus on your main goal.", firstGoal: "Create your first goal", firstText: "Add a destination so OnJarama Path can build your path." },
+    ES: { completeSituation: "Completar tu situación", completeText: "Agrega tus ingresos y salidas para activar una lectura más precisa.", openSituation: "Abrir Mi Situación", createDebtGoal: "Crear un objetivo de deuda", debtGoalText: "Tu deuda ya existe en Situación. El siguiente paso es convertirla en un destino medible.", openGoals: "Abrir objetivos", simulateBest: "Simular el mejor camino", simulateText: "Compara ritmos para avanzar sin perder tu dirección.", openSimulator: "Abrir simulador", finalize: "Finalizar", progress: "Progreso", closeVictory: "Estás cerca de una victoria.", seePlan: "Ver Mi Plan", advance: "Avanzar", keepFocus: "Mantén el rumbo hacia tu objetivo principal.", firstGoal: "Crear tu primer objetivo", firstText: "Agrega un destino para que OnJarama Path construya tu recorrido." },
+  }[language] || {};
+
   if (!monthlyIncome || monthlyIncome <= 0) {
-    return {
-      title: "Compléter votre situation",
-      text: "Ajoutez vos revenus et vos sorties pour activer une lecture plus précise.",
-      button: "Ouvrir Ma Situation",
-      page: "situation",
-    };
+    return { title: x.completeSituation, text: x.completeText, button: x.openSituation, page: "situation" };
   }
 
   if (totalDebt > 0 && !mainGoal) {
-    return {
-      title: "Créer un objectif dette",
-      text: "Votre dette existe déjà dans Situation. L’étape suivante est d’en faire une destination mesurable.",
-      button: "Ouvrir Objectifs",
-      page: "objectifs",
-    };
+    return { title: x.createDebtGoal, text: x.debtGoalText, button: x.openGoals, page: "objectifs" };
   }
 
   if (totalDebt > 0) {
-    return {
-      title: "Simuler le meilleur chemin",
-      text: "Comparez les rythmes pour avancer sans perdre votre cap.",
-      button: "Ouvrir Simulateur",
-      page: "simulateur",
-    };
+    return { title: x.simulateBest, text: x.simulateText, button: x.openSimulator, page: "simulateur" };
   }
 
   if (closestGoal && closestGoal.progress >= 80 && closestGoal.progress < 100) {
-    return {
-      title: `Finaliser ${closestGoal.title}`,
-      text: `Progression : ${closestGoal.progress} %. Vous êtes proche d’une victoire.`,
-      button: "Voir Mon Plan",
-      page: "monplan",
-    };
+    return { title: `${x.finalize} ${closestGoal.title}`, text: `${x.progress}: ${closestGoal.progress} %. ${x.closeVictory}`, button: x.seePlan, page: "monplan" };
   }
 
   if (mainGoal) {
-    return {
-      title: `Avancer ${mainGoal.title}`,
-      text: "Gardez le cap sur votre objectif principal.",
-      button: "Voir Mon Plan",
-      page: "monplan",
-    };
+    return { title: `${x.advance} ${mainGoal.title}`, text: x.keepFocus, button: x.seePlan, page: "monplan" };
   }
 
-  return {
-    title: "Créer votre premier objectif",
-    text: "Ajoutez une destination pour que OnJarama Path construise votre parcours.",
-    button: "Ouvrir Objectifs",
-    page: "objectifs",
-  };
+  return { title: x.firstGoal, text: x.firstText, button: x.openGoals, page: "objectifs" };
 }
 
 function getSituationScore({
@@ -686,13 +885,19 @@ function getSituationScore({
   monthlySavings,
   monthlyAvailable,
   totalDebt,
+  language = "FR",
 }) {
+  const x = {
+    FR: { empty: "Complétez vos sources et vos sorties pour générer un score fiable.", solid: "Base solide. Continuez à protéger votre marge.", stable: "Situation stable, mais quelques ajustements peuvent aider.", priority: "Priorité : reprendre du souffle mensuel." },
+    EN: { empty: "Complete your sources and outflows to generate a reliable score.", solid: "Solid base. Keep protecting your margin.", stable: "Stable situation, but a few adjustments can help.", priority: "Priority: rebuild monthly breathing room." },
+    ES: { empty: "Completa tus fuentes y salidas para generar un puntaje confiable.", solid: "Base sólida. Sigue protegiendo tu margen.", stable: "Situación estable, pero algunos ajustes pueden ayudar.", priority: "Prioridad: recuperar margen mensual." },
+  }[language] || {};
   if (!monthlyIncome || monthlyIncome <= 0) {
     return {
       score: 0,
       isReady: false,
       color: "var(--gold)",
-      label: "Complétez vos sources et vos sorties pour générer un score fiable.",
+      label: x.empty,
     };
   }
 
@@ -711,40 +916,40 @@ function getSituationScore({
       score: safeScore,
       isReady: true,
       color: "var(--green)",
-      label: "Base solide. Continuez à protéger votre marge.",
+      label: x.solid,
     };
   if (safeScore >= 55)
     return {
       score: safeScore,
       isReady: true,
       color: "var(--gold)",
-      label: "Situation stable, mais quelques ajustements peuvent aider.",
+      label: x.stable,
     };
   return {
     score: safeScore,
     isReady: true,
     color: "var(--red)",
-    label: "Priorité : reprendre du souffle mensuel.",
+    label: x.priority,
   };
 }
 
-function getStartedLabel(createdAt) {
-  if (!createdAt) return "aujourd’hui";
+function getStartedLabel(createdAt, language = "FR") {
+  if (!createdAt) return language === "EN" ? "today" : language === "ES" ? "hoy" : "aujourd’hui";
 
   const start = new Date(createdAt);
   const now = new Date();
 
-  if (Number.isNaN(start.getTime())) return "aujourd’hui";
+  if (Number.isNaN(start.getTime())) return language === "EN" ? "today" : language === "ES" ? "hoy" : "aujourd’hui";
 
   const days = Math.max(
     0,
     Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
   );
 
-  if (days === 0) return "aujourd’hui";
-  if (days === 1) return "il y a 1 jour";
+  if (days === 0) return language === "EN" ? "today" : language === "ES" ? "hoy" : "aujourd’hui";
+  if (days === 1) return language === "EN" ? "1 day ago" : language === "ES" ? "hace 1 día" : "il y a 1 jour";
 
-  return `il y a ${days} jours`;
+  return language === "EN" ? `${days} days ago` : language === "ES" ? `hace ${days} días` : `il y a ${days} jours`;
 }
 
 function getDisciplineColor(score) {

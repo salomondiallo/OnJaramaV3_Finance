@@ -39,6 +39,14 @@ const pageText = {
     fierce: "Féroce",
     pathPreview: "Parcours associé",
     projection: "Projection",
+    goalName: "Nom de l’objectif",
+    remaining: "Reste",
+    date: "Date",
+    toDefine: "À définir",
+    existingGoal: "Objectif existant",
+    goalFallback: "Objectif",
+    activatedTitle: "Objectif activé",
+    activatedMessage: "est maintenant actif et relié au parcours",
   },
   EN: {
     title: "Simulate a goal",
@@ -63,6 +71,14 @@ const pageText = {
     fierce: "Fierce",
     pathPreview: "Related path",
     projection: "Projection",
+    goalName: "Goal name",
+    remaining: "Remaining",
+    date: "Date",
+    toDefine: "To define",
+    existingGoal: "Existing goal",
+    goalFallback: "Goal",
+    activatedTitle: "Goal activated",
+    activatedMessage: "is now active and linked to the path",
   },
   ES: {
     title: "Simular un objetivo",
@@ -87,6 +103,14 @@ const pageText = {
     fierce: "Feroz",
     pathPreview: "Recorrido asociado",
     projection: "Proyección",
+    goalName: "Nombre del objetivo",
+    remaining: "Restante",
+    date: "Fecha",
+    toDefine: "Por definir",
+    existingGoal: "Objetivo existente",
+    goalFallback: "Objetivo",
+    activatedTitle: "Objetivo activado",
+    activatedMessage: "ahora está activo y vinculado al recorrido",
   },
 };
 
@@ -98,19 +122,30 @@ const fallbackGoal = {
   defaultMonthly: 500,
 };
 
+function getFallbackGoal(language) {
+  if (language === "EN") {
+    return { ...fallbackGoal, title: "Travel", subtitle: "Ticket, stay and safety margin." };
+  }
+  if (language === "ES") {
+    return { ...fallbackGoal, title: "Viaje", subtitle: "Boleto, estadía y margen de seguridad." };
+  }
+  return fallbackGoal;
+}
+
 function Simulateur({ selectedGoals, setSelectedGoals, setCurrentPage, settings, addActivity }) {
   const t = getText(settings);
   const language = settings?.language || "FR";
   const p = pageText[language] || pageText.FR;
   const currency = settings?.currency || "CAD";
   const goals = Array.isArray(selectedGoals) ? selectedGoals : [];
+  const localFallbackGoal = getFallbackGoal(language);
 
-  const [template, setTemplate] = useState(fallbackGoal);
-  const [title, setTitle] = useState(fallbackGoal.title);
-  const [targetAmount, setTargetAmount] = useState(String(fallbackGoal.defaultAmount));
+  const [template, setTemplate] = useState(localFallbackGoal);
+  const [title, setTitle] = useState(localFallbackGoal.title);
+  const [targetAmount, setTargetAmount] = useState(String(localFallbackGoal.defaultAmount));
   const [currentAmount, setCurrentAmount] = useState("0");
   const [monthlyContribution, setMonthlyContribution] = useState(
-    String(fallbackGoal.defaultMonthly)
+    String(localFallbackGoal.defaultMonthly)
   );
   const [activatedGoalId, setActivatedGoalId] = useState(null);
 
@@ -121,11 +156,11 @@ function Simulateur({ selectedGoals, setSelectedGoals, setCurrentPage, settings,
     if (rawTemplate) {
       try {
         const parsed = JSON.parse(rawTemplate);
-        const safe = { ...fallbackGoal, ...parsed };
+        const safe = { ...localFallbackGoal, ...parsed };
         setTemplate(safe);
-        setTitle(safe.title || fallbackGoal.title);
-        setTargetAmount(String(safe.defaultAmount || fallbackGoal.defaultAmount));
-        setMonthlyContribution(String(safe.defaultMonthly || fallbackGoal.defaultMonthly));
+        setTitle(safe.title || localFallbackGoal.title);
+        setTargetAmount(String(safe.defaultAmount || localFallbackGoal.defaultAmount));
+        setMonthlyContribution(String(safe.defaultMonthly || localFallbackGoal.defaultMonthly));
         setCurrentAmount("0");
         localStorage.removeItem("onjaramaGoalToSimulate");
         return;
@@ -140,11 +175,11 @@ function Simulateur({ selectedGoals, setSelectedGoals, setCurrentPage, settings,
         setTemplate({
           id: goal.category || "libre",
           title: goal.title,
-          subtitle: goal.option || goal.categoryLabel || "Objectif existant",
+          subtitle: goal.option || goal.categoryLabel || p.existingGoal,
           defaultAmount: Number(goal.targetAmount || 0),
           defaultMonthly: Number(goal.monthlyContribution || 0) || 250,
         });
-        setTitle(goal.title || "Objectif");
+        setTitle(goal.title || p.goalFallback);
         setTargetAmount(String(goal.targetAmount || 0));
         setCurrentAmount(String(goal.currentAmount || 0));
         setMonthlyContribution(String(goal.monthlyContribution || 250));
@@ -163,7 +198,7 @@ function Simulateur({ selectedGoals, setSelectedGoals, setCurrentPage, settings,
     () => estimateDate(monthsNeeded, language),
     [monthsNeeded, language]
   );
-  const pathSteps = useMemo(() => buildPathSteps(template.id, title), [template.id, title]);
+  const pathSteps = useMemo(() => buildPathSteps(template.id, title, language), [template.id, title]);
   const scenarios = useMemo(
     () => [
       buildScenario(p.calm, monthly * 0.75, remaining, language),
@@ -223,8 +258,8 @@ function Simulateur({ selectedGoals, setSelectedGoals, setCurrentPage, settings,
 
     addActivity?.(
       "objectif",
-      "Objectif activé",
-      `${newGoal.title} est maintenant actif et relié au parcours.`
+      p.activatedTitle,
+      `${newGoal.title} ${p.activatedMessage}.`
     );
   }
 
@@ -262,7 +297,7 @@ function Simulateur({ selectedGoals, setSelectedGoals, setCurrentPage, settings,
           <h2>{p.projection}</h2>
         </div>
 
-        <label>Nom de l’objectif</label>
+        <label>{p.goalName}</label>
         <input value={title} onChange={(event) => setTitle(event.target.value)} style={input} />
 
         <label>{p.amount}</label>
@@ -301,9 +336,9 @@ function Simulateur({ selectedGoals, setSelectedGoals, setCurrentPage, settings,
 
         <div style={resultGrid}>
           <Result label={p.amount} value={formatMoney(target, currency)} />
-          <Result label="Reste" value={formatMoney(remaining, currency)} />
+          <Result label={p.remaining} value={formatMoney(remaining, currency)} />
           <Result label={p.timeNeeded} value={`${monthsNeeded || "—"} ${p.months}`} />
-          <Result label="Date" value={estimatedDate} />
+          <Result label={p.date} value={estimatedDate} />
         </div>
 
         <div style={progressBg}>
@@ -407,7 +442,7 @@ function buildScenario(label, monthly, remaining, language) {
 }
 
 function estimateDate(months, language) {
-  if (!months || months <= 0) return "À définir";
+  if (!months || months <= 0) return language === "EN" ? "To define" : language === "ES" ? "Por definir" : "À définir";
   const date = new Date();
   date.setMonth(date.getMonth() + months);
   const locale = language === "EN" ? "en-CA" : language === "ES" ? "es-CA" : "fr-CA";
@@ -420,44 +455,45 @@ function getIsoTargetDate(months) {
   return date.toISOString().slice(0, 10);
 }
 
-function buildPathSteps(category, title) {
-  if (category === "voyage") {
-    return [
-      { id: "passport", label: "Passeport / documents", done: false },
-      { id: "ticket", label: "Billet", done: false },
-      { id: "bags", label: "Bagages", done: false },
-      { id: "stay", label: "Séjour et dépenses", done: false },
-      { id: "security", label: "Marge de sécurité", done: false },
-    ];
-  }
+function getStepLabels(language) {
+  const labels = {
+    FR: {
+      voyage: ["Passeport / documents", "Billet", "Bagages", "Séjour et dépenses", "Marge de sécurité"],
+      maison: ["Plan du projet", "Matériaux", "Travaux", "Équipement", "Finition"],
+      dette: ["Solde confirmé", "Taux identifié", "Paiement mensuel fixé", "Premier palier atteint", "Solde à zéro"],
+      libre: ["défini", "Plan de financement", "Premier palier", "Milieu du parcours", "Objectif atteint"],
+    },
+    EN: {
+      voyage: ["Passport / documents", "Ticket", "Bags", "Stay and expenses", "Safety margin"],
+      maison: ["Project plan", "Materials", "Work", "Equipment", "Finishing"],
+      dette: ["Balance confirmed", "Rate identified", "Monthly payment set", "First milestone reached", "Zero balance"],
+      libre: ["defined", "Funding plan", "First milestone", "Mid-path", "Goal reached"],
+    },
+    ES: {
+      voyage: ["Pasaporte / documentos", "Boleto", "Equipaje", "Estadía y gastos", "Margen de seguridad"],
+      maison: ["Plan del proyecto", "Materiales", "Trabajos", "Equipamiento", "Finalización"],
+      dette: ["Saldo confirmado", "Tasa identificada", "Pago mensual fijado", "Primer hito alcanzado", "Saldo en cero"],
+      libre: ["definido", "Plan de financiación", "Primer hito", "Mitad del recorrido", "Objetivo alcanzado"],
+    },
+  };
+  return labels[language] || labels.FR;
+}
 
-  if (category === "maison") {
-    return [
-      { id: "plan", label: "Plan du projet", done: false },
-      { id: "materials", label: "Matériaux", done: false },
-      { id: "work", label: "Travaux", done: false },
-      { id: "equipment", label: "Équipement", done: false },
-      { id: "finish", label: "Finition", done: false },
-    ];
-  }
+function buildPathSteps(category, title, language = "FR") {
+  const allLabels = getStepLabels(language);
+  const safeCategory = category === "voyage" || category === "maison" || category === "dette" ? category : "libre";
+  const ids = {
+    voyage: ["passport", "ticket", "bags", "stay", "security"],
+    maison: ["plan", "materials", "work", "equipment", "finish"],
+    dette: ["balance", "rate", "payment", "threshold", "zero"],
+    libre: ["start", "plan", "first", "mid", "victory"],
+  };
 
-  if (category === "dette") {
-    return [
-      { id: "balance", label: "Solde confirmé", done: false },
-      { id: "rate", label: "Taux identifié", done: false },
-      { id: "payment", label: "Paiement mensuel fixé", done: false },
-      { id: "threshold", label: "Premier palier atteint", done: false },
-      { id: "zero", label: "Solde à zéro", done: false },
-    ];
-  }
-
-  return [
-    { id: "start", label: `${title || "Objectif"} défini`, done: false },
-    { id: "plan", label: "Plan de financement", done: false },
-    { id: "first", label: "Premier palier", done: false },
-    { id: "mid", label: "Milieu du parcours", done: false },
-    { id: "victory", label: "Objectif atteint", done: false },
-  ];
+  return allLabels[safeCategory].map((label, index) => ({
+    id: ids[safeCategory][index],
+    label: safeCategory === "libre" && index === 0 ? `${title || "Goal"} ${label}` : label,
+    done: false,
+  }));
 }
 
 const page = { display: "flex", flexDirection: "column", gap: "16px" };

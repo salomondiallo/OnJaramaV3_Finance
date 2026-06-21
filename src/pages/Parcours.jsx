@@ -24,6 +24,8 @@ const pageText = {
     monthly: "Contribution mensuelle",
     nextAction: "Prochaine action",
     completed: "Objectif atteint",
+    completedMessage: "est complété",
+    done: "Complété",
     goGoals: "Mes objectifs",
     goSimulator: "Simuler un objectif",
     historyHint: "Les objectifs terminés seront visibles dans Profil > Historique.",
@@ -40,6 +42,8 @@ const pageText = {
     monthly: "Monthly contribution",
     nextAction: "Next action",
     completed: "Goal achieved",
+    completedMessage: "is completed",
+    done: "Completed",
     goGoals: "My goals",
     goSimulator: "Simulate a goal",
     historyHint: "Completed goals will be visible in Profile > History.",
@@ -56,6 +60,8 @@ const pageText = {
     monthly: "Contribución mensual",
     nextAction: "Próxima acción",
     completed: "Objetivo alcanzado",
+    completedMessage: "está completado",
+    done: "Completado",
     goGoals: "Mis objetivos",
     goSimulator: "Simular un objetivo",
     historyHint: "Los objetivos terminados estarán visibles en Perfil > Historial.",
@@ -79,8 +85,8 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
   }, []);
 
   const activeGoals = useMemo(
-    () => goals.filter((goal) => getProgress(goal) < 100),
-    [goals]
+    () => goals.filter((goal) => getProgress(goal, language) < 100),
+    [goals, language]
   );
 
   const focusedGoal =
@@ -88,9 +94,9 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
     activeGoals.find((goal) => goal.highlighted) ||
     activeGoals[0];
 
-  const progress = getProgress(focusedGoal);
-  const remaining = getRemaining(focusedGoal);
-  const nextStep = getNextStep(focusedGoal);
+  const progress = getProgress(focusedGoal, language);
+  const remaining = getRemaining(focusedGoal, language);
+  const nextStep = getNextStep(focusedGoal, language);
 
   function toggleStep(stepId) {
     if (!focusedGoal) return;
@@ -99,7 +105,7 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
       selectedGoals.map((goal) => {
         if (goal.id !== focusedGoal.id) return goal;
 
-        const existingSteps = ensureSteps(goal);
+        const existingSteps = ensureSteps(goal, language);
         const nextSteps = existingSteps.map((step) =>
           step.id === stepId
             ? {
@@ -113,8 +119,8 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
         const nextProgress = Math.round((doneCount / nextSteps.length) * 100);
         const completed = nextProgress >= 100;
 
-        if (completed && getProgress(goal) < 100) {
-          addActivity?.("victoire", "Objectif atteint", `${goal.title} est complété.`);
+        if (completed && getProgress(goal, language) < 100) {
+          addActivity?.("victoire", p.completed, `${goal.title} ${p.completedMessage}.`);
         }
 
         return {
@@ -215,7 +221,7 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
             </div>
 
             <div style={stepList}>
-              {ensureSteps(focusedGoal).map((step, index) => (
+              {ensureSteps(focusedGoal, language).map((step, index) => (
                 <button key={step.id} onClick={() => toggleStep(step.id)} style={stepButton}>
                   <span style={stepIcon}>
                     {step.done ? (
@@ -228,7 +234,7 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
                     <strong>
                       {index + 1}. {step.label}
                     </strong>
-                    {step.done && <p style={doneText}>✓ Complété</p>}
+                    {step.done && <p style={doneText}>✓ {p.done}</p>}
                   </div>
                 </button>
               ))}
@@ -256,53 +262,54 @@ function Parcours({ selectedGoals, setSelectedGoals, settings, setCurrentPage, a
   );
 }
 
-function ensureSteps(goal) {
+function getDefaultSteps(language) {
+  const labels = {
+    FR: {
+      voyage: ["Passeport / documents", "Billet", "Bagages", "Séjour et dépenses", "Marge de sécurité"],
+      maison: ["Plan du projet", "Matériaux", "Travaux", "Équipement", "Finition"],
+      dette: ["Solde confirmé", "Taux identifié", "Paiement mensuel fixé", "Premier palier atteint", "Solde à zéro"],
+      libre: ["Objectif défini", "Plan de financement", "Premier palier", "Milieu du parcours", "Objectif atteint"],
+    },
+    EN: {
+      voyage: ["Passport / documents", "Ticket", "Bags", "Stay and expenses", "Safety margin"],
+      maison: ["Project plan", "Materials", "Work", "Equipment", "Finishing"],
+      dette: ["Balance confirmed", "Rate identified", "Monthly payment set", "First milestone reached", "Zero balance"],
+      libre: ["Goal defined", "Funding plan", "First milestone", "Mid-path", "Goal reached"],
+    },
+    ES: {
+      voyage: ["Pasaporte / documentos", "Boleto", "Equipaje", "Estadía y gastos", "Margen de seguridad"],
+      maison: ["Plan del proyecto", "Materiales", "Trabajos", "Equipamiento", "Finalización"],
+      dette: ["Saldo confirmado", "Tasa identificada", "Pago mensual fijado", "Primer hito alcanzado", "Saldo en cero"],
+      libre: ["Objetivo definido", "Plan de financiación", "Primer hito", "Mitad del recorrido", "Objetivo alcanzado"],
+    },
+  };
+  return labels[language] || labels.FR;
+}
+
+function ensureSteps(goal, language = "FR") {
   if (Array.isArray(goal?.pathSteps) && goal.pathSteps.length > 0) {
     return goal.pathSteps;
   }
 
-  if (goal?.category === "voyage") {
-    return [
-      { id: "passport", label: "Passeport / documents", done: false },
-      { id: "ticket", label: "Billet", done: false },
-      { id: "bags", label: "Bagages", done: false },
-      { id: "stay", label: "Séjour et dépenses", done: false },
-      { id: "security", label: "Marge de sécurité", done: false },
-    ];
-  }
+  const labels = getDefaultSteps(language);
+  const category = goal?.category === "voyage" || goal?.category === "maison" || goal?.category === "dette" ? goal.category : "libre";
+  const ids = {
+    voyage: ["passport", "ticket", "bags", "stay", "security"],
+    maison: ["plan", "materials", "work", "equipment", "finish"],
+    dette: ["balance", "rate", "payment", "threshold", "zero"],
+    libre: ["start", "plan", "first", "mid", "victory"],
+  };
 
-  if (goal?.category === "maison") {
-    return [
-      { id: "plan", label: "Plan du projet", done: false },
-      { id: "materials", label: "Matériaux", done: false },
-      { id: "work", label: "Travaux", done: false },
-      { id: "equipment", label: "Équipement", done: false },
-      { id: "finish", label: "Finition", done: false },
-    ];
-  }
-
-  if (goal?.category === "dette") {
-    return [
-      { id: "balance", label: "Solde confirmé", done: false },
-      { id: "rate", label: "Taux identifié", done: false },
-      { id: "payment", label: "Paiement mensuel fixé", done: false },
-      { id: "threshold", label: "Premier palier atteint", done: false },
-      { id: "zero", label: "Solde à zéro", done: false },
-    ];
-  }
-
-  return [
-    { id: "start", label: "Objectif défini", done: false },
-    { id: "plan", label: "Plan de financement", done: false },
-    { id: "first", label: "Premier palier", done: false },
-    { id: "mid", label: "Milieu du parcours", done: false },
-    { id: "victory", label: "Objectif atteint", done: false },
-  ];
+  return labels[category].map((label, index) => ({
+    id: ids[category][index],
+    label,
+    done: false,
+  }));
 }
 
-function getProgress(goal) {
+function getProgress(goal, language = "FR") {
   if (!goal) return 0;
-  const steps = ensureSteps(goal);
+  const steps = ensureSteps(goal, language);
   if (steps.length > 0) {
     return Math.round((steps.filter((step) => step.done).length / steps.length) * 100);
   }
@@ -312,15 +319,16 @@ function getProgress(goal) {
   return Math.min(100, Math.round((Number(goal.currentAmount || 0) / target) * 100));
 }
 
-function getRemaining(goal) {
+function getRemaining(goal, language = "FR") {
   if (!goal) return 0;
-  if (getProgress(goal) >= 100) return 0;
+  if (getProgress(goal, language) >= 100) return 0;
   return Math.max(0, Number(goal.targetAmount || 0) - Number(goal.currentAmount || 0));
 }
 
-function getNextStep(goal) {
-  const step = ensureSteps(goal).find((item) => !item.done);
-  return step?.label || "Objectif atteint";
+function getNextStep(goal, language = "FR") {
+  const step = ensureSteps(goal, language).find((item) => !item.done);
+  const fallback = language === "EN" ? "Goal reached" : language === "ES" ? "Objetivo alcanzado" : "Objectif atteint";
+  return step?.label || fallback;
 }
 
 function Small({ label, value }) {
