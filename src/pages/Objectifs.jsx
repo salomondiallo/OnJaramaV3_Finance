@@ -15,6 +15,8 @@ import {
   Users,
   Briefcase,
   Zap,
+  ShieldCheck,
+  TrendingUp,
 } from "lucide-react";
 import { formatMoney } from "../utils/formatters";
 import { getText } from "../data/translations";
@@ -23,7 +25,7 @@ const pageText = {
   FR: {
     title: "Mes objectifs",
     subtitle:
-      "Choisissez une destination, simulez le chemin, puis activez seulement si le plan vous convient.",
+      "Choisissez une destination universelle, simulez le chemin, puis activez seulement si le plan vous convient.",
     available: "Objectifs disponibles",
     active: "Objectifs actifs",
     completed: "Objectifs terminés",
@@ -39,10 +41,10 @@ const pageText = {
     target: "Objectif",
     current: "Actuel",
     steps: "Étapes",
-    flowTitle: "Flux V14.2",
+    flowTitle: "Flux V17.1",
     flowText:
       "Objectif → Simulation → Activation → Parcours → Progression → Réussite.",
-    smartGoals: "Smart Goals",
+    smartGoals: "Objectifs intelligents",
     smartStatus: "Statut intelligent",
     ahead: "En avance",
     onTrack: "Dans la cible",
@@ -52,7 +54,7 @@ const pageText = {
     timeLeft: "Temps restant",
     monthsLeft: "mois restants",
     daysLeft: "jours restants",
-    started: "Parcours commencé",
+    started: "Objectif créé",
     ago: "il y a",
     recommendedAction: "Action recommandée",
     recommendationDefault:
@@ -63,7 +65,7 @@ const pageText = {
   EN: {
     title: "My goals",
     subtitle:
-      "Choose a destination, simulate the path, then activate it only if the plan works for you.",
+      "Choose a universal destination, simulate the path, then activate it only if the plan works for you.",
     available: "Available goals",
     active: "Active goals",
     completed: "Completed goals",
@@ -79,9 +81,9 @@ const pageText = {
     target: "Target",
     current: "Current",
     steps: "Steps",
-    flowTitle: "V14.2 flow",
+    flowTitle: "V17.1 flow",
     flowText: "Goal → Simulation → Activation → Path → Progress → Success.",
-    smartGoals: "Smart Goals",
+    smartGoals: "Smart goals",
     smartStatus: "Smart status",
     ahead: "Ahead",
     onTrack: "On track",
@@ -91,7 +93,7 @@ const pageText = {
     timeLeft: "Time left",
     monthsLeft: "months left",
     daysLeft: "days left",
-    started: "Path started",
+    started: "Goal created",
     ago: "ago",
     recommendedAction: "Recommended action",
     recommendationDefault:
@@ -102,7 +104,7 @@ const pageText = {
   ES: {
     title: "Mis objetivos",
     subtitle:
-      "Elige un destino, simula el camino y actívalo solo si el plan te conviene.",
+      "Elige una meta universal, simula el camino y actívala solo si el plan te conviene.",
     available: "Objetivos disponibles",
     active: "Objetivos activos",
     completed: "Objetivos terminados",
@@ -118,9 +120,9 @@ const pageText = {
     target: "Objetivo",
     current: "Actual",
     steps: "Etapas",
-    flowTitle: "Flujo V14.2",
+    flowTitle: "Flujo V17.1",
     flowText: "Objetivo → Simulación → Activación → Recorrido → Progreso → Éxito.",
-    smartGoals: "Smart Goals",
+    smartGoals: "Objetivos inteligentes",
     smartStatus: "Estado inteligente",
     ahead: "Adelantado",
     onTrack: "En camino",
@@ -130,7 +132,7 @@ const pageText = {
     timeLeft: "Tiempo restante",
     monthsLeft: "meses restantes",
     daysLeft: "días restantes",
-    started: "Recorrido iniciado",
+    started: "Objetivo creado",
     ago: "hace",
     recommendedAction: "Acción recomendada",
     recommendationDefault:
@@ -143,32 +145,38 @@ const pageText = {
 function getGoalCatalog(language) {
   const catalogText = {
     FR: {
-      voyage: ["Voyage", "Billet, séjour, famille, marge de sécurité."],
-      maison: ["Maison", "Construction, rénovation, terrain ou projet solaire."],
+      voyage: ["Voyage", "Préparer un déplacement, un séjour ou un retour important."],
+      maison: ["Maison", "Achat, rénovation, construction, terrain ou amélioration."],
       auto: ["Auto", "Achat, réparation, remplacement ou mise de fonds."],
       dette: ["Dette", "Carte, prêt personnel, marge ou remboursement prioritaire."],
-      epargne: ["Épargne", "Fonds d’urgence, sécurité ou réserve familiale."],
+      urgence: ["Fonds d’urgence", "Construire une réserve pour les imprévus."],
+      epargne: ["Épargne", "Mettre de côté pour un projet ou une sécurité."],
       famille: ["Famille", "Soutien, événement, école ou besoin important."],
+      liberte: ["Liberté financière", "Réduire la pression et bâtir une base durable."],
       business: ["Projet personnel", "Formation, lancement, matériel ou projet libre."],
       libre: ["Objectif libre", "Un objectif totalement personnalisé."],
     },
     EN: {
-      voyage: ["Travel", "Ticket, stay, family and safety margin."],
-      maison: ["Home", "Construction, renovation, land or solar project."],
+      voyage: ["Travel", "Prepare a trip, stay or important return."],
+      maison: ["Home", "Purchase, renovation, construction, land or improvement."],
       auto: ["Car", "Purchase, repair, replacement or down payment."],
       dette: ["Debt", "Card, personal loan, credit line or priority repayment."],
-      epargne: ["Savings", "Emergency fund, security or family reserve."],
+      urgence: ["Emergency fund", "Build a reserve for unexpected events."],
+      epargne: ["Savings", "Set money aside for a project or security."],
       famille: ["Family", "Support, event, school or important need."],
+      liberte: ["Financial freedom", "Reduce pressure and build a durable base."],
       business: ["Personal project", "Training, launch, equipment or open project."],
       libre: ["Custom goal", "A fully personalized goal."],
     },
     ES: {
-      voyage: ["Viaje", "Boleto, estadía, familia y margen de seguridad."],
-      maison: ["Casa", "Construcción, renovación, terreno o proyecto solar."],
+      voyage: ["Viaje", "Preparar un viaje, estancia o regreso importante."],
+      maison: ["Casa", "Compra, renovación, construcción, terreno o mejora."],
       auto: ["Auto", "Compra, reparación, reemplazo o pago inicial."],
       dette: ["Deuda", "Tarjeta, préstamo personal, línea de crédito o pago prioritario."],
-      epargne: ["Ahorro", "Fondo de emergencia, seguridad o reserva familiar."],
+      urgence: ["Fondo de emergencia", "Crear una reserva para imprevistos."],
+      epargne: ["Ahorro", "Ahorrar para un proyecto o seguridad."],
       famille: ["Familia", "Apoyo, evento, escuela o necesidad importante."],
+      liberte: ["Libertad financiera", "Reducir presión y construir una base durable."],
       business: ["Proyecto personal", "Formación, lanzamiento, material o proyecto libre."],
       libre: ["Objetivo libre", "Un objetivo totalmente personalizado."],
     },
@@ -214,6 +222,15 @@ function getGoalCatalog(language) {
       defaultMonthly: 500,
     },
     {
+      id: "urgence",
+      title: text.urgence[0],
+      subtitle: text.urgence[1],
+      icon: <ShieldCheck />,
+      color: "var(--green)",
+      defaultAmount: 2500,
+      defaultMonthly: 250,
+    },
+    {
       id: "epargne",
       title: text.epargne[0],
       subtitle: text.epargne[1],
@@ -230,6 +247,15 @@ function getGoalCatalog(language) {
       color: "var(--purple)",
       defaultAmount: 2500,
       defaultMonthly: 300,
+    },
+    {
+      id: "liberte",
+      title: text.liberte[0],
+      subtitle: text.liberte[1],
+      icon: <TrendingUp />,
+      color: "var(--gold)",
+      defaultAmount: 10000,
+      defaultMonthly: 600,
     },
     {
       id: "business",
@@ -680,7 +706,9 @@ function getStartedLabel(goal, text) {
     Math.floor((today.getTime() - started.getTime()) / (1000 * 60 * 60 * 24))
   );
 
-  if (diffDays < 30) return `${text.ago} ${diffDays} jour${diffDays > 1 ? "s" : ""}`;
+  if (diffDays < 30) {
+    return `${text.ago} ${diffDays} jour${diffDays > 1 ? "s" : ""}`;
+  }
 
   const months = Math.floor(diffDays / 30);
   return `${text.ago} ${months} mois`;

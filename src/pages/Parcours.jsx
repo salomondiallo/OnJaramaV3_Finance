@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  AlertTriangle,
+  CalendarDays,
   CheckCircle,
   Circle,
+  Clock3,
   Flag,
   Route,
   Target,
@@ -13,7 +16,7 @@ import { getText } from "../data/translations";
 const pageText = {
   FR: {
     title: "Parcours",
-    subtitle: "Un objectif actif, des étapes claires et une progression visible.",
+    subtitle: "Un objectif actif, des étapes universelles et une progression visible.",
     activeGoal: "Objectif actif",
     noGoal: "Aucun objectif actif. Choisissez un objectif, simulez-le puis activez-le.",
     chooseGoal: "Choisir un objectif",
@@ -31,10 +34,21 @@ const pageText = {
     goGoals: "Mes objectifs",
     goSimulator: "Simuler un objectif",
     historyHint: "Les objectifs terminés seront visibles dans Profil > Historique.",
+    created: "Objectif créé",
+    ago: "il y a",
+    targetDate: "Date cible",
+    noDate: "Date cible non définie",
+    timeLeft: "Temps restant",
+    daysLeft: "jours restants",
+    monthsLeft: "mois restants",
+    ahead: "En avance",
+    onTrack: "Dans la cible",
+    late: "En retard",
+    smartStatus: "Statut intelligent",
   },
   EN: {
     title: "Path",
-    subtitle: "One active goal, clear steps and visible progress.",
+    subtitle: "One active goal, universal steps and visible progress.",
     activeGoal: "Active goal",
     noGoal: "No active goal. Choose a goal, simulate it and activate it.",
     chooseGoal: "Choose goal",
@@ -52,10 +66,21 @@ const pageText = {
     goGoals: "My goals",
     goSimulator: "Simulate a goal",
     historyHint: "Completed goals will be visible in Profile > History.",
+    created: "Goal created",
+    ago: "ago",
+    targetDate: "Target date",
+    noDate: "No target date",
+    timeLeft: "Time left",
+    daysLeft: "days left",
+    monthsLeft: "months left",
+    ahead: "Ahead",
+    onTrack: "On track",
+    late: "Late",
+    smartStatus: "Smart status",
   },
   ES: {
     title: "Recorrido",
-    subtitle: "Un objetivo activo, etapas claras y progreso visible.",
+    subtitle: "Un objetivo activo, etapas universales y progreso visible.",
     activeGoal: "Objetivo activo",
     noGoal: "No hay objetivo activo. Elige un objetivo, simúlalo y actívalo.",
     chooseGoal: "Elegir objetivo",
@@ -73,6 +98,17 @@ const pageText = {
     goGoals: "Mis objetivos",
     goSimulator: "Simular un objetivo",
     historyHint: "Los objetivos terminados estarán visibles en Perfil > Historial.",
+    created: "Objetivo creado",
+    ago: "hace",
+    targetDate: "Fecha objetivo",
+    noDate: "Fecha objetivo no definida",
+    timeLeft: "Tiempo restante",
+    daysLeft: "días restantes",
+    monthsLeft: "meses restantes",
+    ahead: "Adelantado",
+    onTrack: "En camino",
+    late: "Atrasado",
+    smartStatus: "Estado inteligente",
   },
 };
 
@@ -131,6 +167,10 @@ function Parcours({
   const remaining = getRemaining(focusedGoal, language);
   const nextStep = getNextStep(focusedGoal, language);
   const doneCount = steps.filter((step) => step.done).length;
+  const targetDate = getGoalDate(focusedGoal);
+  const smartStatus = getSmartGoalStatus(focusedGoal, progress, p);
+  const createdLabel = getCreatedLabel(focusedGoal, p);
+  const timeLeftLabel = getTimeLeftLabel(targetDate, p);
 
   function toggleStep(stepId) {
     if (!focusedGoal) return;
@@ -174,6 +214,7 @@ function Parcours({
           completedAt: completed
             ? goal.completedAt || new Date().toISOString()
             : null,
+          updatedAt: new Date().toISOString(),
           status: completed ? "completed" : "active",
         };
       })
@@ -204,7 +245,7 @@ function Parcours({
         </section>
       ) : (
         <>
-          <section style={heroCard}>
+          <section style={{ ...heroCard, borderColor: smartStatus.color }}>
             <div style={header}>
               <Flag color="var(--gold)" />
               <div>
@@ -218,12 +259,21 @@ function Parcours({
               </div>
             </div>
 
+            {createdLabel && (
+              <div style={createdBox}>
+                <Clock3 size={16} color="var(--gold)" />
+                <span>
+                  🚩 {p.created} {createdLabel}
+                </span>
+              </div>
+            )}
+
             <div style={progressBg}>
               <div
                 style={{
                   ...progressFill,
                   width: `${progress}%`,
-                  background: progress >= 100 ? "var(--green)" : "var(--gold)",
+                  background: progress >= 100 ? "var(--green)" : smartStatus.color,
                 }}
               />
             </div>
@@ -240,6 +290,9 @@ function Parcours({
                     : "—"
                 }
               />
+              <Small label={p.targetDate} value={formatDisplayDate(targetDate, p)} />
+              <Small label={p.timeLeft} value={timeLeftLabel} />
+              <Small label={p.smartStatus} value={smartStatus.label} />
             </div>
           </section>
 
@@ -268,6 +321,19 @@ function Parcours({
             </section>
           )}
 
+          <section style={statusCard(smartStatus)}>
+            <div style={header}>
+              <AlertTriangle color={smartStatus.color} />
+              <div>
+                <p style={eyebrow}>{p.smartStatus}</p>
+                <h2>{smartStatus.label}</h2>
+                <p style={mutedSmall}>
+                  {p.targetDate} : {formatDisplayDate(targetDate, p)}
+                </p>
+              </div>
+            </div>
+          </section>
+
           <section style={card}>
             <div style={header}>
               <Route color="var(--green)" />
@@ -275,6 +341,13 @@ function Parcours({
                 <h2>{p.steps}</h2>
                 <p style={mutedSmall}>{p.tapToValidate}</p>
               </div>
+            </div>
+
+            <div style={stepProgressBox}>
+              <CheckCircle size={18} color="var(--green)" />
+              <strong>
+                {doneCount}/{steps.length} {p.checkedSteps}
+              </strong>
             </div>
 
             <div style={stepList}>
@@ -329,7 +402,7 @@ function Parcours({
               {progress >= 100 ? (
                 <Trophy color="var(--green)" />
               ) : (
-                <Flag color="var(--gold)" />
+                <CalendarDays color="var(--gold)" />
               )}
 
               <div>
@@ -351,144 +424,247 @@ function getDefaultSteps(language) {
   const labels = {
     FR: {
       voyage: [
-        "Passeport / documents",
-        "Billet",
-        "Bagages",
-        "Séjour et dépenses",
+        "Budget défini",
+        "Destination confirmée",
+        "Documents vérifiés",
+        "Transport planifié",
+        "Dépenses principales prévues",
         "Marge de sécurité",
       ],
       maison: [
-        "Terrain",
-        "Fondation",
-        "Murs",
-        "Toiture",
-        "Électricité",
-        "Finition",
+        "Budget défini",
+        "Type de projet choisi",
+        "Priorités confirmées",
+        "Plan de financement",
+        "Étapes principales validées",
+        "Marge de sécurité",
       ],
       auto: [
-        "Véhicule choisi",
-        "Mise de fonds",
-        "Financement",
-        "Assurance",
-        "Achat",
+        "Budget défini",
+        "Type de véhicule choisi",
+        "Coûts récurrents estimés",
+        "Financement préparé",
+        "Achat ou réparation planifié",
+        "Marge de sécurité",
       ],
       dette: [
         "Solde confirmé",
         "Taux identifié",
-        "Paiement mensuel fixé",
+        "Paiement minimum connu",
+        "Montant extra défini",
         "Premier palier atteint",
         "Solde à zéro",
       ],
+      urgence: [
+        "Objectif défini",
+        "Compte ou enveloppe choisi",
+        "Premier dépôt effectué",
+        "Palier intermédiaire atteint",
+        "Objectif principal atteint",
+        "Réserve stabilisée",
+      ],
       epargne: [
-        "Compte séparé",
-        "Premier dépôt",
-        "3 mois",
-        "6 mois",
-        "12 mois",
+        "Objectif défini",
+        "Compte ou enveloppe choisi",
+        "Premier dépôt effectué",
+        "Palier intermédiaire atteint",
+        "Objectif principal atteint",
+        "Réserve stabilisée",
+      ],
+      famille: [
+        "Besoin défini",
+        "Budget estimé",
+        "Priorité confirmée",
+        "Plan de contribution",
+        "Étape principale réalisée",
+        "Marge de sécurité",
+      ],
+      liberte: [
+        "Situation clarifiée",
+        "Dettes priorisées",
+        "Fonds de sécurité lancé",
+        "Épargne régulière activée",
+        "Plan long terme défini",
+        "Progression stabilisée",
       ],
       business: [
         "Idée clarifiée",
-        "Budget minimum",
-        "Matériel ou formation",
-        "Premier lancement",
-        "Projet opérationnel",
+        "Budget estimé",
+        "Priorités choisies",
+        "Plan d’action préparé",
+        "Première étape lancée",
+        "Projet stabilisé",
       ],
       libre: [
         "Objectif défini",
-        "Plan de financement",
-        "Premier palier",
-        "Milieu du parcours",
+        "Montant cible choisi",
+        "Date cible fixée",
+        "Plan de contribution",
+        "Premier palier atteint",
         "Objectif atteint",
       ],
     },
     EN: {
       voyage: [
-        "Passport / documents",
-        "Ticket",
-        "Bags",
-        "Stay and expenses",
+        "Budget defined",
+        "Destination confirmed",
+        "Documents checked",
+        "Transport planned",
+        "Main expenses planned",
         "Safety margin",
       ],
-      maison: ["Land", "Foundation", "Walls", "Roof", "Electricity", "Finishing"],
-      auto: ["Vehicle chosen", "Down payment", "Financing", "Insurance", "Purchase"],
+      maison: [
+        "Budget defined",
+        "Project type chosen",
+        "Priorities confirmed",
+        "Funding plan",
+        "Main steps validated",
+        "Safety margin",
+      ],
+      auto: [
+        "Budget defined",
+        "Vehicle type chosen",
+        "Recurring costs estimated",
+        "Financing prepared",
+        "Purchase or repair planned",
+        "Safety margin",
+      ],
       dette: [
         "Balance confirmed",
         "Rate identified",
-        "Monthly payment set",
+        "Minimum payment known",
+        "Extra amount defined",
         "First milestone reached",
         "Zero balance",
       ],
+      urgence: [
+        "Goal defined",
+        "Account or envelope chosen",
+        "First deposit made",
+        "Intermediate milestone reached",
+        "Main goal reached",
+        "Reserve stabilized",
+      ],
       epargne: [
-        "Separate account",
-        "First deposit",
-        "3 months",
-        "6 months",
-        "12 months",
+        "Goal defined",
+        "Account or envelope chosen",
+        "First deposit made",
+        "Intermediate milestone reached",
+        "Main goal reached",
+        "Reserve stabilized",
+      ],
+      famille: [
+        "Need defined",
+        "Budget estimated",
+        "Priority confirmed",
+        "Contribution plan",
+        "Main step completed",
+        "Safety margin",
+      ],
+      liberte: [
+        "Situation clarified",
+        "Debts prioritized",
+        "Security fund started",
+        "Regular savings activated",
+        "Long-term plan defined",
+        "Progress stabilized",
       ],
       business: [
         "Idea clarified",
-        "Minimum budget",
-        "Equipment or training",
-        "First launch",
-        "Project operating",
+        "Budget estimated",
+        "Priorities chosen",
+        "Action plan prepared",
+        "First step launched",
+        "Project stabilized",
       ],
       libre: [
         "Goal defined",
-        "Funding plan",
-        "First milestone",
-        "Mid-path",
+        "Target amount chosen",
+        "Target date set",
+        "Contribution plan",
+        "First milestone reached",
         "Goal reached",
       ],
     },
     ES: {
       voyage: [
-        "Pasaporte / documentos",
-        "Boleto",
-        "Equipaje",
-        "Estadía y gastos",
+        "Presupuesto definido",
+        "Destino confirmado",
+        "Documentos verificados",
+        "Transporte planificado",
+        "Gastos principales previstos",
         "Margen de seguridad",
       ],
       maison: [
-        "Terreno",
-        "Fundación",
-        "Muros",
-        "Techo",
-        "Electricidad",
-        "Finalización",
+        "Presupuesto definido",
+        "Tipo de proyecto elegido",
+        "Prioridades confirmadas",
+        "Plan de financiación",
+        "Etapas principales validadas",
+        "Margen de seguridad",
       ],
       auto: [
-        "Vehículo elegido",
-        "Pago inicial",
-        "Financiamiento",
-        "Seguro",
-        "Compra",
+        "Presupuesto definido",
+        "Tipo de vehículo elegido",
+        "Costos recurrentes estimados",
+        "Financiación preparada",
+        "Compra o reparación planificada",
+        "Margen de seguridad",
       ],
       dette: [
         "Saldo confirmado",
         "Tasa identificada",
-        "Pago mensual fijado",
+        "Pago mínimo conocido",
+        "Monto extra definido",
         "Primer hito alcanzado",
         "Saldo en cero",
       ],
+      urgence: [
+        "Objetivo definido",
+        "Cuenta o sobre elegido",
+        "Primer depósito realizado",
+        "Hito intermedio alcanzado",
+        "Objetivo principal alcanzado",
+        "Reserva estabilizada",
+      ],
       epargne: [
-        "Cuenta separada",
-        "Primer depósito",
-        "3 meses",
-        "6 meses",
-        "12 meses",
+        "Objetivo definido",
+        "Cuenta o sobre elegido",
+        "Primer depósito realizado",
+        "Hito intermedio alcanzado",
+        "Objetivo principal alcanzado",
+        "Reserva estabilizada",
+      ],
+      famille: [
+        "Necesidad definida",
+        "Presupuesto estimado",
+        "Prioridad confirmada",
+        "Plan de contribución",
+        "Etapa principal realizada",
+        "Margen de seguridad",
+      ],
+      liberte: [
+        "Situación clarificada",
+        "Deudas priorizadas",
+        "Fondo de seguridad iniciado",
+        "Ahorro regular activado",
+        "Plan a largo plazo definido",
+        "Progreso estabilizado",
       ],
       business: [
         "Idea aclarada",
-        "Presupuesto mínimo",
-        "Material o formación",
-        "Primer lanzamiento",
-        "Proyecto operativo",
+        "Presupuesto estimado",
+        "Prioridades elegidas",
+        "Plan de acción preparado",
+        "Primera etapa lanzada",
+        "Proyecto estabilizado",
       ],
       libre: [
         "Objetivo definido",
-        "Plan de financiación",
-        "Primer hito",
-        "Mitad del recorrido",
+        "Monto objetivo elegido",
+        "Fecha objetivo fijada",
+        "Plan de contribución",
+        "Primer hito alcanzado",
         "Objetivo alcanzado",
       ],
     },
@@ -498,14 +674,24 @@ function getDefaultSteps(language) {
 }
 
 function normalizeCategory(category) {
-  if (["voyage", "travel", "trip"].includes(category)) return "voyage";
-  if (["maison", "home", "house", "hypotheque", "mortgage"].includes(category)) {
+  const value = String(category || "").toLowerCase();
+
+  if (["voyage", "travel", "trip"].includes(value)) return "voyage";
+  if (["maison", "home", "house", "hypotheque", "mortgage"].includes(value)) {
     return "maison";
   }
-  if (["auto", "car"].includes(category)) return "auto";
-  if (["dette", "debt"].includes(category)) return "dette";
-  if (["epargne", "savings", "ahorro"].includes(category)) return "epargne";
-  if (["business", "project", "projet"].includes(category)) return "business";
+  if (["auto", "car"].includes(value)) return "auto";
+  if (["dette", "debt"].includes(value)) return "dette";
+  if (["urgence", "emergency", "emergencyfund", "fondsurgence"].includes(value)) {
+    return "urgence";
+  }
+  if (["epargne", "savings", "ahorro"].includes(value)) return "epargne";
+  if (["famille", "family"].includes(value)) return "famille";
+  if (["liberte", "freedom", "financialfreedom", "libertefinanciere"].includes(value)) {
+    return "liberte";
+  }
+  if (["business", "project", "projet"].includes(value)) return "business";
+
   return "libre";
 }
 
@@ -520,20 +706,26 @@ function ensureSteps(goal, language = "FR") {
   }
 
   const labels = getDefaultSteps(language);
-  const category = normalizeCategory(goal?.category);
+  const category = normalizeCategory(goal?.category || goal?.id);
 
   const ids = {
-    voyage: ["passport", "ticket", "bags", "stay", "security"],
-    maison: ["land", "foundation", "walls", "roof", "electricity", "finish"],
-    auto: ["vehicle", "downpayment", "financing", "insurance", "purchase"],
-    dette: ["balance", "rate", "payment", "threshold", "zero"],
-    epargne: ["account", "first", "three", "six", "twelve"],
-    business: ["idea", "budget", "equipment", "launch", "operating"],
-    libre: ["start", "plan", "first", "mid", "victory"],
+    voyage: ["budget", "destination", "documents", "transport", "expenses", "security"],
+    maison: ["budget", "type", "priorities", "funding", "mainsteps", "security"],
+    auto: ["budget", "vehicle", "costs", "financing", "purchase", "security"],
+    dette: ["balance", "rate", "minimum", "extra", "threshold", "zero"],
+    urgence: ["goal", "account", "deposit", "milestone", "main", "stable"],
+    epargne: ["goal", "account", "deposit", "milestone", "main", "stable"],
+    famille: ["need", "budget", "priority", "contribution", "main", "security"],
+    liberte: ["situation", "debts", "fund", "savings", "longterm", "stable"],
+    business: ["idea", "budget", "priorities", "plan", "launch", "stable"],
+    libre: ["goal", "amount", "date", "plan", "milestone", "victory"],
   };
 
-  return labels[category].map((label, index) => ({
-    id: ids[category][index] || `step-${index + 1}`,
+  const selectedLabels = labels[category] || labels.libre;
+  const selectedIds = ids[category] || ids.libre;
+
+  return selectedLabels.map((label, index) => ({
+    id: selectedIds[index] || `step-${index + 1}`,
     label,
     done: false,
     completedAt: null,
@@ -581,6 +773,128 @@ function getNextStep(goal, language = "FR") {
   return step?.label || fallback;
 }
 
+function getGoalDate(goal) {
+  return goal?.targetDate || goal?.deadline || goal?.endDate || "";
+}
+
+function getDaysUntil(dateValue) {
+  if (!dateValue) return null;
+
+  const today = new Date();
+  const target = new Date(`${dateValue}T12:00:00`);
+
+  if (Number.isNaN(target.getTime())) return null;
+
+  today.setHours(12, 0, 0, 0);
+
+  return Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function getTimeLeftLabel(dateValue, text) {
+  const daysLeft = getDaysUntil(dateValue);
+
+  if (daysLeft === null) return text.noDate;
+  if (daysLeft < 0) return text.late;
+  if (daysLeft === 0) return `0 ${text.daysLeft}`;
+  if (daysLeft < 60) return `${daysLeft} ${text.daysLeft}`;
+
+  return `${Math.ceil(daysLeft / 30)} ${text.monthsLeft}`;
+}
+
+function getSmartGoalStatus(goal, progress, text) {
+  const targetDate = getGoalDate(goal);
+  const daysLeft = getDaysUntil(targetDate);
+
+  if (progress >= 100) {
+    return {
+      key: "completed",
+      label: text.completed,
+      color: "var(--green)",
+      background: "rgba(34,197,94,.12)",
+    };
+  }
+
+  if (daysLeft === null) {
+    return {
+      key: "onTrack",
+      label: text.onTrack,
+      color: "var(--gold)",
+      background: "rgba(212,175,55,.12)",
+    };
+  }
+
+  if (daysLeft < 0) {
+    return {
+      key: "late",
+      label: text.late,
+      color: "var(--red)",
+      background: "rgba(239,68,68,.12)",
+    };
+  }
+
+  if (progress >= 65 && daysLeft > 60) {
+    return {
+      key: "ahead",
+      label: text.ahead,
+      color: "var(--green)",
+      background: "rgba(34,197,94,.12)",
+    };
+  }
+
+  if (progress < 25 && daysLeft < 30) {
+    return {
+      key: "late",
+      label: text.late,
+      color: "var(--red)",
+      background: "rgba(239,68,68,.12)",
+    };
+  }
+
+  return {
+    key: "onTrack",
+    label: text.onTrack,
+    color: "var(--gold)",
+    background: "rgba(212,175,55,.12)",
+  };
+}
+
+function getCreatedLabel(goal, text) {
+  const startedAt = goal?.startedAt || goal?.createdAt || goal?.activatedAt;
+
+  if (!startedAt) return "";
+
+  const started = new Date(startedAt);
+  const today = new Date();
+
+  if (Number.isNaN(started.getTime())) return "";
+
+  const diffDays = Math.max(
+    0,
+    Math.floor((today.getTime() - started.getTime()) / (1000 * 60 * 60 * 24))
+  );
+
+  if (diffDays < 30) {
+    return `${text.ago} ${diffDays} jour${diffDays > 1 ? "s" : ""}`;
+  }
+
+  const months = Math.floor(diffDays / 30);
+  return `${text.ago} ${months} mois`;
+}
+
+function formatDisplayDate(value, text) {
+  if (!value) return text.noDate;
+
+  const date = new Date(`${value}T12:00:00`);
+
+  if (Number.isNaN(date.getTime())) return text.noDate;
+
+  return date.toLocaleDateString("fr-CA", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
 function Small({ label, value }) {
   return (
     <div style={smallStat}>
@@ -620,6 +934,12 @@ const nextCard = {
   background: "linear-gradient(135deg, rgba(34,197,94,.14), var(--bg-card))",
 };
 
+const statusCard = (status) => ({
+  ...card,
+  borderColor: status.color,
+  background: `linear-gradient(135deg, ${status.background}, var(--bg-card))`,
+});
+
 const header = {
   display: "flex",
   alignItems: "center",
@@ -633,6 +953,20 @@ const eyebrow = {
   fontWeight: 900,
   margin: 0,
   textTransform: "uppercase",
+};
+
+const createdBox = {
+  marginTop: "10px",
+  border: "1px solid var(--border)",
+  background: "var(--bg-panel)",
+  borderRadius: "14px",
+  padding: "9px 10px",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  color: "var(--text-main)",
+  fontSize: "13px",
+  fontWeight: "800",
 };
 
 const progressBg = {
@@ -687,6 +1021,18 @@ const selectedGoalButton = {
   borderColor: "var(--gold)",
   color: "var(--gold)",
   background: "rgba(212,175,55,.12)",
+};
+
+const stepProgressBox = {
+  border: "1px solid var(--green)",
+  background: "rgba(34,197,94,.10)",
+  borderRadius: "14px",
+  padding: "10px",
+  marginBottom: "12px",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  color: "var(--green)",
 };
 
 const stepList = {
