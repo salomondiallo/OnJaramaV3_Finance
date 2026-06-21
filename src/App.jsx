@@ -31,6 +31,7 @@ import Notifications from "./pages/Notifications";
 import Historique from "./pages/Historique";
 import Guide from "./pages/Guide";
 import PatchNotes from "./pages/PatchNotes";
+import AtelierFondateur from "./pages/AtelierFondateur";
 
 function App() {
   const appState = useAppState();
@@ -150,6 +151,7 @@ function App() {
     historique: <Historique {...pageProps} />,
     guide: <Guide {...pageProps} />,
     patchnotes: <PatchNotes {...pageProps} />,
+    atelierfondateur: <AtelierFondateur {...pageProps} />,
   };
 
   function closeVictoryOverlay() {
