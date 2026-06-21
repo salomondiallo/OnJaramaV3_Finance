@@ -729,78 +729,6 @@ function Objectifs({
 
   return (
     <div className="native-page" style={page}>
-      <GoalPremiumDashboard
-        goals={rankedGoals}
-        currency={currency}
-        templates={goalTemplates}
-        onOpenCreate={() => window.scrollTo?.({ top: 0, behavior: "smooth" })}
-        onOpenJourney={openJourney}
-      />
-
-      <section style={pilotCard}>
-        <div style={header}>
-          <SparklesIcon />
-          <div>
-            <p style={eyebrow}>{p.premiumVersion}</p>
-            <h2>{p.pilotTitle}</h2>
-            <p style={muted}>{p.pilotText}</p>
-          </div>
-        </div>
-
-        <div style={pilotGrid}>
-          <PilotStat
-            icon={<Target size={18} />}
-            label={p.mainGoal}
-            value={mainGoal?.title || p.noMainGoalPilot}
-            color="var(--gold)"
-          />
-          <PilotStat
-            icon={<TrendingUp size={18} />}
-            label={p.priorityAuto}
-            value={mainGoal?.priority?.label || "À définir"}
-            color={mainGoal?.priority?.color || "var(--gold)"}
-          />
-          <PilotStat
-            icon={<CalendarClock size={18} />}
-            label={p.ifContinue}
-            value={mainGoal ? estimateGoalDate(mainGoal) : "—"}
-            color="var(--blue)"
-          />
-          <PilotStat
-            icon={<Wallet size={18} />}
-            label={p.fundingOrigin}
-            value={"Profil financier"}
-            color="var(--green)"
-          />
-        </div>
-      </section>
-
-      {connectedGoal && (
-        <section style={connectedCard}>
-          <div style={header}>
-            <Layers color="var(--green)" />
-            <div>
-              <p style={eyebrow}>{p.connectedGoals}</p>
-              <h2>{connectedGoal.title}</h2>
-              <p style={muted}>{p.discreet}</p>
-            </div>
-          </div>
-          <ConnectedGoalMini goal={connectedGoal} currency={currency} />
-        </section>
-      )}
-
-      <section style={journeyNotice}>
-        <Route color="var(--gold)" />
-        <div>
-          <h2>{p.smartJourney}</h2>
-          <p style={muted}>{p.journeyHint}</p>
-          <button onClick={openJourney} style={journeyButton}>
-            <Route size={17} />
-            {p.seeJourney}
-          </button>
-        </div>
-      </section>
-
       <section
         style={{
           ...heroCard,
@@ -1038,6 +966,8 @@ function Objectifs({
         </div>
       </section>
 
+
+
       <section style={card}>
         <div style={header}>
           <Trophy color="var(--gold)" />
@@ -1066,6 +996,84 @@ function Objectifs({
           </div>
         ))}
       </section>
+
+
+      <section style={journeyNotice}>
+        <Route color="var(--gold)" />
+        <div>
+          <h2>{p.smartJourney}</h2>
+          <p style={muted}>{p.journeyHint}</p>
+          <button onClick={openJourney} style={journeyButton}>
+            <Route size={17} />
+            {p.seeJourney}
+          </button>
+        </div>
+      </section>
+
+
+
+      {connectedGoal && (
+        <section style={connectedCard}>
+          <div style={header}>
+            <Layers color="var(--green)" />
+            <div>
+              <p style={eyebrow}>{p.connectedGoals}</p>
+              <h2>{connectedGoal.title}</h2>
+              <p style={muted}>{p.discreet}</p>
+            </div>
+          </div>
+          <ConnectedGoalMini goal={connectedGoal} currency={currency} />
+        </section>
+      )}
+
+
+      <section style={pilotCard}>
+        <div style={header}>
+          <SparklesIcon />
+          <div>
+            <p style={eyebrow}>{p.premiumVersion}</p>
+            <h2>{p.pilotTitle}</h2>
+            <p style={muted}>{p.pilotText}</p>
+          </div>
+        </div>
+
+        <div style={pilotGrid}>
+          <PilotStat
+            icon={<Target size={18} />}
+            label={p.mainGoal}
+            value={mainGoal?.title || p.noMainGoalPilot}
+            color="var(--gold)"
+          />
+          <PilotStat
+            icon={<TrendingUp size={18} />}
+            label={p.priorityAuto}
+            value={mainGoal?.priority?.label || "À définir"}
+            color={mainGoal?.priority?.color || "var(--gold)"}
+          />
+          <PilotStat
+            icon={<CalendarClock size={18} />}
+            label={p.ifContinue}
+            value={mainGoal ? estimateGoalDate(mainGoal) : "—"}
+            color="var(--blue)"
+          />
+          <PilotStat
+            icon={<Wallet size={18} />}
+            label={p.fundingOrigin}
+            value={"Profil financier"}
+            color="var(--green)"
+          />
+        </div>
+      </section>
+
+
+      <GoalPremiumDashboard
+        goals={rankedGoals}
+        currency={currency}
+        templates={goalTemplates}
+        onOpenCreate={() => window.scrollTo?.({ top: 0, behavior: "smooth" })}
+        onOpenJourney={openJourney}
+      />
+
     </div>
   );
 }
