@@ -423,6 +423,7 @@ function Objectifs({
   const [selectedType, setSelectedType] = useState(null);
   const [selectedSubType, setSelectedSubType] = useState(null);
   const [celebratingGoalId, setCelebratingGoalId] = useState(null);
+  const [showCreateGoal, setShowCreateGoal] = useState(goals.length === 0);
   const [form, setForm] = useState({
     title: "",
     currentAmount: "",
@@ -626,6 +627,7 @@ function Objectifs({
     }
 
     resetForm();
+    setShowCreateGoal(false);
   }
 
   function removeGoal(id) {
@@ -729,12 +731,71 @@ function Objectifs({
 
   return (
     <div className="native-page" style={page}>
-      <section
-        style={{
-          ...heroCard,
-          borderColor: selectedCategory?.color || "var(--gold)",
-        }}
-      >
+      <section style={card}>
+        <div style={sectionTop}>
+          <div style={headerCompact}>
+            <Trophy color="var(--gold)" />
+            <div>
+              <p style={eyebrow}>Priorité V11.4</p>
+              <h2>{p.activeGoals}</h2>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              setShowCreateGoal(true);
+              window.setTimeout(() => {
+                document
+                  .getElementById("create-goal-panel")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }, 50);
+            }}
+            style={compactAddButton}
+          >
+            <Plus size={17} />
+            Ajouter
+          </button>
+        </div>
+
+        {rankedGoals.length === 0 && (
+          <div style={emptyGoalCard}>
+            <Target color="var(--gold)" />
+            <div>
+              <strong>{p.noGoal}</strong>
+              <p style={mutedSmall}>Commencez par créer un objectif simple, puis OnJarama le connectera au parcours.</p>
+            </div>
+          </div>
+        )}
+
+        {rankedGoals.map((goal, index) => (
+          <div key={goal.id} style={goalActionWrap}>
+            <GoalPremiumCard
+              goal={goal}
+              rank={index + 1}
+              template={goalTemplates[goal.category] || goalTemplates.personnalise}
+              currency={currency}
+              isCelebrating={celebratingGoalId === goal.id}
+              onDeposit={addDeposit}
+              onHighlight={highlightGoal}
+              onRemove={removeGoal}
+              onOpenJourney={openJourney}
+            />
+            <button onClick={() => simulateGoal(goal.id)} style={simulateButton}>
+              <Calculator size={17} />
+              {p.simulateGoal}
+            </button>
+          </div>
+        ))}
+      </section>
+
+      {showCreateGoal && (
+        <section
+          id="create-goal-panel"
+          style={{
+            ...heroCard,
+            borderColor: selectedCategory?.color || "var(--gold)",
+          }}
+        >
         <div
           key={`${selectedType || "categories"}-${selectedSubType || "root"}`}
           style={animatedPanel}
@@ -966,36 +1027,7 @@ function Objectifs({
         </div>
       </section>
 
-
-
-      <section style={card}>
-        <div style={header}>
-          <Trophy color="var(--gold)" />
-          <h2>{p.activeGoals}</h2>
-        </div>
-
-        {rankedGoals.length === 0 && <p style={muted}>{p.noGoal}</p>}
-
-        {rankedGoals.map((goal, index) => (
-          <div key={goal.id} style={goalActionWrap}>
-            <GoalPremiumCard
-              goal={goal}
-              rank={index + 1}
-              template={goalTemplates[goal.category] || goalTemplates.personnalise}
-              currency={currency}
-              isCelebrating={celebratingGoalId === goal.id}
-              onDeposit={addDeposit}
-              onHighlight={highlightGoal}
-              onRemove={removeGoal}
-              onOpenJourney={openJourney}
-            />
-            <button onClick={() => simulateGoal(goal.id)} style={simulateButton}>
-              <Calculator size={17} />
-              {p.simulateGoal}
-            </button>
-          </div>
-        ))}
-      </section>
+      )}
 
 
       <section style={journeyNotice}>
@@ -1070,7 +1102,14 @@ function Objectifs({
         goals={rankedGoals}
         currency={currency}
         templates={goalTemplates}
-        onOpenCreate={() => window.scrollTo?.({ top: 0, behavior: "smooth" })}
+        onOpenCreate={() => {
+          setShowCreateGoal(true);
+          window.setTimeout(() => {
+            document
+              .getElementById("create-goal-panel")
+              ?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }, 50);
+        }}
         onOpenJourney={openJourney}
       />
 
@@ -1227,6 +1266,45 @@ function getConnectedSteps(goal) {
     { label: "Victoire", text: "100 % atteint", done: goal.progress >= 100 },
   ];
 }
+
+
+const sectionTop = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "12px",
+  marginBottom: "14px",
+};
+
+const headerCompact = {
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
+};
+
+const compactAddButton = {
+  border: "1px solid var(--gold)",
+  background: "rgba(212,175,55,.14)",
+  color: "var(--gold)",
+  borderRadius: "999px",
+  padding: "10px 13px",
+  fontWeight: "900",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "7px",
+  whiteSpace: "nowrap",
+};
+
+const emptyGoalCard = {
+  background: "linear-gradient(135deg, rgba(212,175,55,.13), var(--bg-panel))",
+  border: "1px dashed var(--gold)",
+  borderRadius: "18px",
+  padding: "16px",
+  display: "flex",
+  alignItems: "center",
+  gap: "12px",
+};
 
 const page = { paddingTop: "0" };
 

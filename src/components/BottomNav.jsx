@@ -1,11 +1,11 @@
 import {
-  BarChart3,
   Brain,
   Calculator,
   ChevronDown,
   ChevronUp,
   Home,
   Route,
+  Target,
   UserCircle,
 } from "lucide-react";
 
@@ -15,9 +15,8 @@ function BottomNav({ currentPage, setCurrentPage, navHidden, setNavHidden, setti
   const labels = {
     FR: {
       accueil: "Accueil",
-      situation: "Situation",
-      monplan: "Mon Plan",
       parcours: "Parcours",
+      objectifs: "Objectifs",
       simulateur: "Simulateur",
       profil: "Profil",
       showNav: "Afficher la navigation",
@@ -26,9 +25,8 @@ function BottomNav({ currentPage, setCurrentPage, navHidden, setNavHidden, setti
     },
     EN: {
       accueil: "Home",
-      situation: "Situation",
-      monplan: "My Plan",
       parcours: "Path",
+      objectifs: "Goals",
       simulateur: "Simulator",
       profil: "Profile",
       showNav: "Show navigation",
@@ -68,32 +66,25 @@ function BottomNav({ currentPage, setCurrentPage, navHidden, setNavHidden, setti
         />
 
         <NavButton
-          active={currentPage === "situation"}
-          icon={<BarChart3 size={21} />}
-          label={t.situation}
-          onClick={() => go("situation")}
-        />
-
-        <button
-          onClick={() => go("monplan")}
-          className={`bottom-center-plan ${
-            currentPage === "monplan" ? "active" : ""
-          }`}
-          aria-label={t.monplan}
-          title={t.monplan}
-        >
-          <span className="bottom-center-icon">
-            <Brain size={21} />
-          </span>
-          <strong>{t.monplan}</strong>
-        </button>
-
-        <NavButton
           active={currentPage === "parcours"}
           icon={<Route size={21} />}
           label={t.parcours}
           onClick={() => go("parcours")}
         />
+
+        <button
+          onClick={() => go("objectifs")}
+          className={`bottom-center-plan ${
+            currentPage === "objectifs" ? "active" : ""
+          }`}
+          aria-label={t.objectifs}
+          title={t.objectifs}
+        >
+          <span className="bottom-center-icon">
+            <Target size={21} />
+          </span>
+          <strong>{t.objectifs}</strong>
+        </button>
 
         <NavButton
           active={currentPage === "simulateur"}
