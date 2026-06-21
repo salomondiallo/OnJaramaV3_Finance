@@ -56,12 +56,12 @@ const pageText = {
     startedAgo: "Commencé il y a",
     lastDeposit: "Dernier dépôt",
     smartJourney: "Smart Journey",
-    journeyHint:
-      "Chaque objectif est maintenant connecté à votre parcours global.",
+    journeyHint: "Chaque objectif est maintenant connecté à votre parcours global.",
     seeJourney: "Voir dans mon parcours",
-    premiumVersion: "Objectifs Premium V11.0",
+    premiumVersion: "Objectifs Premium V11.5",
     pilotTitle: "Centre de pilotage Objectifs",
-    pilotText: "L’application ne liste plus seulement vos objectifs : elle aide à choisir quoi avancer en premier.",
+    pilotText:
+      "L’application ne liste plus seulement vos objectifs : elle aide à choisir quoi avancer en premier.",
     priorityAuto: "Priorisation automatique",
     ifContinue: "Si je continue ainsi",
     connectedGoals: "Objectifs connectés",
@@ -76,7 +76,8 @@ const pageText = {
     monthlyContribution: "Contribution possible par mois",
     motivation: "Motivation personnelle",
     simulateGoal: "Simuler cet objectif",
-    planHint: "Configurez votre destination, simulez plusieurs chemins, puis validez le plan de match.",
+    planHint:
+      "Configurez votre destination, simulez plusieurs chemins, puis validez le plan de match.",
   },
 };
 
@@ -379,14 +380,11 @@ const goalTemplates = {
       n(v.launch) + n(v.equipment) + n(v.marketing) + n(v.training) + n(v.cashflow),
   },
 
-
   personnalise: {
     label: "Objectif libre",
     icon: <Target />,
     color: "var(--gold)",
-    fields: [
-      ["target", "Montant cible"],
-    ],
+    fields: [["target", "Montant cible"]],
     calculate: (v) => n(v.target),
   },
 
@@ -483,7 +481,19 @@ function Objectifs({
   }, [goals]);
 
   const mainGoal = rankedGoals.find((goal) => goal.highlighted) || rankedGoals[0];
-  const connectedGoal = rankedGoals.find((goal) => ["maison", "voyage", "business"].includes(goal.category));
+
+  const connectedGoal = rankedGoals.find((goal) =>
+    ["maison", "voyage", "business"].includes(goal.category)
+  );
+
+  function openCreateGoal() {
+    setShowCreateGoal(true);
+    window.setTimeout(() => {
+      document
+        .getElementById("create-goal-panel")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  }
 
   function resetForm() {
     setSelectedType(null);
@@ -731,27 +741,25 @@ function Objectifs({
 
   return (
     <div className="native-page" style={page}>
+      <GoalPremiumDashboard
+        goals={rankedGoals}
+        currency={currency}
+        templates={goalTemplates}
+        onOpenCreate={openCreateGoal}
+        onOpenJourney={openJourney}
+      />
+
       <section style={card}>
         <div style={sectionTop}>
           <div style={headerCompact}>
             <Trophy color="var(--gold)" />
             <div>
-              <p style={eyebrow}>Priorité V11.4</p>
+              <p style={eyebrow}>Priorité V11.5</p>
               <h2>{p.activeGoals}</h2>
             </div>
           </div>
 
-          <button
-            onClick={() => {
-              setShowCreateGoal(true);
-              window.setTimeout(() => {
-                document
-                  .getElementById("create-goal-panel")
-                  ?.scrollIntoView({ behavior: "smooth", block: "start" });
-              }, 50);
-            }}
-            style={compactAddButton}
-          >
+          <button onClick={openCreateGoal} style={compactAddButton}>
             <Plus size={17} />
             Ajouter
           </button>
@@ -762,7 +770,10 @@ function Objectifs({
             <Target color="var(--gold)" />
             <div>
               <strong>{p.noGoal}</strong>
-              <p style={mutedSmall}>Commencez par créer un objectif simple, puis OnJarama le connectera au parcours.</p>
+              <p style={mutedSmall}>
+                Commencez par créer un objectif simple, puis OnJarama le
+                connectera au parcours.
+              </p>
             </div>
           </div>
         )}
@@ -788,248 +799,6 @@ function Objectifs({
         ))}
       </section>
 
-      {showCreateGoal && (
-        <section
-          id="create-goal-panel"
-          style={{
-            ...heroCard,
-            borderColor: selectedCategory?.color || "var(--gold)",
-          }}
-        >
-        <div
-          key={`${selectedType || "categories"}-${selectedSubType || "root"}`}
-          style={animatedPanel}
-        >
-          {!selectedCategory && (
-            <>
-              <div style={header}>
-                <Target color="var(--gold)" />
-                <div>
-                  <p style={eyebrow}>{p.premiumVersion}</p>
-                  <h1>{t.objectifs || p.smartCategories}</h1>
-                </div>
-              </div>
-
-              <p style={muted}>{p.subtitle}</p>
-
-              <div style={categoryGrid}>
-                {categories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => selectCategory(category.id)}
-                    style={categoryTile}
-                  >
-                    <span style={{ color: category.color }}>{category.icon}</span>
-                    <strong>{category.label}</strong>
-                    {category.subcategories && (
-                      <small style={mutedSmall}>Sous-catégories</small>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-
-          {selectedCategory && hasSubcategories && !selectedTemplate && (
-            <>
-              <div style={formTop}>
-                <button onClick={resetForm} style={backButton}>
-                  <ArrowLeft size={17} />
-                  {p.backToCategories}
-                </button>
-
-                <span style={{ ...miniIcon, color: selectedCategory.color }}>
-                  {selectedCategory.icon}
-                </span>
-              </div>
-
-              <div style={header}>
-                <span style={{ color: selectedCategory.color }}>
-                  {selectedCategory.icon}
-                </span>
-                <h1>{selectedCategory.label}</h1>
-              </div>
-
-              <p style={muted}>{p.chooseSubcategory}</p>
-
-              <div style={subcategoryGrid}>
-                {Object.entries(selectedCategory.subcategories).map(
-                  ([id, subcategory]) => (
-                    <button
-                      key={id}
-                      onClick={() => selectSubcategory(id)}
-                      style={{
-                        ...subcategoryTile,
-                        borderColor: selectedCategory.color,
-                      }}
-                    >
-                      <strong>{subcategory.label}</strong>
-                      <ChevronRight size={18} />
-                    </button>
-                  )
-                )}
-              </div>
-            </>
-          )}
-
-          {selectedTemplate && (
-            <>
-              <div style={formTop}>
-                <button
-                  onClick={hasSubcategories ? backToSubcategories : resetForm}
-                  style={backButton}
-                >
-                  <ArrowLeft size={17} />
-                  {hasSubcategories ? p.chooseSubcategory : p.backToGoals}
-                </button>
-
-                <span style={{ ...miniIcon, color: selectedTemplate.color }}>
-                  {selectedTemplate.icon}
-                </span>
-              </div>
-
-              <div style={header}>
-                <span style={{ color: selectedTemplate.color }}>
-                  {selectedTemplate.icon}
-                </span>
-                <h1>
-                  {p.configure} : {selectedTemplate.label}
-                </h1>
-              </div>
-
-              {selectedTemplate.categoryLabel && (
-                <p style={mutedSmall}>{selectedTemplate.categoryLabel}</p>
-              )}
-
-              <label>Nom de l’objectif</label>
-              <input
-                value={form.title}
-                onChange={(event) =>
-                  setForm({ ...form, title: event.target.value })
-                }
-                style={input}
-              />
-
-              {selectedTemplate.fields.map(([key, label]) => (
-                <div key={key}>
-                  <label>{label}</label>
-                  <input
-                    value={form.values[key] || ""}
-                    onChange={(event) => updateValue(key, event.target.value)}
-                    placeholder="0"
-                    inputMode="decimal"
-                    style={input}
-                  />
-                </div>
-              ))}
-
-              <label>{p.currentAmount}</label>
-              <input
-                value={form.currentAmount}
-                onChange={(event) =>
-                  setForm({
-                    ...form,
-                    currentAmount: cleanMoneyInput(event.target.value),
-                  })
-                }
-                placeholder="0"
-                inputMode="decimal"
-                style={input}
-              />
-
-              <label>{p.priorityLevel}</label>
-              <select
-                value={form.priority}
-                onChange={(event) => setForm({ ...form, priority: event.target.value })}
-                style={input}
-              >
-                <option>Douce</option>
-                <option>Moyenne</option>
-                <option>Haute</option>
-                <option>Urgente</option>
-              </select>
-
-              <label>{p.rhythm}</label>
-              <select
-                value={form.rhythm}
-                onChange={(event) => setForm({ ...form, rhythm: event.target.value })}
-                style={input}
-              >
-                <option>Tranquille</option>
-                <option>Équilibré</option>
-                <option>Dynamique</option>
-                <option>Féroce</option>
-              </select>
-
-              <label>{p.monthlyContribution}</label>
-              <input
-                value={form.monthlyContribution}
-                onChange={(event) =>
-                  setForm({
-                    ...form,
-                    monthlyContribution: cleanMoneyInput(event.target.value),
-                  })
-                }
-                placeholder="0"
-                inputMode="decimal"
-                style={input}
-              />
-
-              <label>{p.motivation}</label>
-              <input
-                value={form.motivation}
-                onChange={(event) => setForm({ ...form, motivation: event.target.value })}
-                placeholder="Pourquoi cet objectif compte pour vous ?"
-                style={input}
-              />
-
-              <label>{p.targetDate}</label>
-              <input
-                type="date"
-                value={form.targetDate}
-                onChange={(event) =>
-                  setForm({ ...form, targetDate: event.target.value })
-                }
-                style={input}
-              />
-
-              <button
-                onClick={() =>
-                  setForm({ ...form, highlighted: !form.highlighted })
-                }
-                style={{
-                  ...highlightBtn,
-                  borderColor: form.highlighted ? "var(--gold)" : "var(--border)",
-                  background: form.highlighted
-                    ? "rgba(212,175,55,.14)"
-                    : "var(--bg-panel)",
-                }}
-              >
-                <Star size={17} />
-                {form.highlighted ? p.mainGoal : p.setMain}
-              </button>
-
-              <Preview
-                targetAmount={targetAmount}
-                currentAmount={form.currentAmount}
-                currency={currency}
-                text={p}
-              />
-
-              <button onClick={addGoal} style={addButton}>
-                <Plus size={18} />
-                {p.createGoal}
-              </button>
-
-              <p style={mutedSmall}>{p.planHint}</p>
-            </>
-          )}
-        </div>
-      </section>
-
-      )}
-
-
       <section style={journeyNotice}>
         <Route color="var(--gold)" />
         <div>
@@ -1041,8 +810,6 @@ function Objectifs({
           </button>
         </div>
       </section>
-
-
 
       {connectedGoal && (
         <section style={connectedCard}>
@@ -1057,7 +824,6 @@ function Objectifs({
           <ConnectedGoalMini goal={connectedGoal} currency={currency} />
         </section>
       )}
-
 
       <section style={pilotCard}>
         <div style={header}>
@@ -1091,32 +857,262 @@ function Objectifs({
           <PilotStat
             icon={<Wallet size={18} />}
             label={p.fundingOrigin}
-            value={"Profil financier"}
+            value="Profil financier"
             color="var(--green)"
           />
         </div>
       </section>
 
+      {showCreateGoal && (
+        <section
+          id="create-goal-panel"
+          style={{
+            ...heroCard,
+            borderColor: selectedCategory?.color || "var(--gold)",
+          }}
+        >
+          <div
+            key={`${selectedType || "categories"}-${selectedSubType || "root"}`}
+            style={animatedPanel}
+          >
+            {!selectedCategory && (
+              <>
+                <div style={header}>
+                  <Target color="var(--gold)" />
+                  <div>
+                    <p style={eyebrow}>{p.premiumVersion}</p>
+                    <h1>{t.objectifs || p.smartCategories}</h1>
+                  </div>
+                </div>
 
-      <GoalPremiumDashboard
-        goals={rankedGoals}
-        currency={currency}
-        templates={goalTemplates}
-        onOpenCreate={() => {
-          setShowCreateGoal(true);
-          window.setTimeout(() => {
-            document
-              .getElementById("create-goal-panel")
-              ?.scrollIntoView({ behavior: "smooth", block: "start" });
-          }, 50);
-        }}
-        onOpenJourney={openJourney}
-      />
+                <p style={muted}>{p.subtitle}</p>
 
+                <div style={categoryGrid}>
+                  {categories.map((category) => (
+                    <button
+                      key={category.id}
+                      onClick={() => selectCategory(category.id)}
+                      style={categoryTile}
+                    >
+                      <span style={{ color: category.color }}>{category.icon}</span>
+                      <strong>{category.label}</strong>
+                      {category.subcategories && (
+                        <small style={mutedSmall}>Sous-catégories</small>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {selectedCategory && hasSubcategories && !selectedTemplate && (
+              <>
+                <div style={formTop}>
+                  <button onClick={resetForm} style={backButton}>
+                    <ArrowLeft size={17} />
+                    {p.backToCategories}
+                  </button>
+
+                  <span style={{ ...miniIcon, color: selectedCategory.color }}>
+                    {selectedCategory.icon}
+                  </span>
+                </div>
+
+                <div style={header}>
+                  <span style={{ color: selectedCategory.color }}>
+                    {selectedCategory.icon}
+                  </span>
+                  <h1>{selectedCategory.label}</h1>
+                </div>
+
+                <p style={muted}>{p.chooseSubcategory}</p>
+
+                <div style={subcategoryGrid}>
+                  {Object.entries(selectedCategory.subcategories).map(
+                    ([id, subcategory]) => (
+                      <button
+                        key={id}
+                        onClick={() => selectSubcategory(id)}
+                        style={{
+                          ...subcategoryTile,
+                          borderColor: selectedCategory.color,
+                        }}
+                      >
+                        <strong>{subcategory.label}</strong>
+                        <ChevronRight size={18} />
+                      </button>
+                    )
+                  )}
+                </div>
+              </>
+            )}
+
+            {selectedTemplate && (
+              <>
+                <div style={formTop}>
+                  <button
+                    onClick={hasSubcategories ? backToSubcategories : resetForm}
+                    style={backButton}
+                  >
+                    <ArrowLeft size={17} />
+                    {hasSubcategories ? p.chooseSubcategory : p.backToGoals}
+                  </button>
+
+                  <span style={{ ...miniIcon, color: selectedTemplate.color }}>
+                    {selectedTemplate.icon}
+                  </span>
+                </div>
+
+                <div style={header}>
+                  <span style={{ color: selectedTemplate.color }}>
+                    {selectedTemplate.icon}
+                  </span>
+                  <h1>
+                    {p.configure} : {selectedTemplate.label}
+                  </h1>
+                </div>
+
+                {selectedTemplate.categoryLabel && (
+                  <p style={mutedSmall}>{selectedTemplate.categoryLabel}</p>
+                )}
+
+                <label>Nom de l’objectif</label>
+                <input
+                  value={form.title}
+                  onChange={(event) =>
+                    setForm({ ...form, title: event.target.value })
+                  }
+                  style={input}
+                />
+
+                {selectedTemplate.fields.map(([key, label]) => (
+                  <div key={key}>
+                    <label>{label}</label>
+                    <input
+                      value={form.values[key] || ""}
+                      onChange={(event) => updateValue(key, event.target.value)}
+                      placeholder="0"
+                      inputMode="decimal"
+                      style={input}
+                    />
+                  </div>
+                ))}
+
+                <label>{p.currentAmount}</label>
+                <input
+                  value={form.currentAmount}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      currentAmount: cleanMoneyInput(event.target.value),
+                    })
+                  }
+                  placeholder="0"
+                  inputMode="decimal"
+                  style={input}
+                />
+
+                <label>{p.priorityLevel}</label>
+                <select
+                  value={form.priority}
+                  onChange={(event) =>
+                    setForm({ ...form, priority: event.target.value })
+                  }
+                  style={input}
+                >
+                  <option>Douce</option>
+                  <option>Moyenne</option>
+                  <option>Haute</option>
+                  <option>Urgente</option>
+                </select>
+
+                <label>{p.rhythm}</label>
+                <select
+                  value={form.rhythm}
+                  onChange={(event) =>
+                    setForm({ ...form, rhythm: event.target.value })
+                  }
+                  style={input}
+                >
+                  <option>Tranquille</option>
+                  <option>Équilibré</option>
+                  <option>Dynamique</option>
+                  <option>Féroce</option>
+                </select>
+
+                <label>{p.monthlyContribution}</label>
+                <input
+                  value={form.monthlyContribution}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      monthlyContribution: cleanMoneyInput(event.target.value),
+                    })
+                  }
+                  placeholder="0"
+                  inputMode="decimal"
+                  style={input}
+                />
+
+                <label>{p.motivation}</label>
+                <input
+                  value={form.motivation}
+                  onChange={(event) =>
+                    setForm({ ...form, motivation: event.target.value })
+                  }
+                  placeholder="Pourquoi cet objectif compte pour vous ?"
+                  style={input}
+                />
+
+                <label>{p.targetDate}</label>
+                <input
+                  type="date"
+                  value={form.targetDate}
+                  onChange={(event) =>
+                    setForm({ ...form, targetDate: event.target.value })
+                  }
+                  style={input}
+                />
+
+                <button
+                  onClick={() =>
+                    setForm({ ...form, highlighted: !form.highlighted })
+                  }
+                  style={{
+                    ...highlightBtn,
+                    borderColor: form.highlighted
+                      ? "var(--gold)"
+                      : "var(--border)",
+                    background: form.highlighted
+                      ? "rgba(212,175,55,.14)"
+                      : "var(--bg-panel)",
+                  }}
+                >
+                  <Star size={17} />
+                  {form.highlighted ? p.mainGoal : p.setMain}
+                </button>
+
+                <Preview
+                  targetAmount={targetAmount}
+                  currentAmount={form.currentAmount}
+                  currency={currency}
+                  text={p}
+                />
+
+                <button onClick={addGoal} style={addButton}>
+                  <Plus size={18} />
+                  {p.createGoal}
+                </button>
+
+                <p style={mutedSmall}>{p.planHint}</p>
+              </>
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
-
 
 function SparklesIcon() {
   return (
@@ -1147,7 +1143,12 @@ function ConnectedGoalMini({ goal, currency }) {
             <strong>{step.label}</strong>
             <p style={mutedSmall}>{step.text}</p>
           </div>
-          <small style={{ color: step.done ? "var(--green)" : "var(--text-muted)", fontWeight: 900 }}>
+          <small
+            style={{
+              color: step.done ? "var(--green)" : "var(--text-muted)",
+              fontWeight: 900,
+            }}
+          >
             {step.done ? "✓" : "○"}
           </small>
         </div>
@@ -1209,7 +1210,6 @@ function getGoalStatus(progress) {
   return "Début";
 }
 
-
 function getGoalPriority(goal, progress, remaining) {
   const hasCloseDate = goal.targetDate && daysUntil(goal.targetDate) <= 90;
   const isDebt = goal.category === "dette";
@@ -1243,19 +1243,51 @@ function estimateGoalDate(goal) {
 function getConnectedSteps(goal) {
   if (goal.category === "maison") {
     return [
-      { label: "Base", text: goal.option || "Projet maison", done: goal.progress >= 20 },
-      { label: "Travaux", text: "Crépi, électricité, solaire ou finition", done: goal.progress >= 50 },
-      { label: "Installation", text: "Mobilier, sécurité et confort", done: goal.progress >= 80 },
-      { label: "Victoire", text: "Objectif maison complété", done: goal.progress >= 100 },
+      {
+        label: "Base",
+        text: goal.option || "Projet maison",
+        done: goal.progress >= 20,
+      },
+      {
+        label: "Travaux",
+        text: "Crépi, électricité, solaire ou finition",
+        done: goal.progress >= 50,
+      },
+      {
+        label: "Installation",
+        text: "Mobilier, sécurité et confort",
+        done: goal.progress >= 80,
+      },
+      {
+        label: "Victoire",
+        text: "Objectif maison complété",
+        done: goal.progress >= 100,
+      },
     ];
   }
 
   if (goal.category === "voyage") {
     return [
-      { label: "Billet", text: "Préparer le transport principal", done: goal.progress >= 25 },
-      { label: "Séjour", text: "Prévoir dépenses sur place", done: goal.progress >= 50 },
-      { label: "Marge", text: "Garder une sécurité", done: goal.progress >= 75 },
-      { label: "Départ", text: "Voyage prêt", done: goal.progress >= 100 },
+      {
+        label: "Billet",
+        text: "Préparer le transport principal",
+        done: goal.progress >= 25,
+      },
+      {
+        label: "Séjour",
+        text: "Prévoir dépenses sur place",
+        done: goal.progress >= 50,
+      },
+      {
+        label: "Marge",
+        text: "Garder une sécurité",
+        done: goal.progress >= 75,
+      },
+      {
+        label: "Départ",
+        text: "Voyage prêt",
+        done: goal.progress >= 100,
+      },
     ];
   }
 
@@ -1267,6 +1299,12 @@ function getConnectedSteps(goal) {
   ];
 }
 
+const page = {
+  paddingTop: "0",
+  display: "flex",
+  flexDirection: "column",
+  gap: "16px",
+};
 
 const sectionTop = {
   display: "flex",
@@ -1306,20 +1344,17 @@ const emptyGoalCard = {
   gap: "12px",
 };
 
-const page = { paddingTop: "0" };
-
-
 const pilotCard = {
   background:
     "radial-gradient(circle at top right, rgba(212,175,55,.22), transparent 34%), linear-gradient(135deg, rgba(15,23,42,.98), var(--bg-card))",
   border: "1px solid var(--gold)",
   borderRadius: "24px",
-  padding: "20px",
+  padding: "18px",
 };
 
 const pilotGrid = {
   display: "grid",
-  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gridTemplateColumns: "repeat(auto-fit, minmax(125px, 1fr))",
   gap: "10px",
   marginTop: "14px",
 };
@@ -1332,6 +1367,7 @@ const pilotStat = {
   display: "grid",
   gap: "6px",
   minHeight: "92px",
+  minWidth: 0,
 };
 
 const sparklesIcon = {
@@ -1349,8 +1385,7 @@ const connectedCard = {
   background: "linear-gradient(135deg, rgba(34,197,94,.14), var(--bg-card))",
   border: "1px solid var(--green)",
   borderRadius: "22px",
-  padding: "20px",
-  marginTop: "16px",
+  padding: "18px",
 };
 
 const connectedList = {
@@ -1378,6 +1413,7 @@ const connectedDot = {
   placeItems: "center",
   fontWeight: 900,
   fontSize: "12px",
+  flex: "0 0 auto",
 };
 
 const journeyNotice = {
@@ -1385,7 +1421,6 @@ const journeyNotice = {
   border: "1px solid var(--gold)",
   borderRadius: "22px",
   padding: "18px",
-  marginTop: "16px",
   display: "flex",
   gap: "12px",
 };
@@ -1410,9 +1445,8 @@ const heroCard = {
     "radial-gradient(circle at top right, rgba(212,175,55,.18), transparent 32%), var(--bg-card)",
   border: "1px solid var(--gold)",
   borderRadius: "22px",
-  padding: "20px",
+  padding: "18px",
   overflow: "hidden",
-  marginTop: "20px",
 };
 
 const animatedPanel = { animation: "fadeIn .22s ease" };
@@ -1449,8 +1483,8 @@ const card = {
   background: "var(--bg-card)",
   border: "1px solid var(--border)",
   borderRadius: "22px",
-  padding: "20px",
-  marginTop: "20px",
+  padding: "18px",
+  marginTop: "0",
 };
 
 const header = {
@@ -1469,25 +1503,26 @@ const eyebrow = {
 
 const categoryGrid = {
   display: "grid",
-  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-  gap: "14px",
-  marginTop: "22px",
+  gridTemplateColumns: "repeat(auto-fit, minmax(135px, 1fr))",
+  gap: "12px",
+  marginTop: "18px",
 };
 
 const categoryTile = {
-  minHeight: "128px",
+  minHeight: "118px",
   background: "var(--bg-panel)",
   border: "1px solid var(--border)",
   borderRadius: "20px",
-  padding: "20px",
+  padding: "16px",
   color: "var(--text-main)",
   display: "flex",
   flexDirection: "column",
   justifyContent: "space-between",
-  gap: "12px",
+  gap: "10px",
   alignItems: "flex-start",
   textAlign: "left",
-  fontSize: "18px",
+  fontSize: "16px",
+  minWidth: 0,
 };
 
 const subcategoryGrid = {

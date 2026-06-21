@@ -47,20 +47,23 @@ function GoalPremiumCard({
           ? "linear-gradient(135deg, rgba(212,175,55,.10), var(--bg-panel))"
           : goal.progress >= 100
             ? "linear-gradient(135deg, rgba(212,175,55,.13), var(--bg-panel))"
-            : "var(--bg-panel)",
+            : goal.highlighted
+              ? "linear-gradient(135deg, rgba(212,175,55,.09), var(--bg-panel))"
+              : "var(--bg-panel)",
       }}
     >
       {!flipped ? (
         <>
+          {goal.highlighted && <div style={mainGoalBadge}>⭐ Objectif principal</div>}
+
           <div style={goalHeader}>
             <span style={{ color }}>
               {goal.progress >= 100 ? <Trophy /> : template?.icon}
             </span>
 
-            <div>
-              <strong>
-                #{rank} {goal.highlighted ? "⭐ " : ""}
-                {goal.title}
+            <div style={{ minWidth: 0 }}>
+              <strong style={goalTitle}>
+                #{rank} {goal.title}
               </strong>
               <p style={mutedSmall}>
                 {goal.categoryLabel || template?.label}
@@ -131,8 +134,8 @@ function GoalPremiumCard({
               <RotateCcw />
             </span>
 
-            <div>
-              <strong>Résumé IA OnJarama</strong>
+            <div style={{ minWidth: 0 }}>
+              <strong style={goalTitle}>Résumé IA OnJarama</strong>
               <p style={mutedSmall}>{goal.title}</p>
             </div>
 
@@ -162,7 +165,7 @@ function GoalPremiumCard({
           <InfoLine label="Date estimée" value={estimated} />
           <InfoLine
             label="Priorité automatique"
-            value={`Score ${goal.priorityScore}`}
+            value={goal.priority?.label || `Score ${goal.priorityScore || 0}`}
           />
           <InfoLine
             label="Smart Journey"
@@ -258,12 +261,14 @@ function getEstimatedDate(goal) {
   if (goal.progress >= 100) return "Atteint";
 
   const remaining = Number(goal.remaining || 0);
+  const monthly = Number(goal.monthlyContribution || 0);
   const lastDeposit = Number(goal.lastDeposit?.amount || 0);
+  const rhythmAmount = monthly > 0 ? monthly : lastDeposit;
 
   if (remaining <= 0) return "Atteint";
-  if (lastDeposit <= 0) return "Après le prochain dépôt";
+  if (rhythmAmount <= 0) return "Après le prochain dépôt";
 
-  const months = Math.max(1, Math.ceil(remaining / lastDeposit));
+  const months = Math.max(1, Math.ceil(remaining / rhythmAmount));
   const date = new Date();
   date.setMonth(date.getMonth() + months);
 
@@ -296,9 +301,11 @@ function getAiText(goal) {
 const goalCard = {
   border: "1px solid var(--border)",
   borderRadius: "20px",
-  padding: "16px",
+  padding: "15px",
   marginTop: "12px",
   transition: "transform .22s ease, box-shadow .22s ease, border-color .22s ease",
+  minWidth: 0,
+  overflow: "hidden",
 };
 
 const celebrationCard = {
@@ -307,11 +314,30 @@ const celebrationCard = {
     "0 0 0 1px rgba(212,175,55,.35), 0 0 28px rgba(212,175,55,.25)",
 };
 
+const mainGoalBadge = {
+  display: "inline-flex",
+  marginBottom: "10px",
+  padding: "7px 10px",
+  borderRadius: "999px",
+  border: "1px solid var(--gold)",
+  background: "rgba(212,175,55,.14)",
+  color: "var(--gold)",
+  fontSize: "12px",
+  fontWeight: "900",
+};
+
 const goalHeader = {
   display: "grid",
-  gridTemplateColumns: "32px 1fr auto",
+  gridTemplateColumns: "32px minmax(0, 1fr) auto",
   gap: "10px",
   alignItems: "center",
+};
+
+const goalTitle = {
+  display: "block",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
 };
 
 const badgeRow = {
@@ -375,6 +401,7 @@ const celebrationBox = {
 const amountRow = {
   display: "flex",
   justifyContent: "space-between",
+  gap: "10px",
   marginTop: "14px",
 };
 
@@ -434,7 +461,7 @@ const infoLine = {
 
 const quickDepositRow = {
   display: "grid",
-  gridTemplateColumns: "repeat(4, 1fr)",
+  gridTemplateColumns: "repeat(auto-fit, minmax(64px, 1fr))",
   gap: "8px",
   marginTop: "12px",
 };
@@ -450,13 +477,14 @@ const smallGreenBtn = {
 
 const customDepositRow = {
   display: "grid",
-  gridTemplateColumns: "1fr auto",
+  gridTemplateColumns: "minmax(0, 1fr) auto",
   gap: "8px",
   marginTop: "10px",
 };
 
 const depositInput = {
   width: "100%",
+  minWidth: 0,
   padding: "12px",
   borderRadius: "12px",
   border: "1px solid var(--border)",
