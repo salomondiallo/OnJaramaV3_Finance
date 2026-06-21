@@ -1070,3 +1070,139 @@ img {
     display: none;
   }
 }
+
+
+/* ================================
+   ONJARAMA PATH V20
+   Production Ready Polish
+================================ */
+
+:root {
+  --radius-sm: 14px;
+  --radius-md: 18px;
+  --radius-lg: 22px;
+  --radius-xl: 26px;
+  --focus-ring: rgba(212, 175, 55, 0.38);
+}
+
+.page-container {
+  isolation: isolate;
+}
+
+.native-page > h1 {
+  letter-spacing: -0.035em;
+}
+
+.native-page > p:first-of-type {
+  line-height: 1.42;
+}
+
+.page-container section {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+}
+
+.theme-dark .page-container section {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+}
+
+.page-container button,
+.page-container input,
+.page-container select,
+.page-container textarea {
+  font-size: 14px;
+}
+
+.page-container button:focus-visible,
+.page-container input:focus-visible,
+.page-container select:focus-visible,
+.page-container textarea:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.page-container input,
+.page-container select,
+.page-container textarea {
+  min-height: 44px;
+}
+
+.page-container button {
+  min-height: 42px;
+}
+
+.topbar-menu-panel,
+.bottom-nav,
+.bottom-nav-handle,
+.floating-ai-button {
+  will-change: transform;
+}
+
+.topbar-menu-panel button:hover,
+.context-nav-btn:hover,
+.bottom-nav-btn:hover,
+.bottom-logo-btn:hover,
+.bottom-center-plan:hover,
+.floating-ai-button:hover {
+  opacity: 0.94;
+}
+
+.accueil-headline,
+.accueil-tile,
+.accueil-hint,
+.context-nav-btn,
+.page-container section {
+  border-color: var(--border);
+}
+
+.accueil-headline:hover,
+.accueil-tile:hover {
+  border-color: rgba(212, 175, 55, 0.48);
+}
+
+.page-scroll-shell {
+  scroll-padding-top: 12px;
+}
+
+.grid-2 {
+  gap: 12px;
+}
+
+@media (min-width: 900px) {
+  .page-scroll-shell {
+    padding-bottom: calc(112px + var(--safe-bottom));
+  }
+
+  .native-page {
+    max-width: 980px;
+    margin: 0 auto;
+  }
+
+  .native-page > h1,
+  .native-page > p:first-of-type {
+    max-width: 780px;
+  }
+}
+
+@media (max-width: 520px) {
+  .page-container section {
+    border-radius: 20px !important;
+  }
+
+  .page-container button,
+  .page-container input,
+  .page-container select,
+  .page-container textarea {
+    font-size: 13px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

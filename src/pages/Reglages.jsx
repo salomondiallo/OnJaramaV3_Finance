@@ -371,7 +371,7 @@ function Reglages({
         color="var(--purple)"
       >
         <InfoRow label={p.application} value="OnJarama Path" />
-        <InfoRow label={p.version} value="V16.0 Trust & Security" />
+        <InfoRow label={p.version} value="V20 Production Ready" />
         <InfoRow label={p.creator} value="Thierno Diallo" />
         <InfoRow label="OnJarama" value={t.founder} />
         <InfoRow label={p.origin} value={t.guineaQuebecCanada} />
