@@ -1,21 +1,25 @@
 import {
-  Brain,
+  BarChart3,
   Calculator,
   ChevronDown,
   ChevronUp,
-  Home,
-  Route,
   Target,
   UserCircle,
 } from "lucide-react";
 
-function BottomNav({ currentPage, setCurrentPage, navHidden, setNavHidden, settings }) {
+function BottomNav({
+  currentPage,
+  setCurrentPage,
+  navHidden,
+  setNavHidden,
+  settings,
+}) {
   const language = settings?.language || "FR";
 
   const labels = {
     FR: {
-      accueil: "Accueil",
-      parcours: "Parcours",
+      accueil: "OJ",
+      situation: "Situation",
       objectifs: "Objectifs",
       simulateur: "Simulateur",
       profil: "Profil",
@@ -24,8 +28,8 @@ function BottomNav({ currentPage, setCurrentPage, navHidden, setNavHidden, setti
       mainNav: "Navigation principale OnJarama Path",
     },
     EN: {
-      accueil: "Home",
-      parcours: "Path",
+      accueil: "OJ",
+      situation: "Situation",
       objectifs: "Goals",
       simulateur: "Simulator",
       profil: "Profile",
@@ -36,6 +40,7 @@ function BottomNav({ currentPage, setCurrentPage, navHidden, setNavHidden, setti
   };
 
   const t = labels[language] || labels.FR;
+  const objectivesActive = currentPage === "objectifs";
 
   function go(page) {
     setCurrentPage(page);
@@ -53,34 +58,49 @@ function BottomNav({ currentPage, setCurrentPage, navHidden, setNavHidden, setti
       </button>
 
       <nav
-        className={`bottom-nav bottom-nav-v113 ${
+        className={`bottom-nav bottom-nav-v115 ${
           navHidden ? "bottom-nav-hidden" : ""
         }`}
         aria-label={t.mainNav}
       >
         <NavButton
           active={currentPage === "accueil"}
-          icon={<Home size={21} />}
+          icon={<OJLogo active={currentPage === "accueil"} />}
           label={t.accueil}
           onClick={() => go("accueil")}
         />
 
         <NavButton
-          active={currentPage === "parcours"}
-          icon={<Route size={21} />}
-          label={t.parcours}
-          onClick={() => go("parcours")}
+          active={currentPage === "situation"}
+          icon={<BarChart3 size={21} />}
+          label={t.situation}
+          onClick={() => go("situation")}
         />
 
         <button
           onClick={() => go("objectifs")}
-          className={`bottom-center-plan ${
-            currentPage === "objectifs" ? "active" : ""
-          }`}
+          className={`bottom-center-plan ${objectivesActive ? "active" : ""}`}
+          style={{
+            borderColor: objectivesActive
+              ? "var(--gold)"
+              : "rgba(212,175,55,.36)",
+            color: objectivesActive ? "var(--gold)" : "var(--text-main)",
+            background: objectivesActive
+              ? "rgba(212,175,55,.16)"
+              : "rgba(255,255,255,.035)",
+            boxShadow: objectivesActive
+              ? "0 0 22px rgba(212,175,55,.34)"
+              : "0 0 18px rgba(212,175,55,.12)",
+          }}
           aria-label={t.objectifs}
           title={t.objectifs}
         >
-          <span className="bottom-center-icon">
+          <span
+            className="bottom-center-icon"
+            style={{
+              color: objectivesActive ? "var(--gold)" : "var(--text-main)",
+            }}
+          >
             <Target size={21} />
           </span>
           <strong>{t.objectifs}</strong>
@@ -115,6 +135,28 @@ function NavButton({ icon, label, active, onClick }) {
       <span className="bottom-nav-icon">{icon}</span>
       <span className="bottom-nav-label">{label}</span>
     </button>
+  );
+}
+
+function OJLogo({ active }) {
+  return (
+    <span
+      style={{
+        width: "28px",
+        height: "28px",
+        borderRadius: "10px",
+        display: "grid",
+        placeItems: "center",
+        border: active ? "1px solid var(--gold)" : "1px solid var(--border)",
+        color: active ? "var(--gold)" : "var(--text-main)",
+        background: active ? "rgba(212,175,55,.14)" : "rgba(255,255,255,.04)",
+        fontSize: "11px",
+        fontWeight: 950,
+        letterSpacing: "-.5px",
+      }}
+    >
+      OJ
+    </span>
   );
 }
 
