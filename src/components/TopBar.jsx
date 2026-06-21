@@ -4,14 +4,13 @@ import {
   BookOpen,
   CheckCircle2,
   ChevronRight,
-  Clock3,
   Cloud,
   FileText,
   Globe2,
-  Home,
   Languages,
   LogOut,
   Menu,
+  Moon,
   Settings,
   ShieldCheck,
   UserCircle,
@@ -35,6 +34,7 @@ function TopBar({
 
   const language = settings?.language || "FR";
   const t = getText(settings);
+  const m = menuText[language] || menuText.FR;
 
   const isConnected = Boolean(auth?.user || auth?.session?.user);
   const userEmail =
@@ -79,12 +79,14 @@ function TopBar({
   }
 
   function toggleQuickLanguage() {
-    if (language === "FR") {
-      updateLanguage("EN");
-      return;
-    }
+    updateLanguage(language === "FR" ? "EN" : "FR");
+  }
 
-    updateLanguage("FR");
+  function signOut() {
+    if (typeof auth?.signOut === "function") {
+      auth.signOut();
+      setMenuOpen(false);
+    }
   }
 
   return (
@@ -160,8 +162,8 @@ function TopBar({
 
           <div className="topbar-menu-panel" style={slidePanel}>
             <div className="topbar-menu-head">
-              <strong>OnJarama Path V13.1</strong>
-              <span>{t.v131Subtitle}</span>
+              <strong>OnJarama Path V13.3</strong>
+              <span>{m.subtitle}</span>
             </div>
 
             <div style={accountCard}>
@@ -197,93 +199,91 @@ function TopBar({
               </div>
             </div>
 
-            <div style={languagePanel}>
-              <div style={languagePanelTitle}>
-                <Languages size={17} />
-                <strong>{t.language}</strong>
+            <MenuSection title={m.account}>
+              <MenuButton
+                icon={<UserCircle size={18} />}
+                label={getPageLabel("profil", language)}
+                onClick={() => openPage("profil")}
+              />
+
+              <MenuButton
+                icon={<Settings size={18} />}
+                label={getPageLabel("reglages", language)}
+                onClick={() => openPage("reglages")}
+              />
+            </MenuSection>
+
+            <MenuSection title={m.preferences}>
+              <div style={languagePanel}>
+                <div style={languagePanelTitle}>
+                  <Languages size={17} />
+                  <strong>{t.language}</strong>
+                </div>
+
+                <div style={languageGrid}>
+                  <button
+                    onClick={() => updateLanguage("FR")}
+                    style={languageChoice(language === "FR")}
+                  >
+                    FR — {t.french}
+                  </button>
+
+                  <button
+                    onClick={() => updateLanguage("EN")}
+                    style={languageChoice(language === "EN")}
+                  >
+                    EN — {t.english}
+                  </button>
+
+                  <button
+                    onClick={() => updateLanguage("ES")}
+                    style={languageChoice(language === "ES")}
+                  >
+                    ES — {t.spanish}
+                  </button>
+
+                  <button disabled style={languageDisabled}>
+                    {t.chinese}
+                    <small>{t.soon}</small>
+                  </button>
+                </div>
               </div>
 
-              <div style={languageGrid}>
-                <button
-                  onClick={() => updateLanguage("FR")}
-                  style={languageChoice(language === "FR")}
-                >
-                  FR — {t.french}
-                </button>
+              <MenuButton
+                icon={<Bell size={18} />}
+                label={getPageLabel("notifications", language)}
+                onClick={() => openPage("notifications")}
+                badge={unreadCount > 0 ? unreadCount : null}
+              />
 
-                <button
-                  onClick={() => updateLanguage("EN")}
-                  style={languageChoice(language === "EN")}
-                >
-                  EN — {t.english}
-                </button>
+              <MenuButton
+                icon={<Moon size={18} />}
+                label={m.theme}
+                onClick={() => openPage("reglages", true)}
+              />
+            </MenuSection>
 
-                <button
-                  onClick={() => updateLanguage("ES")}
-                  style={languageChoice(language === "ES")}
-                >
-                  ES — {t.spanish}
-                </button>
+            <MenuSection title={m.resources}>
+              <MenuButton
+                icon={<BookOpen size={18} />}
+                label={getPageLabel("guide", language)}
+                onClick={() => openPage("guide")}
+              />
 
-                <button disabled style={languageDisabled}>
-                  {t.chinese}
-                  <small>{t.soon}</small>
-                </button>
-              </div>
-            </div>
+              <MenuButton
+                icon={<FileText size={18} />}
+                label={getPageLabel("patchnotes", language)}
+                onClick={() => openPage("patchnotes")}
+              />
+            </MenuSection>
 
-            <button onClick={() => openPage("accueil")}>
-              <Home size={18} />
-              {getPageLabel("accueil", language)}
-            </button>
-
-            <button onClick={() => openPage("profil")}>
-              <UserCircle size={18} />
-              {getPageLabel("profil", language)}
-            </button>
-
-            <button onClick={() => openPage("reglages")}>
-              <Settings size={18} />
-              {getPageLabel("reglages", language)}
-            </button>
-
-            <button onClick={() => openPage("reglages", true)}>
-              <Globe2 size={18} />
-              {t.languageSettings}
-            </button>
-
-            <button onClick={() => openPage("notifications")}>
-              <Bell size={18} />
-              {getPageLabel("notifications", language)}
-              {unreadCount > 0 && (
-                <span style={notificationBadge}>{unreadCount}</span>
-              )}
-            </button>
-
-            <button onClick={() => openPage("guide")}>
-              <BookOpen size={18} />
-              {getPageLabel("guide", language)}
-            </button>
-
-            <button onClick={() => openPage("patchnotes")}>
-              <FileText size={18} />
-              {getPageLabel("patchnotes", language)}
-            </button>
-
-            <button onClick={() => openPage("historique")}>
-              <Clock3 size={18} />
-              {getPageLabel("historique", language)}
-            </button>
-
-            <button onClick={() => openPage("reglages")}>
-              <ShieldCheck size={18} />
-              {t.securityPrivacy}
-            </button>
-
-            <button disabled style={disabledMenuButton}>
-              <LogOut size={18} />
-              {t.signOutSoon}
-            </button>
+            <MenuSection title={m.security}>
+              <MenuButton
+                icon={<ShieldCheck size={18} />}
+                label={t.securityPrivacy}
+                onClick={() => openPage("reglages")}
+              />
+            </MenuSection>
 
             <div className="topbar-credit">
               <strong>Thierno Diallo</strong>
@@ -292,17 +292,84 @@ function TopBar({
               <small>{t.proudlyQuebec}</small>
             </div>
 
-            <button
-              onClick={() => setMenuOpen(false)}
-              className="topbar-close-btn"
-            >
-              <X size={17} />
-              {t.closeMenu}
-            </button>
+            <div style={bottomActions}>
+              <button
+                onClick={signOut}
+                disabled={!isConnected || typeof auth?.signOut !== "function"}
+                style={{
+                  ...logoutButton,
+                  opacity: isConnected && typeof auth?.signOut === "function" ? 1 : 0.62,
+                  cursor:
+                    isConnected && typeof auth?.signOut === "function"
+                      ? "pointer"
+                      : "not-allowed",
+                }}
+              >
+                <LogOut size={18} />
+                {isConnected ? m.logout : t.signOutSoon}
+              </button>
+
+              <button
+                onClick={() => setMenuOpen(false)}
+                className="topbar-close-btn"
+              >
+                <X size={17} />
+                {t.closeMenu}
+              </button>
+            </div>
           </div>
         </>
       )}
     </div>
+  );
+}
+
+const menuText = {
+  FR: {
+    subtitle: "Navigation, préférences et ressources.",
+    account: "Compte",
+    preferences: "Préférences",
+    resources: "Ressources",
+    security: "Sécurité",
+    theme: "Thème",
+    logout: "Déconnexion",
+  },
+  EN: {
+    subtitle: "Navigation, preferences and resources.",
+    account: "Account",
+    preferences: "Preferences",
+    resources: "Resources",
+    security: "Security",
+    theme: "Theme",
+    logout: "Sign out",
+  },
+  ES: {
+    subtitle: "Navegación, preferencias y recursos.",
+    account: "Cuenta",
+    preferences: "Preferencias",
+    resources: "Recursos",
+    security: "Seguridad",
+    theme: "Tema",
+    logout: "Cerrar sesión",
+  },
+};
+
+function MenuSection({ title, children }) {
+  return (
+    <div style={menuSection}>
+      <p style={menuSectionTitle}>{title}</p>
+      <div style={menuSectionBody}>{children}</div>
+    </div>
+  );
+}
+
+function MenuButton({ icon, label, onClick, badge }) {
+  return (
+    <button onClick={onClick} style={menuButton}>
+      {icon}
+      <span>{label}</span>
+      {badge && <span style={notificationBadge}>{badge}</span>}
+    </button>
   );
 }
 
@@ -390,7 +457,7 @@ const accountCard = {
     "linear-gradient(135deg, rgba(212,175,55,.10), rgba(56,189,248,.06), var(--bg-panel))",
   borderRadius: "16px",
   padding: "12px",
-  marginBottom: "10px",
+  marginBottom: "12px",
 };
 
 const accountTop = {
@@ -418,12 +485,43 @@ const cloudStatus = {
   alignItems: "center",
 };
 
+const menuSection = {
+  marginTop: "14px",
+};
+
+const menuSectionTitle = {
+  color: "var(--gold)",
+  fontSize: "12px",
+  fontWeight: "900",
+  textTransform: "uppercase",
+  letterSpacing: ".7px",
+  margin: "0 0 8px",
+};
+
+const menuSectionBody = {
+  display: "grid",
+  gap: "8px",
+};
+
+const menuButton = {
+  width: "100%",
+  border: "1px solid var(--border)",
+  background: "var(--bg-panel)",
+  color: "var(--text-main)",
+  borderRadius: "14px",
+  padding: "12px",
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
+  fontWeight: "800",
+  textAlign: "left",
+};
+
 const languagePanel = {
   border: "1px solid rgba(212,175,55,.35)",
   background: "rgba(212,175,55,.08)",
   borderRadius: "16px",
   padding: "12px",
-  marginBottom: "10px",
 };
 
 const languagePanelTitle = {
@@ -468,9 +566,26 @@ const languageDisabled = {
   gap: "2px",
 };
 
-const disabledMenuButton = {
-  opacity: 0.62,
-  cursor: "not-allowed",
+const bottomActions = {
+  borderTop: "1px solid var(--border)",
+  marginTop: "14px",
+  paddingTop: "12px",
+  display: "grid",
+  gap: "10px",
+};
+
+const logoutButton = {
+  width: "100%",
+  border: "1px solid var(--red)",
+  background: "rgba(239,68,68,.12)",
+  color: "var(--red)",
+  borderRadius: "14px",
+  padding: "12px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+  fontWeight: "900",
 };
 
 export default TopBar;
