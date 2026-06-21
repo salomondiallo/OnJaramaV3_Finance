@@ -11,7 +11,7 @@ import {
   Palette,
   RefreshCcw,
   Shield,
-  UserCircle,
+  Sparkles,
   Wallet,
 } from "lucide-react";
 import { getText } from "../data/translations";
@@ -23,9 +23,11 @@ function Reglages({
   resetFinanceOnly,
   resetSettingsOnly,
   resetGoalsOnly,
-  setCurrentPage,
 }) {
   const t = getText(settings);
+
+  const language = settings?.language || "FR";
+  const p = pageText[language] || pageText.FR;
 
   const [openSection, setOpenSection] = useState("language");
   const [confirmAction, setConfirmAction] = useState(null);
@@ -39,10 +41,7 @@ function Reglages({
   }
 
   function askConfirm(label, action) {
-    setConfirmAction({
-      label,
-      action,
-    });
+    setConfirmAction({ label, action });
   }
 
   function runConfirmedAction() {
@@ -55,7 +54,7 @@ function Reglages({
   return (
     <div className="native-page">
       <h1>{t.reglages}</h1>
-      <p style={muted}>{t.quickPreferencesSecurityBackupCredits}</p>
+      <p style={muted}>{p.subtitle}</p>
 
       {confirmAction && (
         <section style={confirmBox}>
@@ -110,23 +109,25 @@ function Reglages({
       </Tile>
 
       <Tile
-        open={openSection === "currency"}
-        onClick={() => toggle("currency")}
-        icon={<Wallet />}
-        title={t.currency}
-        color="var(--gold)"
+        open={openSection === "notifications"}
+        onClick={() => toggle("notifications")}
+        icon={<Bell />}
+        title={t.notifications}
+        color="var(--green)"
       >
-        {["CAD", "USD", "EUR", "GBP", "GNF", "XOF", "XAF", "CHF", "MAD"].map(
-          (currency) => (
-            <Option
-              key={currency}
-              active={settings.currency === currency}
-              onClick={() => updateSetting("currency", currency)}
-            >
-              {currency}
-            </Option>
-          )
-        )}
+        <Option
+          active={settings.notifications}
+          onClick={() => updateSetting("notifications", true)}
+        >
+          {t.on}
+        </Option>
+
+        <Option
+          active={!settings.notifications}
+          onClick={() => updateSetting("notifications", false)}
+        >
+          {t.off}
+        </Option>
       </Tile>
 
       <Tile
@@ -152,25 +153,17 @@ function Reglages({
       </Tile>
 
       <Tile
-        open={openSection === "notifications"}
-        onClick={() => toggle("notifications")}
-        icon={<Bell />}
-        title={t.notifications}
-        color="var(--green)"
+        open={openSection === "behavior"}
+        onClick={() => toggle("behavior")}
+        icon={<Sparkles />}
+        title={p.behavior}
+        color="var(--gold)"
       >
-        <Option
-          active={settings.notifications}
-          onClick={() => updateSetting("notifications", true)}
-        >
-          {t.on}
-        </Option>
-
-        <Option
-          active={!settings.notifications}
-          onClick={() => updateSetting("notifications", false)}
-        >
-          {t.off}
-        </Option>
+        <StatusLine title={p.onJaramaLive} text={t.on} color="var(--green)" />
+        <StatusLine title={p.speAdvice} text={t.on} color="var(--gold)" />
+        <StatusLine title={p.progressFlag} text={t.on} color="var(--blue)" />
+        <StatusLine title={p.animations} text={t.on} color="var(--purple)" />
+        <StatusLine title={p.hideNavigation} text={t.on} color="var(--green)" />
       </Tile>
 
       <Tile
@@ -292,6 +285,26 @@ function Reglages({
       </Tile>
 
       <Tile
+        open={openSection === "currency"}
+        onClick={() => toggle("currency")}
+        icon={<Wallet />}
+        title={t.currency}
+        color="var(--gold)"
+      >
+        {["CAD", "USD", "EUR", "GBP", "GNF", "XOF", "XAF", "CHF", "MAD"].map(
+          (currency) => (
+            <Option
+              key={currency}
+              active={settings.currency === currency}
+              onClick={() => updateSetting("currency", currency)}
+            >
+              {currency}
+            </Option>
+          )
+        )}
+      </Tile>
+
+      <Tile
         open={openSection === "backup"}
         onClick={() => toggle("backup")}
         icon={<Shield />}
@@ -335,36 +348,70 @@ function Reglages({
       </Tile>
 
       <Tile
-        open={openSection === "credits"}
-        onClick={() => toggle("credits")}
+        open={openSection === "about"}
+        onClick={() => toggle("about")}
         icon={<Info />}
-        title={t.credits}
+        title={p.about}
         color="var(--purple)"
       >
-        <InfoRow label={t.creator} value="Thierno Diallo" />
+        <InfoRow label={p.application} value="OnJarama Path" />
+        <InfoRow label={p.version} value="V13.5 Final Cleanup" />
+        <InfoRow label={p.creator} value="Thierno Diallo" />
         <InfoRow label="OnJarama" value={t.founder} />
-        <InfoRow label="Version" value={t.appVersion} />
-        <InfoRow label={t.ecosystem} value={t.ecosystem} />
-        <InfoRow label={t.origin || "Origin"} value={t.guineaQuebecCanada} />
-        <InfoRow label={t.quebec || "Quebec"} value={t.proudlyQuebec} />
-      </Tile>
-
-      <Tile
-        open={openSection === "account"}
-        onClick={() => toggle("account")}
-        icon={<UserCircle />}
-        title={t.account}
-        color="var(--blue)"
-      >
-        <p style={muted}>{t.accountText}</p>
-
-        <button onClick={() => setCurrentPage("profil")} style={profileBtn}>
-          {t.profil}
-        </button>
+        <InfoRow label={p.origin} value={t.guineaQuebecCanada} />
+        <InfoRow label={p.quebec} value={t.proudlyQuebec} />
       </Tile>
     </div>
   );
 }
+
+const pageText = {
+  FR: {
+    subtitle: "Langue, notifications, apparence, comportement, sécurité et informations de l'application.",
+    behavior: "Comportement",
+    onJaramaLive: "Afficher OnJarama Live",
+    speAdvice: "Afficher les conseils SPE",
+    progressFlag: "Afficher le drapeau de progression",
+    animations: "Animations",
+    hideNavigation: "Navigation masquable",
+    about: "À propos",
+    application: "Application",
+    version: "Version",
+    creator: "Créateur",
+    origin: "Origine",
+    quebec: "Québec",
+  },
+  EN: {
+    subtitle: "Language, notifications, appearance, behavior, security and application information.",
+    behavior: "Behavior",
+    onJaramaLive: "Show OnJarama Live",
+    speAdvice: "Show SPE advice",
+    progressFlag: "Show progress flag",
+    animations: "Animations",
+    hideNavigation: "Hideable navigation",
+    about: "About",
+    application: "Application",
+    version: "Version",
+    creator: "Creator",
+    origin: "Origin",
+    quebec: "Quebec",
+  },
+  ES: {
+    subtitle: "Idioma, notificaciones, apariencia, comportamiento, seguridad e información de la aplicación.",
+    behavior: "Comportamiento",
+    onJaramaLive: "Mostrar OnJarama Live",
+    speAdvice: "Mostrar consejos SPE",
+    progressFlag: "Mostrar bandera de progreso",
+    animations: "Animaciones",
+    hideNavigation: "Navegación ocultable",
+    about: "Acerca de",
+    application: "Aplicación",
+    version: "Versión",
+    creator: "Creador",
+    origin: "Origen",
+    quebec: "Quebec",
+  },
+};
 
 function Tile({ icon, title, color, open, onClick, children }) {
   return (
@@ -521,17 +568,6 @@ const cancelBtn = {
   background: "var(--bg-panel)",
   color: "var(--text-main)",
   marginTop: "10px",
-};
-
-const profileBtn = {
-  width: "100%",
-  padding: "13px",
-  borderRadius: "13px",
-  border: "none",
-  background: "linear-gradient(90deg,var(--purple),var(--blue))",
-  color: "white",
-  fontWeight: "bold",
-  marginTop: "12px",
 };
 
 const infoRow = {

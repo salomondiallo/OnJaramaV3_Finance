@@ -1,21 +1,11 @@
 import {
-  BookOpen,
   Camera,
   CheckCircle,
   Cloud,
-  Contact,
   Globe,
-  HelpCircle,
-  Info,
   KeyRound,
-  Lightbulb,
   LoaderCircle,
-  Lock,
   LogOut,
-  Mail,
-  NotebookText,
-  PlayCircle,
-  Share2,
   ShieldCheck,
   Star,
   History,
@@ -26,22 +16,16 @@ import { getText } from "../data/translations";
 
 const pageText = {
   FR: {
-    subtitle: "Compte, cloud, guide et informations OnJarama.",
+    subtitle: "Profil, compte, cloud, sauvegarde et historique.",
     user: "Utilisateur OnJarama",
-    beta: "Version bêta locale",
+    beta: "Mode invité local",
     connected: "Compte connecté",
     guest: "Mode invité",
     cloudReady: "Cloud Supabase prêt",
     cloudNotReady: "Cloud non configuré",
-    connectionTitle: "Connexion & sauvegarde",
+    connectionTitle: "Compte & sauvegarde",
     connectionLoading: "Vérification de la session...",
     optionalConnection: "Connexion facultative",
-    secureLogin: "Connexion sécurisée",
-    cloudConfiguredText:
-      "Le cloud est prêt. Vous pouvez vous connecter pour préparer la synchronisation future.",
-    cloudDisabledText:
-      "La connexion sera disponible quand les clés Supabase seront configurées dans Vercel.",
-    continueGuest: "Continuer en mode invité",
     googleLogin: "Connexion Google",
     microsoftLogin: "Connexion Microsoft",
     signOut: "Déconnexion",
@@ -50,16 +34,21 @@ const pageText = {
       "Vous utilisez OnJarama Path en mode invité. Les données restent locales sur cet appareil.",
     connectedText:
       "Votre session est active. La synchronisation cloud sera activée progressivement.",
+    cloudConfiguredText:
+      "Le cloud est prêt. Vous pouvez vous connecter pour préparer la synchronisation future.",
+    cloudDisabledText:
+      "La connexion sera disponible quand les clés Supabase seront configurées dans Vercel.",
     photoSoon: "Photo bientôt",
     account: "Compte",
     country: "Pays",
-    language: "Langue",
     currency: "Devise",
-    app: "Application",
-    version: "Version",
-    testerMode: "Mode testeur",
-    pwa: "PWA activée",
+    status: "Statut",
+    activeAccount: "Compte actif",
+    backup: "Sauvegarde",
     localBackup: "Sauvegarde locale",
+    sync: "Synchronisation",
+    syncPrepared: "Préparée",
+    syncLocal: "Locale",
     stats: "Mes statistiques",
     activeGoals: "Objectifs actifs",
     achievedGoals: "Objectifs atteints",
@@ -76,69 +65,20 @@ const pageText = {
     completedOn: "Terminé le",
     noActiveHistory: "Aucun objectif actif pour le moment.",
     noVictory: "Aucune victoire enregistrée pour le moment.",
-    ecosystem: "Écosystème OnJarama",
-    pathDesc: "Coach financier intelligent",
-    ojcsDesc: "Services et connexions",
-    ojctDesc: "Technologies et innovation",
-    creator: "Créateur",
-    founder: "Fondateur de l’écosystème OnJarama",
-    proud: "Fièrement développé au Québec ⚜️",
-    visionTitle: "Vision",
-    vision:
-      "Développer des solutions numériques simples, accessibles et utiles pour accompagner les utilisateurs dans leurs projets financiers, professionnels et personnels.",
-    guideHub: "Guide & aide",
-    guide: "Guide utilisateur",
-    guideText: "Comprendre chaque page et savoir quoi faire étape par étape.",
-    tips: "Astuces",
-    tipsText: "Conseils rapides pour utiliser OnJarama Path sans se perdre.",
-    patchNotes: "Patch Notes",
-    patchNotesText: "Voir les nouveautés et les changements de version.",
-    achievements: "Réalisations",
-    achievementText: "Victoires financières suivies automatiquement.",
-    security: "Sécurité",
-    securityText: "PIN, biométrie et connexion sécurisée prévus plus tard.",
-    about: "À propos",
-    aboutText: "OnJarama Path accompagne vos objectifs financiers.",
-    share: "Partager / Copier le lien",
-    linkCopied: "Lien copié.",
-    officialNetworks: "Réseaux officiels",
-    website: "Site Web OnJarama",
-    youtube: "YouTube",
-    instagram: "Instagram",
-    facebook: "Facebook",
-    tiktok: "TikTok",
-    x: "X",
-    contact: "Contact",
-    support: "Support",
-    suggestions: "Suggestions",
-    reportIssue: "Signaler un problème",
-    privacy: "Confidentialité",
-    privacyText:
-      "Aucune transaction bancaire n’est possible dans cette version. Les données restent locales tant que la synchronisation n’est pas activée.",
-    openSettings: "Ouvrir les réglages",
-    status: "Statut",
-    activeAccount: "Compte actif",
     goalFallback: "Objectif",
-    shareTitle: "Découvre OnJarama Path, un coach financier intelligent.",
+    openSettings: "Ouvrir les réglages",
   },
-
   EN: {
-    subtitle: "Account, cloud, guide and OnJarama information.",
+    subtitle: "Profile, account, cloud, backup and history.",
     user: "OnJarama User",
-    beta: "Local beta version",
+    beta: "Local guest mode",
     connected: "Connected account",
     guest: "Guest mode",
     cloudReady: "Supabase cloud ready",
     cloudNotReady: "Cloud not configured",
-    connectionTitle: "Connection & backup",
+    connectionTitle: "Account & backup",
     connectionLoading: "Checking session...",
     optionalConnection: "Optional sign-in",
-    secureLogin: "Secure sign-in",
-    cloudConfiguredText:
-      "Cloud is ready. You can sign in to prepare future synchronization.",
-    cloudDisabledText:
-      "Sign-in will be available when Supabase keys are configured in Vercel.",
-    continueGuest: "Continue as guest",
     googleLogin: "Sign in with Google",
     microsoftLogin: "Sign in with Microsoft",
     signOut: "Sign out",
@@ -147,16 +87,21 @@ const pageText = {
       "You are using OnJarama Path in guest mode. Data stays local on this device.",
     connectedText:
       "Your session is active. Cloud synchronization will be enabled progressively.",
+    cloudConfiguredText:
+      "Cloud is ready. You can sign in to prepare future synchronization.",
+    cloudDisabledText:
+      "Sign-in will be available when Supabase keys are configured in Vercel.",
     photoSoon: "Photo coming soon",
     account: "Account",
     country: "Country",
-    language: "Language",
     currency: "Currency",
-    app: "Application",
-    version: "Version",
-    testerMode: "Tester mode",
-    pwa: "PWA enabled",
+    status: "Status",
+    activeAccount: "Active account",
+    backup: "Backup",
     localBackup: "Local backup",
+    sync: "Synchronization",
+    syncPrepared: "Prepared",
+    syncLocal: "Local",
     stats: "My statistics",
     activeGoals: "Active goals",
     achievedGoals: "Achieved goals",
@@ -173,69 +118,20 @@ const pageText = {
     completedOn: "Completed on",
     noActiveHistory: "No active goal yet.",
     noVictory: "No victory recorded yet.",
-    ecosystem: "OnJarama Ecosystem",
-    pathDesc: "Smart financial coach",
-    ojcsDesc: "Services and connections",
-    ojctDesc: "Technology and innovation",
-    creator: "Creator",
-    founder: "Founder of the OnJarama ecosystem",
-    proud: "Proudly developed in Quebec ⚜️",
-    visionTitle: "Vision",
-    vision:
-      "Develop simple, accessible and useful digital solutions to support users in their financial, professional and personal projects.",
-    guideHub: "Guide & help",
-    guide: "User guide",
-    guideText: "Understand each page and know what to do step by step.",
-    tips: "Tips",
-    tipsText: "Quick tips to use OnJarama Path without getting lost.",
-    patchNotes: "Patch Notes",
-    patchNotesText: "See what changed in each version.",
-    achievements: "Achievements",
-    achievementText: "Financial victories tracked automatically.",
-    security: "Security",
-    securityText: "PIN, biometrics and secure login planned later.",
-    about: "About",
-    aboutText: "OnJarama Path supports your financial goals.",
-    share: "Share / Copy link",
-    linkCopied: "Link copied.",
-    officialNetworks: "Official networks",
-    website: "OnJarama Website",
-    youtube: "YouTube",
-    instagram: "Instagram",
-    facebook: "Facebook",
-    tiktok: "TikTok",
-    x: "X",
-    contact: "Contact",
-    support: "Support",
-    suggestions: "Suggestions",
-    reportIssue: "Report an issue",
-    privacy: "Privacy",
-    privacyText:
-      "No banking transaction is possible in this version. Data stays local until synchronization is enabled.",
-    openSettings: "Open settings",
-    status: "Status",
-    activeAccount: "Active account",
     goalFallback: "Goal",
-    shareTitle: "Discover OnJarama Path, a smart financial coach.",
+    openSettings: "Open settings",
   },
-
   ES: {
-    subtitle: "Cuenta, cloud, guía e información OnJarama.",
+    subtitle: "Perfil, cuenta, cloud, copia e historial.",
     user: "Usuario OnJarama",
-    beta: "Versión beta local",
+    beta: "Modo invitado local",
     connected: "Cuenta conectada",
     guest: "Modo invitado",
     cloudReady: "Cloud Supabase listo",
     cloudNotReady: "Cloud no configurado",
-    connectionTitle: "Conexión y copia",
+    connectionTitle: "Cuenta y copia",
     connectionLoading: "Verificando la sesión...",
     optionalConnection: "Conexión opcional",
-    secureLogin: "Conexión segura",
-    cloudConfiguredText:
-      "El cloud está listo. Puedes conectarte para preparar la sincronización futura.",
-    cloudDisabledText:
-      "La conexión estará disponible cuando las claves Supabase estén configuradas en Vercel.",
-    continueGuest: "Continuar como invitado",
     googleLogin: "Conexión Google",
     microsoftLogin: "Conexión Microsoft",
     signOut: "Cerrar sesión",
@@ -244,16 +140,21 @@ const pageText = {
       "Usas OnJarama Path en modo invitado. Los datos permanecen locales en este dispositivo.",
     connectedText:
       "Tu sesión está activa. La sincronización cloud se activará progresivamente.",
+    cloudConfiguredText:
+      "El cloud está listo. Puedes conectarte para preparar la sincronización futura.",
+    cloudDisabledText:
+      "La conexión estará disponible cuando las claves Supabase estén configuradas en Vercel.",
     photoSoon: "Foto próximamente",
     account: "Cuenta",
     country: "País",
-    language: "Idioma",
     currency: "Moneda",
-    app: "Aplicación",
-    version: "Versión",
-    testerMode: "Modo probador",
-    pwa: "PWA activada",
+    status: "Estado",
+    activeAccount: "Cuenta activa",
+    backup: "Copia",
     localBackup: "Copia local",
+    sync: "Sincronización",
+    syncPrepared: "Preparada",
+    syncLocal: "Local",
     stats: "Mis estadísticas",
     activeGoals: "Objetivos activos",
     achievedGoals: "Objetivos logrados",
@@ -270,50 +171,8 @@ const pageText = {
     completedOn: "Terminado el",
     noActiveHistory: "No hay objetivo activo por ahora.",
     noVictory: "No hay victoria registrada por ahora.",
-    ecosystem: "Ecosistema OnJarama",
-    pathDesc: "Coach financiero inteligente",
-    ojcsDesc: "Servicios y conexiones",
-    ojctDesc: "Tecnología e innovación",
-    creator: "Creador",
-    founder: "Fundador del ecosistema OnJarama",
-    proud: "Desarrollado con orgullo en Quebec ⚜️",
-    visionTitle: "Visión",
-    vision:
-      "Desarrollar soluciones digitales simples, accesibles y útiles para acompañar a los usuarios en sus proyectos financieros, profesionales y personales.",
-    guideHub: "Guía y ayuda",
-    guide: "Guía de usuario",
-    guideText: "Entender cada página y saber qué hacer paso a paso.",
-    tips: "Consejos",
-    tipsText: "Consejos rápidos para usar OnJarama Path sin perderse.",
-    patchNotes: "Patch Notes",
-    patchNotesText: "Ver cambios y novedades por versión.",
-    achievements: "Logros",
-    achievementText: "Victorias financieras seguidas automáticamente.",
-    security: "Seguridad",
-    securityText: "PIN, biometría e inicio seguro previstos más adelante.",
-    about: "Acerca de",
-    aboutText: "OnJarama Path acompaña tus objetivos financieros.",
-    share: "Compartir / Copiar enlace",
-    linkCopied: "Enlace copiado.",
-    officialNetworks: "Redes oficiales",
-    website: "Sitio web OnJarama",
-    youtube: "YouTube",
-    instagram: "Instagram",
-    facebook: "Facebook",
-    tiktok: "TikTok",
-    x: "X",
-    contact: "Contacto",
-    support: "Soporte",
-    suggestions: "Sugerencias",
-    reportIssue: "Reportar un problema",
-    privacy: "Privacidad",
-    privacyText:
-      "No es posible realizar transacciones bancarias en esta versión. Los datos permanecen locales hasta activar la sincronización.",
-    openSettings: "Abrir ajustes",
-    status: "Estado",
-    activeAccount: "Cuenta activa",
     goalFallback: "Objetivo",
-    shareTitle: "Descubre OnJarama Path, un coach financiero inteligente.",
+    openSettings: "Abrir ajustes",
   },
 };
 
@@ -323,7 +182,6 @@ function Profil({
   selectedGoals,
   disciplineScore,
   auth,
-  financeData,
 }) {
   const t = getText(settings);
   const language = settings?.language || "FR";
@@ -336,33 +194,16 @@ function Profil({
   const achievedGoals = goals.filter((goal) => isGoalAchieved(goal));
   const activeGoals = goals.filter((goal) => !isGoalAchieved(goal));
 
-  const activeGoalsCount = activeGoals.length;
-  const achievedGoalsCount = achievedGoals.length;
-  const daysSinceStart = getDaysSinceStart(goals);
   const disciplineValue = disciplineScore?.score || 0;
   const disciplineLabel = disciplineScore?.label || p.disciplineFallback;
+  const daysSinceStart = getDaysSinceStart(goals);
 
   const isConfigured = Boolean(auth?.isConfigured);
   const isConnected = Boolean(auth?.isConnected);
   const loadingAuth = Boolean(auth?.loadingAuth);
   const providerLoading = auth?.providerLoading || null;
   const authError = auth?.authError || "";
-  const userEmail = auth?.user?.email || "";
-
-  function shareApp() {
-    const link = window.location.origin;
-
-    if (navigator.share) {
-      navigator.share({
-        title: "OnJarama Path",
-        text: p.shareTitle,
-        url: link,
-      });
-    } else {
-      navigator.clipboard.writeText(link);
-      alert(p.linkCopied);
-    }
-  }
+  const userEmail = auth?.user?.email || auth?.session?.user?.email || "";
 
   return (
     <div className="native-page">
@@ -377,7 +218,6 @@ function Profil({
         <div>
           <h2>{isConnected ? p.connected : p.user}</h2>
           <p style={muted}>{isConnected ? p.connectedText : p.beta}</p>
-          <p style={proud}>{p.proud}</p>
         </div>
 
         <button style={photoBtn}>
@@ -414,6 +254,11 @@ function Profil({
           label="Supabase"
           value={isConfigured ? p.cloudReady : p.cloudNotReady}
         />
+        <InfoRow
+          label={p.sync}
+          value={isConnected ? p.syncPrepared : p.syncLocal}
+        />
+        <InfoRow label={p.backup} value={p.localBackup} />
 
         {isConnected && (
           <InfoRow label={p.accountEmail} value={userEmail || p.activeAccount} />
@@ -466,37 +311,6 @@ function Profil({
         )}
       </section>
 
-      <section style={guideCard}>
-        <div style={header}>
-          <BookOpen color="var(--gold)" />
-          <h2>{p.guideHub}</h2>
-        </div>
-
-        <div style={guideGrid}>
-          <ActionTile
-            icon={<BookOpen />}
-            title={p.guide}
-            text={p.guideText}
-            color="var(--gold)"
-            onClick={() => setCurrentPage("guide")}
-          />
-          <ActionTile
-            icon={<Lightbulb />}
-            title={p.tips}
-            text={p.tipsText}
-            color="var(--green)"
-            onClick={() => setCurrentPage("guide")}
-          />
-          <ActionTile
-            icon={<NotebookText />}
-            title={p.patchNotes}
-            text={p.patchNotesText}
-            color="var(--blue)"
-            onClick={() => setCurrentPage("patchnotes")}
-          />
-        </div>
-      </section>
-
       <section style={historyCard}>
         <div style={header}>
           <History color="var(--gold)" />
@@ -541,8 +355,8 @@ function Profil({
       </section>
 
       <Section icon={<Trophy />} title={p.stats} color="var(--gold)">
-        <InfoRow label={p.activeGoals} value={activeGoalsCount} />
-        <InfoRow label={p.achievedGoals} value={achievedGoalsCount} />
+        <InfoRow label={p.activeGoals} value={activeGoals.length} />
+        <InfoRow label={p.achievedGoals} value={achievedGoals.length} />
         <InfoRow label={p.discipline} value={`${disciplineValue}%`} />
         <InfoRow label={p.sinceStart} value={`${daysSinceStart} ${p.days}`} />
       </Section>
@@ -591,98 +405,16 @@ function Profil({
 
       <Section icon={<UserCircle />} title={p.account} color="var(--blue)">
         <InfoRow label={p.country} value="Canada / Guinée" />
-        <InfoRow label={p.language} value={settings.language} />
         <InfoRow label={p.currency} value={settings.currency} />
       </Section>
-
-      <Section icon={<CheckCircle />} title={p.app} color="var(--green)">
-        <InfoRow label={p.version} value="V13.2 Polish & Consistency Final" />
-        <InfoRow label={p.testerMode} value="ON" />
-        <InfoRow label={p.pwa} value="ON" />
-        <InfoRow label={p.localBackup} value="ON" />
-      </Section>
-
-      <Section icon={<Globe />} title={p.ecosystem} color="var(--gold)">
-        <EcosystemItem name="OnJarama Path" text={p.pathDesc} />
-        <EcosystemItem name="OJCS" text={p.ojcsDesc} />
-        <EcosystemItem name="OJCT" text={p.ojctDesc} />
-      </Section>
-
-      <Section icon={<Star />} title={p.creator} color="var(--purple)">
-        <p>
-          <strong>Thierno Diallo</strong>
-        </p>
-        <p style={muted}>{p.founder}</p>
-        <p style={proud}>{p.proud}</p>
-
-        <h3>{p.visionTitle}</h3>
-        <p style={muted}>{p.vision}</p>
-      </Section>
-
-      <Grid>
-        <Tile
-          icon={<Trophy />}
-          title={p.achievements}
-          text={p.achievementText}
-          color="var(--gold)"
-        />
-        <Tile
-          icon={<Lock />}
-          title={p.security}
-          text={p.securityText}
-          color="var(--purple)"
-        />
-        <Tile
-          icon={<Info />}
-          title={p.about}
-          text={p.aboutText}
-          color="var(--blue)"
-        />
-      </Grid>
-
-      <section style={card}>
-        <div style={header}>
-          <Share2 color="var(--green)" />
-          <h2>{t.shareApp}</h2>
-        </div>
-
-        <button onClick={shareApp} style={primaryBtn}>
-          {p.share}
-        </button>
-      </section>
-
-      <section style={card}>
-        <div style={header}>
-          <Globe color="var(--blue)" />
-          <h2>{p.officialNetworks}</h2>
-        </div>
-
-        <Social icon={<Globe />} label={p.website} />
-        <Social icon={<PlayCircle />} label={p.youtube} />
-        <Social icon={<Contact />} label={p.instagram} />
-        <Social icon={<Contact />} label={p.facebook} />
-        <Social icon={<Contact />} label={p.tiktok} />
-        <Social icon={<Contact />} label={p.x} />
-      </section>
-
-      <section style={card}>
-        <div style={header}>
-          <HelpCircle color="var(--purple)" />
-          <h2>{p.contact}</h2>
-        </div>
-
-        <Social icon={<Mail />} label={p.support} />
-        <Social icon={<Mail />} label={p.suggestions} />
-        <Social icon={<Mail />} label={p.reportIssue} />
-      </section>
 
       <section style={card}>
         <div style={header}>
           <ShieldCheck color="var(--gold)" />
-          <h2>{p.privacy}</h2>
+          <h2>{t.privacy}</h2>
         </div>
 
-        <p style={muted}>{p.privacyText}</p>
+        <p style={muted}>{t.privacyText}</p>
       </section>
 
       <button onClick={() => setCurrentPage("reglages")} style={settingsBtn}>
@@ -784,46 +516,12 @@ function InfoRow({ label, value }) {
   );
 }
 
-function EcosystemItem({ name, text }) {
-  return (
-    <div style={ecosystemItem}>
-      <strong>{name}</strong>
-      <p style={mutedSmall}>{text}</p>
-    </div>
-  );
-}
-
-function Grid({ children }) {
-  return <div style={grid}>{children}</div>;
-}
-
-function Tile({ icon, title, text, color }) {
-  return (
-    <div style={{ ...tile, borderColor: color }}>
-      <span style={{ color }}>{icon}</span>
-      <strong>{title}</strong>
-      <p style={mutedSmall}>{text}</p>
-    </div>
-  );
-}
-
-function ActionTile({ icon, title, text, color, onClick }) {
-  return (
-    <button onClick={onClick} style={{ ...actionTile, borderColor: color }}>
-      <span style={{ color }}>{icon}</span>
-      <strong>{title}</strong>
-      <small>{text}</small>
-    </button>
-  );
-}
-
-function Social({ icon, label }) {
-  return (
-    <div style={social}>
-      <span>{icon}</span>
-      <span>{label}</span>
-    </div>
-  );
+function authButtonStyle(base, disabled) {
+  return {
+    ...base,
+    opacity: disabled ? 0.55 : 1,
+    cursor: disabled ? "not-allowed" : "pointer",
+  };
 }
 
 const historyCard = {
@@ -863,20 +561,6 @@ const profileCard = {
   alignItems: "center",
 };
 
-const guideCard = {
-  background: "linear-gradient(135deg, rgba(56,189,248,.10), var(--bg-card))",
-  border: "1px solid var(--blue)",
-  borderRadius: "22px",
-  padding: "18px",
-  marginTop: "16px",
-};
-
-const guideGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-  gap: "10px",
-};
-
 const connectionBadge = (connected) => ({
   display: "inline-flex",
   alignItems: "center",
@@ -902,25 +586,6 @@ const errorLine = {
   fontSize: "13px",
   fontWeight: "800",
   marginTop: "10px",
-};
-
-function authButtonStyle(base, disabled) {
-  return {
-    ...base,
-    opacity: disabled ? 0.55 : 1,
-    cursor: disabled ? "not-allowed" : "pointer",
-  };
-}
-
-const actionTile = {
-  background: "var(--bg-panel)",
-  border: "1px solid var(--border)",
-  borderRadius: "16px",
-  padding: "12px",
-  color: "var(--text-main)",
-  textAlign: "left",
-  display: "grid",
-  gap: "6px",
 };
 
 const authCard = (connected) => ({
@@ -1033,20 +698,6 @@ const victoryItem = {
   alignItems: "center",
 };
 
-const grid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
-  gap: "12px",
-  marginTop: "16px",
-};
-
-const tile = {
-  background: "var(--bg-card)",
-  border: "1px solid var(--border)",
-  borderRadius: "18px",
-  padding: "14px",
-};
-
 const card = {
   background: "var(--bg-card)",
   border: "1px solid var(--border)",
@@ -1073,25 +724,6 @@ const infoRow = {
   gap: "10px",
 };
 
-const ecosystemItem = {
-  background: "var(--bg-panel)",
-  border: "1px solid var(--border)",
-  borderRadius: "14px",
-  padding: "12px",
-  marginTop: "8px",
-};
-
-const primaryBtn = {
-  width: "100%",
-  border: "none",
-  borderRadius: "14px",
-  padding: "14px",
-  marginTop: "12px",
-  background: "var(--green)",
-  color: "white",
-  fontWeight: "bold",
-};
-
 const settingsBtn = {
   width: "100%",
   border: "none",
@@ -1101,23 +733,6 @@ const settingsBtn = {
   background: "linear-gradient(90deg, var(--purple), var(--blue))",
   color: "white",
   fontWeight: "bold",
-};
-
-const social = {
-  background: "var(--bg-panel)",
-  border: "1px solid var(--border)",
-  borderRadius: "14px",
-  padding: "12px",
-  marginTop: "8px",
-  display: "flex",
-  gap: "10px",
-  alignItems: "center",
-};
-
-const proud = {
-  color: "var(--gold)",
-  fontWeight: "bold",
-  marginTop: "8px",
 };
 
 const muted = {

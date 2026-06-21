@@ -2,19 +2,13 @@ import {
   ArrowLeft,
   Bell,
   BookOpen,
-  CheckCircle2,
   ChevronRight,
-  Cloud,
   FileText,
-  Globe2,
-  Languages,
+  Info,
   LogOut,
   Menu,
-  Moon,
   Settings,
   ShieldCheck,
-  UserCircle,
-  Wifi,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -37,11 +31,6 @@ function TopBar({
   const m = menuText[language] || menuText.FR;
 
   const isConnected = Boolean(auth?.user || auth?.session?.user);
-  const userEmail =
-    auth?.user?.email ||
-    auth?.session?.user?.email ||
-    auth?.profile?.email ||
-    "";
 
   const unreadCount = Array.isArray(notifications)
     ? notifications.filter((item) => !item.read).length
@@ -58,19 +47,13 @@ function TopBar({
 
   const isMainPage = mainPages.includes(currentPage);
 
-  function openPage(page, keepOpen = false) {
+  function openPage(page) {
     setCurrentPage(page);
-
-    if (!keepOpen) {
-      setMenuOpen(false);
-    }
+    setMenuOpen(false);
   }
 
   function updateLanguage(nextLanguage) {
-    if (typeof setSettings !== "function") {
-      openPage("reglages", true);
-      return;
-    }
+    if (typeof setSettings !== "function") return;
 
     setSettings({
       ...settings,
@@ -162,135 +145,39 @@ function TopBar({
 
           <div className="topbar-menu-panel" style={slidePanel}>
             <div className="topbar-menu-head">
-              <strong>OnJarama Path V13.3</strong>
+              <strong>OnJarama Path V13.5</strong>
               <span>{m.subtitle}</span>
             </div>
 
-            <div style={accountCard}>
-              <div style={accountTop}>
-                <UserCircle size={26} color="var(--gold)" />
-                <div>
-                  <strong>{isConnected ? t.connectedAccount : t.guestMode}</strong>
-                  <small>{userEmail || "OnJarama Path"}</small>
-                </div>
-              </div>
+            <MenuButton
+              icon={<Settings size={18} />}
+              label={getPageLabel("reglages", language)}
+              onClick={() => openPage("reglages")}
+            />
 
-              <div style={cloudGrid}>
-                <CloudStatus
-                  icon={<Cloud size={16} />}
-                  title="Cloud"
-                  value={isConnected ? t.cloudReady : t.cloudGuest}
-                  color="var(--gold)"
-                />
+            <MenuButton
+              icon={<BookOpen size={18} />}
+              label={getPageLabel("guide", language)}
+              onClick={() => openPage("guide")}
+            />
 
-                <CloudStatus
-                  icon={<Wifi size={16} />}
-                  title={t.cloudSync}
-                  value={isConnected ? t.cloudPrepared : t.cloudLocal}
-                  color="var(--blue)"
-                />
+            <MenuButton
+              icon={<FileText size={18} />}
+              label={getPageLabel("patchnotes", language)}
+              onClick={() => openPage("patchnotes")}
+            />
 
-                <CloudStatus
-                  icon={<CheckCircle2 size={16} />}
-                  title={t.backup}
-                  value={t.localActive}
-                  color="var(--green)"
-                />
-              </div>
-            </div>
+            <MenuButton
+              icon={<ShieldCheck size={18} />}
+              label={m.privacy}
+              onClick={() => openPage("reglages")}
+            />
 
-            <MenuSection title={m.account}>
-              <MenuButton
-                icon={<UserCircle size={18} />}
-                label={getPageLabel("profil", language)}
-                onClick={() => openPage("profil")}
-              />
-
-              <MenuButton
-                icon={<Settings size={18} />}
-                label={getPageLabel("reglages", language)}
-                onClick={() => openPage("reglages")}
-              />
-            </MenuSection>
-
-            <MenuSection title={m.preferences}>
-              <div style={languagePanel}>
-                <div style={languagePanelTitle}>
-                  <Languages size={17} />
-                  <strong>{t.language}</strong>
-                </div>
-
-                <div style={languageGrid}>
-                  <button
-                    onClick={() => updateLanguage("FR")}
-                    style={languageChoice(language === "FR")}
-                  >
-                    FR — {t.french}
-                  </button>
-
-                  <button
-                    onClick={() => updateLanguage("EN")}
-                    style={languageChoice(language === "EN")}
-                  >
-                    EN — {t.english}
-                  </button>
-
-                  <button
-                    onClick={() => updateLanguage("ES")}
-                    style={languageChoice(language === "ES")}
-                  >
-                    ES — {t.spanish}
-                  </button>
-
-                  <button disabled style={languageDisabled}>
-                    {t.chinese}
-                    <small>{t.soon}</small>
-                  </button>
-                </div>
-              </div>
-
-              <MenuButton
-                icon={<Bell size={18} />}
-                label={getPageLabel("notifications", language)}
-                onClick={() => openPage("notifications")}
-                badge={unreadCount > 0 ? unreadCount : null}
-              />
-
-              <MenuButton
-                icon={<Moon size={18} />}
-                label={m.theme}
-                onClick={() => openPage("reglages", true)}
-              />
-            </MenuSection>
-
-            <MenuSection title={m.resources}>
-              <MenuButton
-                icon={<BookOpen size={18} />}
-                label={getPageLabel("guide", language)}
-                onClick={() => openPage("guide")}
-              />
-
-              <MenuButton
-                icon={<FileText size={18} />}
-                label={getPageLabel("patchnotes", language)}
-                onClick={() => openPage("patchnotes")}
-              />
-            </MenuSection>
-
-            <MenuSection title={m.security}>
-              <MenuButton
-                icon={<ShieldCheck size={18} />}
-                label={t.securityPrivacy}
-                onClick={() => openPage("reglages")}
-              />
-            </MenuSection>
-
-            <div className="topbar-credit">
-              <strong>Thierno Diallo</strong>
-              <span>{t.founder}</span>
-              <small>{t.guineaQuebecCanada}</small>
-              <small>{t.proudlyQuebec}</small>
-            </div>
+            <MenuButton
+              icon={<Info size={18} />}
+              label={m.about}
+              onClick={() => openPage("reglages")}
+            />
 
             <div style={bottomActions}>
               <button
@@ -298,7 +185,8 @@ function TopBar({
                 disabled={!isConnected || typeof auth?.signOut !== "function"}
                 style={{
                   ...logoutButton,
-                  opacity: isConnected && typeof auth?.signOut === "function" ? 1 : 0.62,
+                  opacity:
+                    isConnected && typeof auth?.signOut === "function" ? 1 : 0.62,
                   cursor:
                     isConnected && typeof auth?.signOut === "function"
                       ? "pointer"
@@ -326,60 +214,31 @@ function TopBar({
 
 const menuText = {
   FR: {
-    subtitle: "Navigation, préférences et ressources.",
-    account: "Compte",
-    preferences: "Préférences",
-    resources: "Ressources",
-    security: "Sécurité",
-    theme: "Thème",
+    subtitle: "Menu rapide OnJarama Path.",
+    privacy: "Confidentialité",
+    about: "À propos",
     logout: "Déconnexion",
   },
   EN: {
-    subtitle: "Navigation, preferences and resources.",
-    account: "Account",
-    preferences: "Preferences",
-    resources: "Resources",
-    security: "Security",
-    theme: "Theme",
+    subtitle: "OnJarama Path quick menu.",
+    privacy: "Privacy",
+    about: "About",
     logout: "Sign out",
   },
   ES: {
-    subtitle: "Navegación, preferencias y recursos.",
-    account: "Cuenta",
-    preferences: "Preferencias",
-    resources: "Recursos",
-    security: "Seguridad",
-    theme: "Tema",
+    subtitle: "Menú rápido OnJarama Path.",
+    privacy: "Privacidad",
+    about: "Acerca de",
     logout: "Cerrar sesión",
   },
 };
 
-function MenuSection({ title, children }) {
-  return (
-    <div style={menuSection}>
-      <p style={menuSectionTitle}>{title}</p>
-      <div style={menuSectionBody}>{children}</div>
-    </div>
-  );
-}
-
-function MenuButton({ icon, label, onClick, badge }) {
+function MenuButton({ icon, label, onClick }) {
   return (
     <button onClick={onClick} style={menuButton}>
       {icon}
       <span>{label}</span>
-      {badge && <span style={notificationBadge}>{badge}</span>}
     </button>
-  );
-}
-
-function CloudStatus({ icon, title, value, color }) {
-  return (
-    <div style={{ ...cloudStatus, borderColor: color }}>
-      <span style={{ color }}>{icon}</span>
-      <small>{title}</small>
-      <strong>{value}</strong>
-    </div>
   );
 }
 
@@ -436,134 +295,19 @@ const hamburgerBadge = {
   border: "1px solid var(--bg-card)",
 };
 
-const notificationBadge = {
-  marginLeft: "auto",
-  minWidth: "22px",
-  height: "22px",
-  borderRadius: "999px",
-  background: "var(--red)",
-  color: "white",
-  fontSize: "12px",
-  fontWeight: "bold",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "0 6px",
-};
-
-const accountCard = {
-  border: "1px solid rgba(212,175,55,.35)",
-  background:
-    "linear-gradient(135deg, rgba(212,175,55,.10), rgba(56,189,248,.06), var(--bg-panel))",
-  borderRadius: "16px",
-  padding: "12px",
-  marginBottom: "12px",
-};
-
-const accountTop = {
-  display: "grid",
-  gridTemplateColumns: "34px 1fr",
-  gap: "10px",
-  alignItems: "center",
-  marginBottom: "10px",
-};
-
-const cloudGrid = {
-  display: "grid",
-  gridTemplateColumns: "1fr",
-  gap: "8px",
-};
-
-const cloudStatus = {
-  border: "1px solid var(--border)",
-  background: "rgba(0,0,0,.10)",
-  borderRadius: "13px",
-  padding: "9px",
-  display: "grid",
-  gridTemplateColumns: "24px 1fr",
-  gap: "3px 8px",
-  alignItems: "center",
-};
-
-const menuSection = {
-  marginTop: "14px",
-};
-
-const menuSectionTitle = {
-  color: "var(--gold)",
-  fontSize: "12px",
-  fontWeight: "900",
-  textTransform: "uppercase",
-  letterSpacing: ".7px",
-  margin: "0 0 8px",
-};
-
-const menuSectionBody = {
-  display: "grid",
-  gap: "8px",
-};
-
 const menuButton = {
   width: "100%",
   border: "1px solid var(--border)",
   background: "var(--bg-panel)",
   color: "var(--text-main)",
   borderRadius: "14px",
-  padding: "12px",
+  padding: "13px",
   display: "flex",
   alignItems: "center",
   gap: "10px",
-  fontWeight: "800",
-  textAlign: "left",
-};
-
-const languagePanel = {
-  border: "1px solid rgba(212,175,55,.35)",
-  background: "rgba(212,175,55,.08)",
-  borderRadius: "16px",
-  padding: "12px",
-};
-
-const languagePanelTitle = {
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-  color: "var(--gold)",
-  marginBottom: "10px",
-};
-
-const languageGrid = {
-  display: "grid",
-  gridTemplateColumns: "1fr",
-  gap: "8px",
-};
-
-function languageChoice(active) {
-  return {
-    width: "100%",
-    border: active ? "1px solid var(--gold)" : "1px solid var(--border)",
-    background: active ? "rgba(212,175,55,.16)" : "var(--bg-panel)",
-    color: active ? "var(--gold)" : "var(--text-main)",
-    borderRadius: "13px",
-    padding: "10px",
-    fontWeight: "900",
-    textAlign: "left",
-    boxShadow: active ? "0 0 16px rgba(212,175,55,.18)" : "none",
-  };
-}
-
-const languageDisabled = {
-  width: "100%",
-  border: "1px solid var(--border)",
-  background: "rgba(255,255,255,.04)",
-  color: "var(--text-muted)",
-  borderRadius: "13px",
-  padding: "10px",
   fontWeight: "900",
   textAlign: "left",
-  opacity: 0.7,
-  display: "grid",
-  gap: "2px",
+  marginTop: "9px",
 };
 
 const bottomActions = {
