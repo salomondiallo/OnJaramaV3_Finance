@@ -1,11 +1,10 @@
+import { useEffect, useState } from "react";
 import {
   Beaker,
-  BookOpen,
   Brain,
   CheckCircle,
   ClipboardList,
   Home,
-  Lightbulb,
   Lock,
   ShieldCheck,
   Sparkles,
@@ -13,11 +12,21 @@ import {
 } from "lucide-react";
 import { getText } from "../data/translations";
 
+const FOUNDER_UNLOCK_KEY = "onjaramaFounderMode";
+const FOUNDER_PROFILE_KEY = "onjaramaFounderProfile";
+
 const pageText = {
   FR: {
     title: "Atelier Fondateur",
     subtitle:
       "Espace privé pour idées, réformes, templates personnels et modules expérimentaux.",
+    founderProfile: "Profil Fondateur",
+    founderActive: "Mode Fondateur actif",
+    founderProfileActive: "Paramètres personnels actifs",
+    founderProfileInactive: "Paramètres personnels non appliqués",
+    applyFounderProfile: "Appliquer mes paramètres fondateur",
+    publicMode: "Retour au mode public",
+    lockFounderMode: "Verrouiller le mode fondateur",
     privateAccess: "Accès privé",
     privateText:
       "Cet espace est masqué dans l’interface publique. Il sert à préparer les prochaines réformes sans les exposer aux utilisateurs.",
@@ -36,6 +45,11 @@ const pageText = {
     principle4: "Progression sans pression, discipline sans culpabilité.",
     housePrivate: "Projet personnel privé",
     houseText: "Les détails très personnels restent ici, jamais dans les templates publics.",
+    privateSettings: "Paramètres privés préparés",
+    private1: "Maison Guinée privée",
+    private2: "Roadmap OnJarama",
+    private3: "Banquier intelligent futur",
+    private4: "Notes de réforme",
     note: "Note",
     noteText:
       "Le NIP actuel est une protection locale légère. Pour une vraie sécurité, il faudra plus tard un compte fondateur et un rôle serveur.",
@@ -44,6 +58,13 @@ const pageText = {
     title: "Founder Workshop",
     subtitle:
       "Private space for ideas, reforms, personal templates and experimental modules.",
+    founderProfile: "Founder Profile",
+    founderActive: "Founder Mode active",
+    founderProfileActive: "Personal settings active",
+    founderProfileInactive: "Personal settings not applied",
+    applyFounderProfile: "Apply my founder settings",
+    publicMode: "Return to public mode",
+    lockFounderMode: "Lock founder mode",
     privateAccess: "Private access",
     privateText:
       "This area is hidden from the public interface. It prepares future reforms without exposing them to users.",
@@ -62,6 +83,11 @@ const pageText = {
     principle4: "Progress without pressure, discipline without guilt.",
     housePrivate: "Private personal project",
     houseText: "Highly personal details stay here, never inside public templates.",
+    privateSettings: "Prepared private settings",
+    private1: "Private Guinea home",
+    private2: "OnJarama roadmap",
+    private3: "Future smart banker",
+    private4: "Reform notes",
     note: "Note",
     noteText:
       "The current PIN is light local protection. Real security will later require a founder account and server-side role.",
@@ -70,6 +96,13 @@ const pageText = {
     title: "Taller Fundador",
     subtitle:
       "Espacio privado para ideas, reformas, plantillas personales y módulos experimentales.",
+    founderProfile: "Perfil Fundador",
+    founderActive: "Modo Fundador activo",
+    founderProfileActive: "Ajustes personales activos",
+    founderProfileInactive: "Ajustes personales no aplicados",
+    applyFounderProfile: "Aplicar mis ajustes fundador",
+    publicMode: "Volver al modo público",
+    lockFounderMode: "Bloquear modo fundador",
     privateAccess: "Acceso privado",
     privateText:
       "Este espacio está oculto en la interfaz pública. Sirve para preparar reformas futuras sin exponerlas a los usuarios.",
@@ -88,25 +121,100 @@ const pageText = {
     principle4: "Progreso sin presión, disciplina sin culpa.",
     housePrivate: "Proyecto personal privado",
     houseText: "Los detalles muy personales quedan aquí, nunca en plantillas públicas.",
+    privateSettings: "Ajustes privados preparados",
+    private1: "Casa Guinea privada",
+    private2: "Roadmap OnJarama",
+    private3: "Banquero inteligente futuro",
+    private4: "Notas de reforma",
     note: "Nota",
     noteText:
       "El NIP actual es una protección local ligera. La seguridad real requerirá una cuenta fundador y un rol del servidor.",
   },
 };
 
-function AtelierFondateur({ settings }) {
+function AtelierFondateur({ settings, setCurrentPage }) {
   const t = getText(settings);
   const language = settings?.language || "FR";
   const p = pageText[language] || pageText.FR;
+
+  const [founderProfileActive, setFounderProfileActive] = useState(() => {
+    try {
+      return localStorage.getItem(FOUNDER_PROFILE_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(FOUNDER_UNLOCK_KEY, "true");
+  }, []);
+
+  function applyFounderProfile() {
+    localStorage.setItem(FOUNDER_UNLOCK_KEY, "true");
+    localStorage.setItem(FOUNDER_PROFILE_KEY, "true");
+    localStorage.setItem(
+      "onjaramaFounderPrivateSettings",
+      JSON.stringify({
+        founderProfile: true,
+        privateHomeProject: true,
+        reformNotes: true,
+        roadmap: true,
+        experimentalModules: true,
+        smartBankerFuture: true,
+        appliedAt: new Date().toISOString(),
+      })
+    );
+    setFounderProfileActive(true);
+  }
+
+  function lockFounderMode() {
+    localStorage.removeItem(FOUNDER_UNLOCK_KEY);
+    localStorage.removeItem(FOUNDER_PROFILE_KEY);
+    setFounderProfileActive(false);
+    setCurrentPage?.("profil");
+  }
 
   return (
     <div className="native-page" style={page}>
       <h1>{p.title}</h1>
       <p style={muted}>{p.subtitle}</p>
 
-      <section style={heroCard}>
+      <section style={founderProfileCard}>
         <div style={header}>
           <Lock color="var(--gold)" />
+          <div>
+            <h2>{p.founderProfile}</h2>
+            <p style={mutedSmall}>
+              {founderProfileActive
+                ? p.founderProfileActive
+                : p.founderProfileInactive}
+            </p>
+          </div>
+        </div>
+
+        <div style={statusPill}>
+          <CheckCircle size={18} color="var(--green)" />
+          <strong>{p.founderActive}</strong>
+        </div>
+
+        <div style={buttonGrid}>
+          <button onClick={applyFounderProfile} style={primaryButton}>
+            {p.applyFounderProfile}
+          </button>
+
+          <button onClick={() => setCurrentPage?.("profil")} style={secondaryButton}>
+            {p.publicMode}
+          </button>
+
+          <button onClick={lockFounderMode} style={dangerButton}>
+            {p.lockFounderMode}
+          </button>
+        </div>
+      </section>
+
+      <section style={heroCard}>
+        <div style={header}>
+          <ShieldCheck color="var(--gold)" />
           <div>
             <h2>{p.privateAccess}</h2>
             <p style={mutedSmall}>{p.privateText}</p>
@@ -141,6 +249,12 @@ function AtelierFondateur({ settings }) {
             <p style={mutedSmall}>{p.houseText}</p>
           </div>
         </div>
+
+        <h3>{p.privateSettings}</h3>
+        <Principle text={p.private1} />
+        <Principle text={p.private2} />
+        <Principle text={p.private3} />
+        <Principle text={p.private4} />
       </section>
 
       <section style={noteCard}>
@@ -179,6 +293,57 @@ const page = {
   display: "flex",
   flexDirection: "column",
   gap: "16px",
+};
+
+const founderProfileCard = {
+  background:
+    "linear-gradient(135deg, rgba(212,175,55,.20), rgba(139,92,246,.12), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "24px",
+  padding: "20px",
+};
+
+const statusPill = {
+  background: "rgba(34,197,94,.12)",
+  border: "1px solid var(--green)",
+  borderRadius: "999px",
+  padding: "9px 12px",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "8px",
+  marginBottom: "12px",
+};
+
+const buttonGrid = {
+  display: "grid",
+  gap: "10px",
+};
+
+const primaryButton = {
+  border: "none",
+  borderRadius: "14px",
+  padding: "13px",
+  background: "var(--green)",
+  color: "white",
+  fontWeight: "900",
+};
+
+const secondaryButton = {
+  border: "1px solid var(--gold)",
+  borderRadius: "14px",
+  padding: "13px",
+  background: "rgba(212,175,55,.12)",
+  color: "var(--gold)",
+  fontWeight: "900",
+};
+
+const dangerButton = {
+  border: "1px solid var(--red)",
+  borderRadius: "14px",
+  padding: "13px",
+  background: "rgba(239,68,68,.10)",
+  color: "var(--red)",
+  fontWeight: "900",
 };
 
 const heroCard = {

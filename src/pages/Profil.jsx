@@ -28,6 +28,7 @@ import { getText } from "../data/translations";
 
 const PROFILE_PHOTO_KEY = "onjaramaProfilePhoto";
 const FOUNDER_UNLOCK_KEY = "onjaramaFounderMode";
+const FOUNDER_PROFILE_KEY = "onjaramaFounderProfile";
 const FOUNDER_PIN = "0621";
 const FOUNDER_HOLD_MS = 10000;
 
@@ -134,6 +135,9 @@ const pageText = {
     mottoOne: "Votre parcours.",
     mottoTwo: "Votre rythme.",
     countries: "Guinée 🇬🇳 • Québec ⚜️ • Canada 🇨🇦",
+    founderModeActive: "Mode Fondateur actif",
+    founderModeText: "Vos paramètres personnels sont actifs sur cet appareil.",
+    lockFounderMode: "Verrouiller le mode fondateur",
   },
   EN: {
     subtitle: "Smart profile, account, preferences, security and history.",
@@ -237,6 +241,9 @@ const pageText = {
     mottoOne: "Your path.",
     mottoTwo: "Your pace.",
     countries: "Guinea 🇬🇳 • Quebec ⚜️ • Canada 🇨🇦",
+    founderModeActive: "Founder Mode active",
+    founderModeText: "Your personal settings are active on this device.",
+    lockFounderMode: "Lock founder mode",
   },
   ES: {
     subtitle: "Perfil inteligente, cuenta, preferencias, seguridad e historial.",
@@ -340,6 +347,9 @@ const pageText = {
     mottoOne: "Tu camino.",
     mottoTwo: "Tu ritmo.",
     countries: "Guinea 🇬🇳 • Quebec ⚜️ • Canadá 🇨🇦",
+    founderModeActive: "Modo Fundador activo",
+    founderModeText: "Tus ajustes personales están activos en este dispositivo.",
+    lockFounderMode: "Bloquear modo fundador",
   },
 };
 
@@ -367,6 +377,13 @@ function Profil({
   const [photoMessage, setPhotoMessage] = useState("");
   const founderHoldTimer = useRef(null);
   const [founderMessage, setFounderMessage] = useState("");
+  const [founderModeActive, setFounderModeActive] = useState(() => {
+    try {
+      return localStorage.getItem(FOUNDER_UNLOCK_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
 
   const goals = Array.isArray(selectedGoals)
     ? selectedGoals.filter((goal) => !goal.archived)
@@ -458,8 +475,18 @@ function Profil({
 
   function unlockFounderWorkshop() {
     localStorage.setItem(FOUNDER_UNLOCK_KEY, "true");
-    setFounderMessage("Atelier Fondateur déverrouillé.");
+    localStorage.setItem(FOUNDER_PROFILE_KEY, "true");
+    setFounderModeActive(true);
+    setFounderMessage("");
     setCurrentPage?.("atelierfondateur");
+  }
+
+  function lockFounderMode() {
+    localStorage.removeItem(FOUNDER_UNLOCK_KEY);
+    localStorage.removeItem(FOUNDER_PROFILE_KEY);
+    setFounderModeActive(false);
+    setFounderMessage("");
+    setCurrentPage?.("profil");
   }
 
   function requestFounderPin() {
@@ -482,8 +509,6 @@ function Profil({
       window.clearTimeout(founderHoldTimer.current);
     }
 
-    setFounderMessage("Maintenez 10 secondes pour ouvrir le Mode Fondateur.");
-
     founderHoldTimer.current = window.setTimeout(() => {
       founderHoldTimer.current = null;
       requestFounderPin();
@@ -502,6 +527,22 @@ function Profil({
     <div className="native-page">
       <h1>{t.profil}</h1>
       <p style={muted}>{p.subtitle}</p>
+
+      {founderModeActive && (
+        <section style={founderModeCard}>
+          <div style={header}>
+            <Lock color="var(--gold)" />
+            <div>
+              <h2>{p.founderModeActive}</h2>
+              <p style={mutedSmall}>{p.founderModeText}</p>
+            </div>
+          </div>
+
+          <button onClick={lockFounderMode} style={lockFounderBtn}>
+            {p.lockFounderMode}
+          </button>
+        </section>
+      )}
 
       <section style={profileCard}>
         <div style={avatar}>
@@ -869,8 +910,6 @@ function Profil({
           <span>{p.founderTitle}</span>
           <span>{p.countries}</span>
         </div>
-
-        {founderMessage && <p style={founderUnlockLine}>{founderMessage}</p>}
       </section>
 
       <button onClick={() => setCurrentPage("reglages")} style={settingsBtn}>
@@ -1461,11 +1500,23 @@ const founderBox = {
   gap: "5px",
 };
 
-const founderUnlockLine = {
+const founderModeCard = {
+  background: "linear-gradient(135deg, rgba(212,175,55,.16), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "22px",
+  padding: "18px",
+  marginTop: "16px",
+};
+
+const lockFounderBtn = {
+  width: "100%",
+  border: "1px solid var(--gold)",
+  borderRadius: "14px",
+  padding: "13px",
+  marginTop: "10px",
+  background: "rgba(212,175,55,.12)",
   color: "var(--gold)",
-  fontSize: "13px",
   fontWeight: "900",
-  marginTop: "12px",
 };
 
 const header = {
