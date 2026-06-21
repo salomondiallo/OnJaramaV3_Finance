@@ -1,21 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  Bell,
   Camera,
   CheckCircle,
   Cloud,
   Database,
+  FileDown,
   Globe,
   ImagePlus,
   KeyRound,
+  Languages,
   LoaderCircle,
   Lock,
   LogOut,
+  Palette,
   ShieldCheck,
+  Smartphone,
+  Sparkles,
   Star,
   History,
   Trash2,
   Trophy,
   UserCircle,
+  Wifi,
 } from "lucide-react";
 import { getText } from "../data/translations";
 
@@ -23,7 +30,7 @@ const PROFILE_PHOTO_KEY = "onjaramaProfilePhoto";
 
 const pageText = {
   FR: {
-    subtitle: "Profil, compte, sécurité, sauvegarde et historique.",
+    subtitle: "Profil intelligent, compte, préférences, sécurité et historique.",
     user: "Utilisateur OnJarama",
     beta: "Mode invité local",
     connected: "Compte connecté",
@@ -49,7 +56,7 @@ const pageText = {
     replacePhoto: "Remplacer la photo",
     deletePhoto: "Supprimer la photo",
     photoSaved: "Photo enregistrée localement.",
-    account: "Compte",
+    account: "Mon compte",
     country: "Pays",
     currency: "Devise",
     status: "Statut",
@@ -59,16 +66,19 @@ const pageText = {
     sync: "Synchronisation",
     syncPrepared: "Préparée",
     syncLocal: "Locale",
-    stats: "Mes statistiques",
+    evolution: "Mon évolution",
+    goalsCreated: "Objectifs créés",
     activeGoals: "Objectifs actifs",
     achievedGoals: "Objectifs atteints",
+    averageProgress: "Progression moyenne",
     discipline: "Discipline",
     disciplineFallback: "Départ",
     sinceStart: "Depuis le départ",
+    startedMessage: "Vous avez commencé votre parcours il y a",
     days: "jours",
     progress: "Progression personnelle",
     victories: "Mes victoires",
-    history: "Historique",
+    history: "Historique du parcours",
     activeHistory: "Objectifs en cours",
     completedHistory: "Objectifs terminés",
     startedOn: "Commencé le",
@@ -98,10 +108,32 @@ const pageText = {
     privacyTrust: "Pourquoi faire confiance ?",
     privacyTrustText:
       "Vos données vous appartiennent. Vous pouvez utiliser l’application localement, réinitialiser vos données et garder le contrôle.",
+    preferences: "Préférences",
+    language: "Langue",
+    appearance: "Apparence",
+    notifications: "Notifications",
+    privacy: "Confidentialité",
+    recommendedNext: "Prochaine étape recommandée",
+    noRecommendation:
+      "Créez un objectif ou ajoutez une dette pour activer une recommandation intelligente.",
+    recommendedFallback:
+      "Commencer par retrouver une marge positive avant d’accélérer.",
+    connectivity: "Connectivité",
+    comingSoon: "Bientôt disponible",
+    bankSync: "Synchronisation bancaire",
+    pdfExport: "Export PDF",
+    multiDevice: "Multi-appareils",
+    advancedAI: "Assistant IA avancé",
     developed: "Fièrement développé au Québec ⚜️",
+    founder: "Thierno Diallo",
+    founderTitle: "Fondateur de l’écosystème OnJarama",
+    version: "OnJarama Path V16.5",
+    mottoOne: "Votre parcours.",
+    mottoTwo: "Votre rythme.",
+    countries: "Guinée 🇬🇳 • Québec ⚜️ • Canada 🇨🇦",
   },
   EN: {
-    subtitle: "Profile, account, security, backup and history.",
+    subtitle: "Smart profile, account, preferences, security and history.",
     user: "OnJarama User",
     beta: "Local guest mode",
     connected: "Connected account",
@@ -127,7 +159,7 @@ const pageText = {
     replacePhoto: "Replace photo",
     deletePhoto: "Delete photo",
     photoSaved: "Photo saved locally.",
-    account: "Account",
+    account: "My account",
     country: "Country",
     currency: "Currency",
     status: "Status",
@@ -137,16 +169,19 @@ const pageText = {
     sync: "Synchronization",
     syncPrepared: "Prepared",
     syncLocal: "Local",
-    stats: "My statistics",
+    evolution: "My evolution",
+    goalsCreated: "Goals created",
     activeGoals: "Active goals",
     achievedGoals: "Achieved goals",
+    averageProgress: "Average progress",
     discipline: "Discipline",
     disciplineFallback: "Start",
     sinceStart: "Since start",
-    days: "days",
+    startedMessage: "You started your path",
+    days: "days ago",
     progress: "Personal progress",
     victories: "My victories",
-    history: "History",
+    history: "Path history",
     activeHistory: "Active goals",
     completedHistory: "Completed goals",
     startedOn: "Started on",
@@ -176,10 +211,32 @@ const pageText = {
     privacyTrust: "Why trust it?",
     privacyTrustText:
       "Your data belongs to you. You can use the app locally, reset your data and stay in control.",
+    preferences: "Preferences",
+    language: "Language",
+    appearance: "Appearance",
+    notifications: "Notifications",
+    privacy: "Privacy",
+    recommendedNext: "Recommended next step",
+    noRecommendation:
+      "Create a goal or add a debt to activate a smart recommendation.",
+    recommendedFallback:
+      "Start by recovering positive margin before accelerating.",
+    connectivity: "Connectivity",
+    comingSoon: "Coming soon",
+    bankSync: "Bank synchronization",
+    pdfExport: "PDF export",
+    multiDevice: "Multi-device",
+    advancedAI: "Advanced AI assistant",
     developed: "Proudly developed in Quebec ⚜️",
+    founder: "Thierno Diallo",
+    founderTitle: "Founder of the OnJarama ecosystem",
+    version: "OnJarama Path V16.5",
+    mottoOne: "Your path.",
+    mottoTwo: "Your pace.",
+    countries: "Guinea 🇬🇳 • Quebec ⚜️ • Canada 🇨🇦",
   },
   ES: {
-    subtitle: "Perfil, cuenta, seguridad, copia e historial.",
+    subtitle: "Perfil inteligente, cuenta, preferencias, seguridad e historial.",
     user: "Usuario OnJarama",
     beta: "Modo invitado local",
     connected: "Cuenta conectada",
@@ -205,7 +262,7 @@ const pageText = {
     replacePhoto: "Cambiar foto",
     deletePhoto: "Eliminar foto",
     photoSaved: "Foto guardada localmente.",
-    account: "Cuenta",
+    account: "Mi cuenta",
     country: "País",
     currency: "Moneda",
     status: "Estado",
@@ -215,16 +272,19 @@ const pageText = {
     sync: "Sincronización",
     syncPrepared: "Preparada",
     syncLocal: "Local",
-    stats: "Mis estadísticas",
+    evolution: "Mi evolución",
+    goalsCreated: "Objetivos creados",
     activeGoals: "Objetivos activos",
     achievedGoals: "Objetivos logrados",
+    averageProgress: "Progreso promedio",
     discipline: "Disciplina",
     disciplineFallback: "Inicio",
     sinceStart: "Desde el inicio",
+    startedMessage: "Empezaste tu camino hace",
     days: "días",
     progress: "Progreso personal",
     victories: "Mis victorias",
-    history: "Historial",
+    history: "Historial del camino",
     activeHistory: "Objetivos activos",
     completedHistory: "Objetivos terminados",
     startedOn: "Empezado el",
@@ -254,7 +314,29 @@ const pageText = {
     privacyTrust: "¿Por qué confiar?",
     privacyTrustText:
       "Tus datos te pertenecen. Puedes usar la app localmente, reiniciar tus datos y mantener el control.",
+    preferences: "Preferencias",
+    language: "Idioma",
+    appearance: "Apariencia",
+    notifications: "Notificaciones",
+    privacy: "Privacidad",
+    recommendedNext: "Próximo paso recomendado",
+    noRecommendation:
+      "Crea un objetivo o agrega una deuda para activar una recomendación inteligente.",
+    recommendedFallback:
+      "Empieza por recuperar un margen positivo antes de acelerar.",
+    connectivity: "Conectividad",
+    comingSoon: "Próximamente",
+    bankSync: "Sincronización bancaria",
+    pdfExport: "Export PDF",
+    multiDevice: "Multi-dispositivo",
+    advancedAI: "Asistente IA avanzado",
     developed: "Desarrollado con orgullo en Quebec ⚜️",
+    founder: "Thierno Diallo",
+    founderTitle: "Fundador del ecosistema OnJarama",
+    version: "OnJarama Path V16.5",
+    mottoOne: "Tu camino.",
+    mottoTwo: "Tu ritmo.",
+    countries: "Guinea 🇬🇳 • Quebec ⚜️ • Canadá 🇨🇦",
   },
 };
 
@@ -264,6 +346,7 @@ function Profil({
   selectedGoals,
   financeData,
   disciplineScore,
+  smartAllocationEngine,
   auth,
 }) {
   const t = getText(settings);
@@ -290,6 +373,13 @@ function Profil({
   const disciplineValue = disciplineScore?.score || 0;
   const disciplineLabel = disciplineScore?.label || p.disciplineFallback;
   const daysSinceStart = getDaysSinceStart(goals);
+  const averageProgress = getAverageProgress(goals);
+
+  const recommendation = getSmartRecommendation({
+    smartAllocationEngine,
+    language,
+    fallback: p.recommendedFallback,
+  });
 
   const isConfigured = Boolean(auth?.isConfigured);
   const isConnected = Boolean(auth?.isConnected);
@@ -364,6 +454,13 @@ function Profil({
         <div>
           <h2>{isConnected ? p.connected : p.user}</h2>
           <p style={muted}>{isConnected ? p.connectedText : p.beta}</p>
+
+          <p style={startFlag}>
+            {language === "EN"
+              ? `${p.startedMessage} ${daysSinceStart} ${p.days}.`
+              : `${p.startedMessage} ${daysSinceStart} ${p.days}.`}
+          </p>
+
           {photoMessage && <p style={successLine}>✓ {photoMessage}</p>}
         </div>
 
@@ -422,6 +519,76 @@ function Profil({
               <span>{item.label}</span>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section style={evolutionCard}>
+        <div style={header}>
+          <Sparkles color="var(--gold)" />
+          <div>
+            <h2>{p.evolution}</h2>
+            <p style={mutedSmall}>{disciplineLabel}</p>
+          </div>
+        </div>
+
+        <div style={metricGrid}>
+          <Metric label={p.goalsCreated} value={goals.length} />
+          <Metric label={p.activeGoals} value={activeGoals.length} />
+          <Metric label={p.achievedGoals} value={achievedGoals.length} />
+          <Metric label={p.averageProgress} value={`${averageProgress}%`} />
+          <Metric label={p.discipline} value={`${disciplineValue}%`} />
+          <Metric label={p.sinceStart} value={`${daysSinceStart} ${p.days}`} />
+        </div>
+      </section>
+
+      <section style={recommendationCard}>
+        <div style={header}>
+          <Star color="var(--green)" />
+          <div>
+            <h2>{p.recommendedNext}</h2>
+            <p style={mutedSmall}>
+              {recommendation ? recommendation.reason : p.noRecommendation}
+            </p>
+          </div>
+        </div>
+
+        {recommendation ? (
+          <div style={recommendationBox}>
+            <strong>{recommendation.title}</strong>
+            <span>{recommendation.amountLabel}</span>
+          </div>
+        ) : (
+          <p style={muted}>{p.noRecommendation}</p>
+        )}
+      </section>
+
+      <section style={preferencesCard}>
+        <div style={header}>
+          <Palette color="var(--blue)" />
+          <h2>{p.preferences}</h2>
+        </div>
+
+        <div style={preferenceGrid}>
+          <PreferenceButton
+            icon={<Languages size={18} />}
+            label={p.language}
+            onClick={() => setCurrentPage("reglages", "language")}
+          />
+          <PreferenceButton
+            icon={<Palette size={18} />}
+            label={p.appearance}
+            onClick={() => setCurrentPage("reglages", "appearance")}
+          />
+          <PreferenceButton
+            icon={<Bell size={18} />}
+            label={p.notifications}
+            onClick={() => setCurrentPage("reglages", "notifications")}
+          />
+          <PreferenceButton
+            icon={<Lock size={18} />}
+            label={p.privacy}
+            onClick={() => setCurrentPage("reglages", "privacy")}
+          />
         </div>
       </section>
 
@@ -531,6 +698,18 @@ function Profil({
         )}
       </section>
 
+      <section style={connectivityCard}>
+        <div style={header}>
+          <Wifi color="var(--blue)" />
+          <h2>{p.connectivity}</h2>
+        </div>
+
+        <FutureItem icon={<Database size={18} />} label={p.bankSync} badge={p.comingSoon} />
+        <FutureItem icon={<FileDown size={18} />} label={p.pdfExport} badge={p.comingSoon} />
+        <FutureItem icon={<Smartphone size={18} />} label={p.multiDevice} badge={p.comingSoon} />
+        <FutureItem icon={<Sparkles size={18} />} label={p.advancedAI} badge={p.comingSoon} />
+      </section>
+
       <section style={historyCard}>
         <div style={header}>
           <History color="var(--gold)" />
@@ -574,32 +753,6 @@ function Profil({
         )}
       </section>
 
-      <Section icon={<Trophy />} title={p.stats} color="var(--gold)">
-        <InfoRow label={p.activeGoals} value={activeGoals.length} />
-        <InfoRow label={p.achievedGoals} value={achievedGoals.length} />
-        <InfoRow label={p.discipline} value={`${disciplineValue}%`} />
-        <InfoRow label={p.sinceStart} value={`${daysSinceStart} ${p.days}`} />
-      </Section>
-
-      <section style={card}>
-        <div style={header}>
-          <Star color="var(--green)" />
-          <h2>{p.progress}</h2>
-        </div>
-
-        <p style={muted}>{disciplineLabel}</p>
-
-        <div style={progressBar}>
-          <div
-            style={{
-              ...progressFill,
-              width: `${disciplineValue}%`,
-              background: getDisciplineColor(disciplineValue),
-            }}
-          />
-        </div>
-      </section>
-
       <section style={card}>
         <div style={header}>
           <Trophy color="var(--gold)" />
@@ -628,13 +781,22 @@ function Profil({
         <InfoRow label={p.currency} value={settings.currency} />
       </Section>
 
-      <section style={card}>
-        <div style={header}>
+      <section style={brandCard}>
+        <div style={brandBadge}>
           <Database color="var(--gold)" />
-          <h2>{p.developed}</h2>
+          <strong>{p.version}</strong>
         </div>
 
-        <p style={muted}>{p.privacyTrust}</p>
+        <h2>{p.mottoOne}</h2>
+        <h2 style={{ color: "var(--gold)" }}>{p.mottoTwo}</h2>
+
+        <p style={muted}>{p.developed}</p>
+
+        <div style={founderBox}>
+          <strong>{p.founder}</strong>
+          <span>{p.founderTitle}</span>
+          <span>{p.countries}</span>
+        </div>
       </section>
 
       <button onClick={() => setCurrentPage("reglages")} style={settingsBtn}>
@@ -653,6 +815,54 @@ function isGoalAchieved(goal) {
     Number(goal?.targetAmount || 0) > 0 &&
     Number(goal?.currentAmount || 0) >= Number(goal?.targetAmount || 0)
   );
+}
+
+function getGoalProgress(goal) {
+  if (Array.isArray(goal?.pathSteps) && goal.pathSteps.length > 0) {
+    const done = goal.pathSteps.filter((step) => step.done).length;
+    return Math.round((done / goal.pathSteps.length) * 100);
+  }
+
+  const target = Number(goal?.targetAmount || 0);
+  const current = Number(goal?.currentAmount || 0);
+
+  if (target <= 0) return 0;
+  return Math.min(100, Math.round((current / target) * 100));
+}
+
+function getAverageProgress(goals) {
+  if (!Array.isArray(goals) || goals.length === 0) return 0;
+
+  const total = goals.reduce((sum, goal) => sum + getGoalProgress(goal), 0);
+  return Math.round(total / goals.length);
+}
+
+function getSmartRecommendation({ smartAllocationEngine, language, fallback }) {
+  const firstAllocation = Array.isArray(smartAllocationEngine?.allocations)
+    ? smartAllocationEngine.allocations[0]
+    : null;
+
+  if (!firstAllocation) return null;
+
+  const amount = Number(firstAllocation.amount || 0);
+  const label = firstAllocation.label || "Objectif";
+  const reason = firstAllocation.reason || fallback;
+
+  return {
+    title:
+      language === "EN"
+        ? `Add ${amount.toLocaleString("en-CA")} $ to ${label}`
+        : language === "ES"
+          ? `Agregar ${amount.toLocaleString("es-CA")} $ a ${label}`
+          : `Ajouter ${amount.toLocaleString("fr-CA")} $ à ${label}`,
+    amountLabel:
+      language === "EN"
+        ? "Smart priority"
+        : language === "ES"
+          ? "Prioridad inteligente"
+          : "Priorité intelligente",
+    reason,
+  };
 }
 
 function formatHistoryDate(dateValue, language = "FR") {
@@ -727,6 +937,34 @@ function Section({ icon, title, color, children }) {
   );
 }
 
+function Metric({ label, value }) {
+  return (
+    <div style={metricItem}>
+      <strong>{value}</strong>
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function PreferenceButton({ icon, label, onClick }) {
+  return (
+    <button onClick={onClick} style={preferenceButton}>
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function FutureItem({ icon, label, badge }) {
+  return (
+    <div style={futureItem}>
+      <span style={futureIcon}>{icon}</span>
+      <strong>{label}</strong>
+      <em>{badge}</em>
+    </div>
+  );
+}
+
 function InfoRow({ label, value }) {
   return (
     <div style={infoRow}>
@@ -744,9 +982,48 @@ function authButtonStyle(base, disabled) {
   };
 }
 
+const startFlag = {
+  color: "var(--gold)",
+  fontSize: "13px",
+  fontWeight: "900",
+  marginTop: "8px",
+};
+
 const trustCard = {
   background: "linear-gradient(135deg, rgba(34,197,94,.14), var(--bg-card))",
   border: "1px solid var(--green)",
+  borderRadius: "22px",
+  padding: "18px",
+  marginTop: "16px",
+};
+
+const evolutionCard = {
+  background: "linear-gradient(135deg, rgba(212,175,55,.14), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "22px",
+  padding: "18px",
+  marginTop: "16px",
+};
+
+const recommendationCard = {
+  background: "linear-gradient(135deg, rgba(34,197,94,.14), var(--bg-card))",
+  border: "1px solid var(--green)",
+  borderRadius: "22px",
+  padding: "18px",
+  marginTop: "16px",
+};
+
+const preferencesCard = {
+  background: "linear-gradient(135deg, rgba(56,189,248,.13), var(--bg-card))",
+  border: "1px solid var(--blue)",
+  borderRadius: "22px",
+  padding: "18px",
+  marginTop: "16px",
+};
+
+const connectivityCard = {
+  background: "linear-gradient(135deg, rgba(56,189,248,.13), var(--bg-card))",
+  border: "1px solid var(--blue)",
   borderRadius: "22px",
   padding: "18px",
   marginTop: "16px",
@@ -797,6 +1074,68 @@ const trustNote = {
   gap: "10px",
   alignItems: "flex-start",
   color: "var(--text-main)",
+};
+
+const metricGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: "10px",
+  marginTop: "12px",
+};
+
+const metricItem = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "13px",
+  display: "grid",
+  gap: "4px",
+};
+
+const recommendationBox = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--green)",
+  borderRadius: "18px",
+  padding: "15px",
+  display: "grid",
+  gap: "6px",
+};
+
+const preferenceGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: "10px",
+};
+
+const preferenceButton = {
+  border: "1px solid var(--border)",
+  background: "var(--bg-panel)",
+  color: "var(--text-main)",
+  borderRadius: "15px",
+  padding: "12px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+  fontWeight: "900",
+};
+
+const futureItem = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "15px",
+  padding: "12px",
+  marginTop: "8px",
+  display: "grid",
+  gridTemplateColumns: "24px 1fr auto",
+  gap: "10px",
+  alignItems: "center",
+};
+
+const futureIcon = {
+  color: "var(--blue)",
+  display: "grid",
+  placeItems: "center",
 };
 
 const historyCard = {
@@ -1015,6 +1354,37 @@ const card = {
   borderRadius: "22px",
   padding: "18px",
   marginTop: "16px",
+};
+
+const brandCard = {
+  background: "linear-gradient(135deg, rgba(212,175,55,.18), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "24px",
+  padding: "20px",
+  marginTop: "16px",
+  textAlign: "center",
+};
+
+const brandBadge = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+  background: "var(--bg-panel)",
+  border: "1px solid var(--gold)",
+  borderRadius: "999px",
+  padding: "9px 13px",
+  marginBottom: "12px",
+};
+
+const founderBox = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "16px",
+  padding: "13px",
+  marginTop: "14px",
+  display: "grid",
+  gap: "5px",
 };
 
 const header = {
