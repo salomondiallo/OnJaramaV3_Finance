@@ -19,6 +19,7 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
+import { getPageLabel, getText } from "../data/translations";
 
 function TopBar({
   currentPage,
@@ -33,6 +34,8 @@ function TopBar({
   const [menuOpen, setMenuOpen] = useState(false);
 
   const language = settings?.language || "FR";
+  const t = getText(settings);
+
   const isConnected = Boolean(auth?.user || auth?.session?.user);
   const userEmail =
     auth?.user?.email ||
@@ -76,14 +79,19 @@ function TopBar({
   }
 
   function toggleQuickLanguage() {
-    updateLanguage(language === "EN" ? "FR" : "EN");
+    if (language === "FR") {
+      updateLanguage("EN");
+      return;
+    }
+
+    updateLanguage("FR");
   }
 
   return (
     <div className={`topbar ${isMainPage ? "topbar-main" : ""}`}>
       <div className="topbar-left">
         {!isMainPage && canGoBack ? (
-          <button onClick={goBack} className="topbar-back" aria-label="Retour">
+          <button onClick={goBack} className="topbar-back" aria-label={t.return}>
             <ArrowLeft size={20} />
           </button>
         ) : (
@@ -121,7 +129,7 @@ function TopBar({
         <button
           onClick={() => openPage("notifications")}
           className="topbar-menu-btn"
-          aria-label="Notifications"
+          aria-label={t.notificationsPage}
           style={menuButtonWithBadge}
         >
           <Bell size={19} />
@@ -136,7 +144,7 @@ function TopBar({
         <button
           onClick={() => setMenuOpen(true)}
           className="topbar-menu-btn"
-          aria-label="Menu"
+          aria-label={t.menuOnJarama}
         >
           <Menu size={22} />
         </button>
@@ -147,32 +155,20 @@ function TopBar({
           <button
             className="topbar-menu-backdrop"
             onClick={() => setMenuOpen(false)}
-            aria-label="Fermer le menu"
+            aria-label={t.closeMenu}
           />
 
           <div className="topbar-menu-panel" style={slidePanel}>
             <div className="topbar-menu-head">
-              <strong>OnJarama Path V11.3</strong>
-              <span>
-                {language === "EN"
-                  ? "Cloud & Multilingual Finalization"
-                  : "Cloud & Multilingual Finalization"}
-              </span>
+              <strong>OnJarama Path V13.1</strong>
+              <span>{t.v131Subtitle}</span>
             </div>
 
             <div style={accountCard}>
               <div style={accountTop}>
                 <UserCircle size={26} color="var(--gold)" />
                 <div>
-                  <strong>
-                    {isConnected
-                      ? language === "EN"
-                        ? "Connected account"
-                        : "Compte connecté"
-                      : language === "EN"
-                        ? "Guest mode"
-                        : "Mode invité"}
-                  </strong>
+                  <strong>{isConnected ? t.connectedAccount : t.guestMode}</strong>
                   <small>{userEmail || "OnJarama Path"}</small>
                 </div>
               </div>
@@ -180,42 +176,22 @@ function TopBar({
               <div style={cloudGrid}>
                 <CloudStatus
                   icon={<Cloud size={16} />}
-                  title={language === "EN" ? "Cloud" : "Cloud"}
-                  value={
-                    isConnected
-                      ? language === "EN"
-                        ? "Ready"
-                        : "Prêt"
-                      : language === "EN"
-                        ? "Guest"
-                        : "Invité"
-                  }
+                  title="Cloud"
+                  value={isConnected ? t.cloudReady : t.cloudGuest}
                   color="var(--gold)"
                 />
 
                 <CloudStatus
                   icon={<Wifi size={16} />}
-                  title={language === "EN" ? "Sync" : "Synchro"}
-                  value={
-                    isConnected
-                      ? language === "EN"
-                        ? "Prepared"
-                        : "Préparée"
-                      : language === "EN"
-                        ? "Local"
-                        : "Locale"
-                  }
+                  title={t.cloudSync}
+                  value={isConnected ? t.cloudPrepared : t.cloudLocal}
                   color="var(--blue)"
                 />
 
                 <CloudStatus
                   icon={<CheckCircle2 size={16} />}
-                  title={language === "EN" ? "Backup" : "Sauvegarde"}
-                  value={
-                    language === "EN"
-                      ? "Local active"
-                      : "Locale active"
-                  }
+                  title={t.backup}
+                  value={t.localActive}
                   color="var(--green)"
                 />
               </div>
@@ -224,7 +200,7 @@ function TopBar({
             <div style={languagePanel}>
               <div style={languagePanelTitle}>
                 <Languages size={17} />
-                <strong>{language === "EN" ? "Language" : "Langue"}</strong>
+                <strong>{t.language}</strong>
               </div>
 
               <div style={languageGrid}>
@@ -232,19 +208,26 @@ function TopBar({
                   onClick={() => updateLanguage("FR")}
                   style={languageChoice(language === "FR")}
                 >
-                  FR — Français
+                  FR — {t.french}
                 </button>
 
                 <button
                   onClick={() => updateLanguage("EN")}
                   style={languageChoice(language === "EN")}
                 >
-                  EN — English
+                  EN — {t.english}
+                </button>
+
+                <button
+                  onClick={() => updateLanguage("ES")}
+                  style={languageChoice(language === "ES")}
+                >
+                  ES — {t.spanish}
                 </button>
 
                 <button disabled style={languageDisabled}>
-                  中文
-                  <small>{language === "EN" ? "Soon" : "Bientôt"}</small>
+                  {t.chinese}
+                  <small>{t.soon}</small>
                 </button>
               </div>
             </div>
@@ -266,7 +249,7 @@ function TopBar({
 
             <button onClick={() => openPage("reglages", true)}>
               <Globe2 size={18} />
-              {language === "EN" ? "Language settings" : "Paramètres de langue"}
+              {t.languageSettings}
             </button>
 
             <button onClick={() => openPage("notifications")}>
@@ -279,12 +262,12 @@ function TopBar({
 
             <button onClick={() => openPage("guide")}>
               <BookOpen size={18} />
-              {language === "EN" ? "Guide & Tips" : "Guide & Astuces"}
+              {getPageLabel("guide", language)}
             </button>
 
             <button onClick={() => openPage("patchnotes")}>
               <FileText size={18} />
-              Patch Notes
+              {getPageLabel("patchnotes", language)}
             </button>
 
             <button onClick={() => openPage("historique")}>
@@ -294,29 +277,19 @@ function TopBar({
 
             <button onClick={() => openPage("reglages")}>
               <ShieldCheck size={18} />
-              {language === "EN"
-                ? "Security & privacy"
-                : "Sécurité & confidentialité"}
+              {t.securityPrivacy}
             </button>
 
             <button disabled style={disabledMenuButton}>
               <LogOut size={18} />
-              {language === "EN" ? "Sign out soon" : "Déconnexion bientôt"}
+              {t.signOutSoon}
             </button>
 
             <div className="topbar-credit">
               <strong>Thierno Diallo</strong>
-              <span>
-                {language === "EN"
-                  ? "Founder of the OnJarama ecosystem"
-                  : "Fondateur de l’écosystème OnJarama"}
-              </span>
-              <small>Guinée 🇬🇳 • Québec ⚜️ • Canada 🇨🇦</small>
-              <small>
-                {language === "EN"
-                  ? "Proudly developed in Quebec ⚜️"
-                  : "Fièrement développé au Québec ⚜️"}
-              </small>
+              <span>{t.founder}</span>
+              <small>{t.guineaQuebecCanada}</small>
+              <small>{t.proudlyQuebec}</small>
             </div>
 
             <button
@@ -324,7 +297,7 @@ function TopBar({
               className="topbar-close-btn"
             >
               <X size={17} />
-              {language === "EN" ? "Close menu" : "Fermer le menu"}
+              {t.closeMenu}
             </button>
           </div>
         </>
@@ -341,57 +314,6 @@ function CloudStatus({ icon, title, value, color }) {
       <strong>{value}</strong>
     </div>
   );
-}
-
-function getPageLabel(page, language = "FR") {
-  const labels = {
-    FR: {
-      accueil: "Accueil",
-      situation: "Situation",
-      objectifs: "Objectifs",
-      parcours: "Parcours",
-      monplan: "Mon Plan",
-      simulateur: "Simulateur",
-      dettes: "Dettes",
-      epargne: "Épargne",
-      paiements: "Paiements",
-      transactions: "Transactions",
-      assistant: "Assistant IA",
-      budget: "Budget",
-      explorer: "Explorer",
-      horizon: "Horizon",
-      profil: "Profil",
-      reglages: "Réglages",
-      notifications: "Notifications",
-      historique: "Historique",
-      guide: "Guide & Astuces",
-      patchnotes: "Patch Notes",
-    },
-    EN: {
-      accueil: "Home",
-      situation: "Situation",
-      objectifs: "Goals",
-      parcours: "Path",
-      monplan: "My Plan",
-      simulateur: "Simulator",
-      dettes: "Debts",
-      epargne: "Savings",
-      paiements: "Payments",
-      transactions: "Transactions",
-      assistant: "AI Assistant",
-      budget: "Budget",
-      explorer: "Explorer",
-      horizon: "Horizon",
-      profil: "Profile",
-      reglages: "Settings",
-      notifications: "Notifications",
-      historique: "History",
-      guide: "Guide & Tips",
-      patchnotes: "Patch Notes",
-    },
-  };
-
-  return labels[language]?.[page] || labels.FR[page] || "Page";
 }
 
 const brandBlock = {

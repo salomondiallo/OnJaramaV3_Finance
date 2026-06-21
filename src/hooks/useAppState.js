@@ -55,8 +55,17 @@ const defaultSettings = {
   demoMode: false,
   showAmounts: false,
   aiAssistantMode: "auto",
-  cloudBackup: true,
+
+  cloudBackup: false,
   cloudSyncStatus: "local",
+  syncEnabled: false,
+  cloudProvider: null,
+  lastSync: null,
+
+  googleLoginReady: false,
+  microsoftLoginReady: false,
+  bankSyncReady: false,
+  bankSyncMode: "read-only",
 };
 
 function readStorage(key, fallback) {

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   Bell,
+  Building2,
   Cloud,
   Fingerprint,
   Info,
@@ -15,152 +16,6 @@ import {
 } from "lucide-react";
 import { getText } from "../data/translations";
 
-const pageText = {
-  FR: {
-    subtitle: "Préférences rapides, sécurité, sauvegarde et crédits.",
-    language: "Langue",
-    currency: "Devise",
-    appearance: "Apparence",
-    notifications: "Notifications",
-    synchronization: "Synchronisation",
-    backup: "Sauvegarde",
-    reset: "Réinitialisation",
-    credits: "Crédits",
-    privacy: "Confidentialité",
-    security: "Sécurité",
-    account: "Compte",
-    banking: "Connexion bancaire",
-    google: "Connexion Google",
-    pin: "Code PIN",
-    biometric: "Biométrie",
-    comingSoon: "Bientôt disponible",
-    readOnly: "Lecture seule, aucune transaction.",
-    french: "Français",
-    english: "English",
-    spanish: "Español",
-    dark: "Mode sombre",
-    light: "Mode clair",
-    on: "ON",
-    off: "OFF",
-    hideAmounts: "Masquer les montants",
-    showAmounts: "Afficher les montants",
-    confirmTitle: "Confirmer la réinitialisation",
-    confirmText: "Cette action peut supprimer des données locales.",
-    confirmYes: "Oui, confirmer",
-    confirmCancel: "Annuler",
-    syncText: "Connexion cloud prévue plus tard. Aucune transaction bancaire.",
-    backupText: "Sauvegarde locale automatique activée sur cet appareil.",
-    privacyText:
-      "Aucune transaction bancaire n’est possible dans cette version. Les données restent locales tant que la synchronisation n’est pas activée.",
-    accountText: "Profil utilisateur, pays, langue et devise sont visibles dans Profil.",
-    securityText: "Sécurité avancée préparée pour les prochaines versions.",
-    resetGoals: "Réinitialiser les objectifs",
-    resetFinance: "Réinitialiser les finances",
-    resetSettings: "Réinitialiser les réglages",
-    resetAll: "Réinitialiser tout",
-    creator: "Créateur",
-    founder: "Fondateur de l’écosystème OnJarama",
-    appVersion: "OnJarama Path • Version V8.5 Beta",
-    ecosystem: "OnJarama • OJCS • OJCT",
-  },
-
-  EN: {
-    subtitle: "Quick preferences, security, backup and credits.",
-    language: "Language",
-    currency: "Currency",
-    appearance: "Appearance",
-    notifications: "Notifications",
-    synchronization: "Synchronization",
-    backup: "Backup",
-    reset: "Reset",
-    credits: "Credits",
-    privacy: "Privacy",
-    security: "Security",
-    account: "Account",
-    banking: "Bank connection",
-    google: "Google sign-in",
-    pin: "PIN code",
-    biometric: "Biometrics",
-    comingSoon: "Coming soon",
-    readOnly: "Read-only, no transaction.",
-    french: "Français",
-    english: "English",
-    spanish: "Español",
-    dark: "Dark mode",
-    light: "Light mode",
-    on: "ON",
-    off: "OFF",
-    hideAmounts: "Hide amounts",
-    showAmounts: "Show amounts",
-    confirmTitle: "Confirm reset",
-    confirmText: "This action may delete local data.",
-    confirmYes: "Yes, confirm",
-    confirmCancel: "Cancel",
-    syncText: "Cloud connection planned later. No banking transaction.",
-    backupText: "Automatic local backup enabled on this device.",
-    privacyText:
-      "No banking transaction is possible in this version. Data stays local until synchronization is enabled.",
-    accountText: "User profile, country, language and currency are visible in Profile.",
-    securityText: "Advanced security prepared for future versions.",
-    resetGoals: "Reset goals",
-    resetFinance: "Reset finances",
-    resetSettings: "Reset settings",
-    resetAll: "Reset everything",
-    creator: "Creator",
-    founder: "Founder of the OnJarama ecosystem",
-    appVersion: "OnJarama Path • Version V8.5 Beta",
-    ecosystem: "OnJarama • OJCS • OJCT",
-  },
-
-  ES: {
-    subtitle: "Preferencias rápidas, seguridad, copia y créditos.",
-    language: "Idioma",
-    currency: "Moneda",
-    appearance: "Apariencia",
-    notifications: "Notificaciones",
-    synchronization: "Sincronización",
-    backup: "Copia de seguridad",
-    reset: "Restablecer",
-    credits: "Créditos",
-    privacy: "Privacidad",
-    security: "Seguridad",
-    account: "Cuenta",
-    banking: "Conexión bancaria",
-    google: "Conexión Google",
-    pin: "Código PIN",
-    biometric: "Biometría",
-    comingSoon: "Próximamente",
-    readOnly: "Solo lectura, ninguna transacción.",
-    french: "Français",
-    english: "English",
-    spanish: "Español",
-    dark: "Modo oscuro",
-    light: "Modo claro",
-    on: "ON",
-    off: "OFF",
-    hideAmounts: "Ocultar montos",
-    showAmounts: "Mostrar montos",
-    confirmTitle: "Confirmar restablecimiento",
-    confirmText: "Esta acción puede borrar datos locales.",
-    confirmYes: "Sí, confirmar",
-    confirmCancel: "Cancelar",
-    syncText: "Conexión cloud prevista más adelante. Ninguna transacción bancaria.",
-    backupText: "Copia local automática activada en este dispositivo.",
-    privacyText:
-      "No es posible realizar transacciones bancarias en esta versión. Los datos permanecen locales hasta activar la sincronización.",
-    accountText: "Perfil, país, idioma y moneda están visibles en Perfil.",
-    securityText: "Seguridad avanzada preparada para futuras versiones.",
-    resetGoals: "Restablecer objetivos",
-    resetFinance: "Restablecer finanzas",
-    resetSettings: "Restablecer ajustes",
-    resetAll: "Restablecer todo",
-    creator: "Creador",
-    founder: "Fundador del ecosistema OnJarama",
-    appVersion: "OnJarama Path • Versión V8.5 Beta",
-    ecosystem: "OnJarama • OJCS • OJCT",
-  },
-};
-
 function Reglages({
   settings,
   setSettings,
@@ -171,7 +26,6 @@ function Reglages({
   setCurrentPage,
 }) {
   const t = getText(settings);
-  const p = pageText[settings?.language || "FR"] || pageText.FR;
 
   const [openSection, setOpenSection] = useState("language");
   const [confirmAction, setConfirmAction] = useState(null);
@@ -201,24 +55,24 @@ function Reglages({
   return (
     <div className="native-page">
       <h1>{t.reglages}</h1>
-      <p style={muted}>{p.subtitle}</p>
+      <p style={muted}>{t.quickPreferencesSecurityBackupCredits}</p>
 
       {confirmAction && (
         <section style={confirmBox}>
-          <strong>{p.confirmTitle}</strong>
+          <strong>{t.confirmReset}</strong>
           <p style={muted}>
-            {p.confirmText}
+            {t.resetWarning}
             <br />
             <strong>{confirmAction.label}</strong>
           </p>
 
           <div style={confirmActions}>
             <button onClick={runConfirmedAction} style={dangerBtn}>
-              {p.confirmYes}
+              {t.yesConfirm}
             </button>
 
             <button onClick={() => setConfirmAction(null)} style={cancelBtn}>
-              {p.confirmCancel}
+              {t.cancel}
             </button>
           </div>
         </section>
@@ -228,36 +82,38 @@ function Reglages({
         open={openSection === "language"}
         onClick={() => toggle("language")}
         icon={<Languages />}
-        title={p.language}
+        title={t.language}
         color="var(--green)"
       >
         <Option
           active={settings.language === "FR"}
           onClick={() => updateSetting("language", "FR")}
         >
-          {p.french}
+          {t.french}
         </Option>
 
         <Option
           active={settings.language === "EN"}
           onClick={() => updateSetting("language", "EN")}
         >
-          {p.english}
+          {t.english}
         </Option>
 
         <Option
           active={settings.language === "ES"}
           onClick={() => updateSetting("language", "ES")}
         >
-          {p.spanish}
+          {t.spanish}
         </Option>
+
+        <StatusLine title={t.chinese} text={t.soon} color="var(--blue)" />
       </Tile>
 
       <Tile
         open={openSection === "currency"}
         onClick={() => toggle("currency")}
         icon={<Wallet />}
-        title={p.currency}
+        title={t.currency}
         color="var(--gold)"
       >
         {["CAD", "USD", "EUR", "GBP", "GNF", "XOF", "XAF", "CHF", "MAD"].map(
@@ -277,21 +133,21 @@ function Reglages({
         open={openSection === "appearance"}
         onClick={() => toggle("appearance")}
         icon={<Palette />}
-        title={p.appearance}
+        title={t.appearance}
         color="var(--purple)"
       >
         <Option
           active={settings.theme === "sombre"}
           onClick={() => updateSetting("theme", "sombre")}
         >
-          {p.dark}
+          {t.darkMode}
         </Option>
 
         <Option
           active={settings.theme === "clair"}
           onClick={() => updateSetting("theme", "clair")}
         >
-          {p.light}
+          {t.lightMode}
         </Option>
       </Tile>
 
@@ -299,21 +155,21 @@ function Reglages({
         open={openSection === "notifications"}
         onClick={() => toggle("notifications")}
         icon={<Bell />}
-        title={p.notifications}
+        title={t.notifications}
         color="var(--green)"
       >
         <Option
           active={settings.notifications}
           onClick={() => updateSetting("notifications", true)}
         >
-          {p.on}
+          {t.on}
         </Option>
 
         <Option
           active={!settings.notifications}
           onClick={() => updateSetting("notifications", false)}
         >
-          {p.off}
+          {t.off}
         </Option>
       </Tile>
 
@@ -321,28 +177,28 @@ function Reglages({
         open={openSection === "privacy"}
         onClick={() => toggle("privacy")}
         icon={<Lock />}
-        title={p.privacy}
+        title={t.privacy}
         color="var(--gold)"
       >
-        <p style={muted}>{p.privacyText}</p>
+        <p style={muted}>{t.privacyText}</p>
 
         <Option
           active={settings.privacyMode}
           onClick={() => updateSetting("privacyMode", true)}
         >
-          {p.on}
+          {t.on}
         </Option>
 
         <Option
           active={!settings.privacyMode}
           onClick={() => updateSetting("privacyMode", false)}
         >
-          {p.off}
+          {t.off}
         </Option>
 
         <StatusLine
-          title={p.hideAmounts}
-          text={settings.showAmounts ? p.off : p.on}
+          title={t.hideAmounts}
+          text={settings.showAmounts ? t.off : t.on}
           color="var(--gold)"
         />
 
@@ -350,14 +206,14 @@ function Reglages({
           active={!settings.showAmounts}
           onClick={() => updateSetting("showAmounts", false)}
         >
-          {p.hideAmounts}
+          {t.hideAmounts}
         </Option>
 
         <Option
           active={settings.showAmounts}
           onClick={() => updateSetting("showAmounts", true)}
         >
-          {p.showAmounts}
+          {t.showAmounts}
         </Option>
       </Tile>
 
@@ -365,22 +221,23 @@ function Reglages({
         open={openSection === "security"}
         onClick={() => toggle("security")}
         icon={<KeyRound />}
-        title={p.security}
+        title={t.security}
         color="var(--purple)"
       >
-        <p style={muted}>{p.securityText}</p>
+        <p style={muted}>{t.securityText}</p>
 
-        <StatusLine title={p.pin} text={p.comingSoon} color="var(--gold)" />
+        <StatusLine title={t.pinCode} text={t.soon} color="var(--gold)" />
         <StatusLine
-          title={p.biometric}
-          text={p.comingSoon}
+          title={t.biometrics}
+          text={t.soon}
           color="var(--green)"
+          icon={<Fingerprint size={16} />}
         />
-        <StatusLine title={p.google} text={p.comingSoon} color="var(--blue)" />
+        <StatusLine title={t.googleSignIn} text={t.soon} color="var(--blue)" />
         <StatusLine
-          title={p.banking}
-          text={`${p.comingSoon} • ${p.readOnly}`}
-          color="var(--gold)"
+          title={t.microsoftSignIn}
+          text={t.soon}
+          color="var(--purple)"
         />
       </Tile>
 
@@ -388,58 +245,92 @@ function Reglages({
         open={openSection === "sync"}
         onClick={() => toggle("sync")}
         icon={<Cloud />}
-        title={p.synchronization}
+        title={t.cloudSynchronization}
         color="var(--blue)"
       >
-        <StatusLine title={p.google} text={p.comingSoon} color="var(--blue)" />
         <StatusLine
-          title={p.banking}
-          text={`${p.comingSoon} • ${p.readOnly}`}
+          title={t.cloudSync}
+          text={t.cloudComingSoon}
+          color="var(--blue)"
+        />
+
+        <StatusLine
+          title={t.googleSignIn}
+          text={t.soon}
+          color="var(--green)"
+        />
+
+        <StatusLine
+          title={t.microsoftSignIn}
+          text={t.soon}
+          color="var(--purple)"
+        />
+
+        <p style={muted}>{t.cloudText}</p>
+
+        <InfoRow
+          label="syncEnabled"
+          value={String(Boolean(settings.syncEnabled))}
+        />
+        <InfoRow label="cloudProvider" value={settings.cloudProvider || "null"} />
+        <InfoRow label="lastSync" value={settings.lastSync || "null"} />
+      </Tile>
+
+      <Tile
+        open={openSection === "banking"}
+        onClick={() => toggle("banking")}
+        icon={<Building2 />}
+        title={t.bankConnection}
+        color="var(--gold)"
+      >
+        <StatusLine
+          title={t.bankSync}
+          text={t.bankingComingSoon}
           color="var(--gold)"
         />
-        <p style={muted}>{p.syncText}</p>
+        <p style={muted}>{t.readOnlyNoTransaction}</p>
       </Tile>
 
       <Tile
         open={openSection === "backup"}
         onClick={() => toggle("backup")}
         icon={<Shield />}
-        title={p.backup}
+        title={t.backup}
         color="var(--gold)"
       >
-        <p>{p.backupText}</p>
+        <p>{t.backupText}</p>
       </Tile>
 
       <Tile
         open={openSection === "reset"}
         onClick={() => toggle("reset")}
         icon={<RefreshCcw />}
-        title={p.reset}
+        title={t.reset}
         color="var(--red)"
       >
         <button
-          onClick={() => askConfirm(p.resetGoals, resetGoalsOnly)}
+          onClick={() => askConfirm(t.resetGoals, resetGoalsOnly)}
           style={dangerBtn}
         >
-          {p.resetGoals}
+          {t.resetGoals}
         </button>
 
         <button
-          onClick={() => askConfirm(p.resetFinance, resetFinanceOnly)}
+          onClick={() => askConfirm(t.resetFinance, resetFinanceOnly)}
           style={dangerBtn}
         >
-          {p.resetFinance}
+          {t.resetFinance}
         </button>
 
         <button
-          onClick={() => askConfirm(p.resetSettings, resetSettingsOnly)}
+          onClick={() => askConfirm(t.resetSettings, resetSettingsOnly)}
           style={dangerBtn}
         >
-          {p.resetSettings}
+          {t.resetSettings}
         </button>
 
-        <button onClick={() => askConfirm(p.resetAll, resetAll)} style={dangerBtn}>
-          {p.resetAll}
+        <button onClick={() => askConfirm(t.resetAll, resetAll)} style={dangerBtn}>
+          {t.resetAll}
         </button>
       </Tile>
 
@@ -447,23 +338,25 @@ function Reglages({
         open={openSection === "credits"}
         onClick={() => toggle("credits")}
         icon={<Info />}
-        title={p.credits}
+        title={t.credits}
         color="var(--purple)"
       >
-        <InfoRow label={p.creator} value="Thierno Diallo" />
-        <InfoRow label="OnJarama" value={p.founder} />
-        <InfoRow label="Version" value={p.appVersion} />
-        <InfoRow label="Écosystème" value={p.ecosystem} />
+        <InfoRow label={t.creator} value="Thierno Diallo" />
+        <InfoRow label="OnJarama" value={t.founder} />
+        <InfoRow label="Version" value={t.appVersion} />
+        <InfoRow label="Écosystème" value={t.ecosystem} />
+        <InfoRow label="Origine" value={t.guineaQuebecCanada} />
+        <InfoRow label="Québec" value={t.proudlyQuebec} />
       </Tile>
 
       <Tile
         open={openSection === "account"}
         onClick={() => toggle("account")}
         icon={<UserCircle />}
-        title={p.account}
+        title={t.account}
         color="var(--blue)"
       >
-        <p style={muted}>{p.accountText}</p>
+        <p style={muted}>{t.accountText}</p>
 
         <button onClick={() => setCurrentPage("profil")} style={profileBtn}>
           {t.profil}
@@ -503,10 +396,13 @@ function Option({ active, children, onClick }) {
   );
 }
 
-function StatusLine({ title, text, color }) {
+function StatusLine({ title, text, color, icon = null }) {
   return (
     <div style={{ ...statusLine, borderColor: color }}>
-      <strong>{title}</strong>
+      <div style={statusTitle}>
+        {icon}
+        <strong>{title}</strong>
+      </div>
       <span>{text}</span>
     </div>
   );
@@ -584,6 +480,12 @@ const statusLine = {
   marginTop: "8px",
   display: "grid",
   gap: "4px",
+};
+
+const statusTitle = {
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
 };
 
 const confirmBox = {
