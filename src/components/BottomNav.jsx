@@ -37,6 +37,16 @@ function BottomNav({
       hideNav: "Hide navigation",
       mainNav: "OnJarama Path main navigation",
     },
+    ES: {
+      accueil: "OJ",
+      situation: "Situación",
+      objectifs: "Objetivos",
+      simulateur: "Simulador",
+      profil: "Perfil",
+      showNav: "Mostrar navegación",
+      hideNav: "Ocultar navegación",
+      mainNav: "Navegación principal OnJarama Path",
+    },
   };
 
   const t = labels[language] || labels.FR;
@@ -58,7 +68,7 @@ function BottomNav({
       </button>
 
       <nav
-        className={`bottom-nav bottom-nav-v115 ${
+        className={`bottom-nav bottom-nav-v123 ${
           navHidden ? "bottom-nav-hidden" : ""
         }`}
         aria-label={t.mainNav}
@@ -80,27 +90,10 @@ function BottomNav({
         <button
           onClick={() => go("objectifs")}
           className={`bottom-center-plan ${objectivesActive ? "active" : ""}`}
-          style={{
-            borderColor: objectivesActive
-              ? "var(--gold)"
-              : "rgba(212,175,55,.36)",
-            color: objectivesActive ? "var(--gold)" : "var(--text-main)",
-            background: objectivesActive
-              ? "rgba(212,175,55,.16)"
-              : "rgba(255,255,255,.035)",
-            boxShadow: objectivesActive
-              ? "0 0 22px rgba(212,175,55,.34)"
-              : "0 0 18px rgba(212,175,55,.12)",
-          }}
           aria-label={t.objectifs}
           title={t.objectifs}
         >
-          <span
-            className="bottom-center-icon"
-            style={{
-              color: objectivesActive ? "var(--gold)" : "var(--text-main)",
-            }}
-          >
+          <span className="bottom-center-icon">
             <Target size={21} />
           </span>
           <strong>{t.objectifs}</strong>
@@ -141,19 +134,8 @@ function NavButton({ icon, label, active, onClick }) {
 function OJLogo({ active }) {
   return (
     <span
-      style={{
-        width: "28px",
-        height: "28px",
-        borderRadius: "10px",
-        display: "grid",
-        placeItems: "center",
-        border: active ? "1px solid var(--gold)" : "1px solid var(--border)",
-        color: active ? "var(--gold)" : "var(--text-main)",
-        background: active ? "rgba(212,175,55,.14)" : "rgba(255,255,255,.04)",
-        fontSize: "11px",
-        fontWeight: 950,
-        letterSpacing: "-.5px",
-      }}
+      className={`bottom-oj-logo ${active ? "active" : ""}`}
+      aria-hidden="true"
     >
       OJ
     </span>

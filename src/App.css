@@ -988,3 +988,85 @@ img {
     height: 50px;
   }
 }
+
+/* ================================
+   ONJARAMA PATH V12.3
+   Polish & Consistency
+================================ */
+
+.bottom-nav-v123 {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.bottom-nav-v123 .bottom-nav-btn {
+  min-width: 0;
+}
+
+.bottom-nav-v123 .bottom-nav-label {
+  max-width: 68px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bottom-nav-v123 .bottom-center-plan {
+  border-color: rgba(212, 175, 55, 0.72);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.bottom-nav-v123 .bottom-center-plan.active {
+  color: var(--gold);
+  border-color: var(--gold);
+  background: rgba(212, 175, 55, 0.16);
+  box-shadow: 0 0 22px rgba(212, 175, 55, 0.34);
+}
+
+.bottom-nav-v123 .bottom-center-plan.active .bottom-center-icon {
+  color: var(--gold);
+}
+
+.bottom-oj-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: -0.5px;
+}
+
+.bottom-oj-logo.active {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(212, 175, 55, 0.14);
+}
+
+.native-page section {
+  max-width: 100%;
+}
+
+@media (max-width: 520px) {
+  .bottom-nav-v123 .bottom-nav-label {
+    font-size: 9px;
+    max-width: 52px;
+  }
+
+  .bottom-nav-v123 .bottom-nav-icon svg {
+    width: 19px;
+    height: 19px;
+  }
+}
+
+@media (max-width: 390px) {
+  .bottom-nav-v123 .bottom-nav-label {
+    display: none;
+  }
+
+  .bottom-nav-v123 .bottom-center-plan strong {
+    display: none;
+  }
+}

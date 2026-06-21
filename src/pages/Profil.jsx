@@ -18,6 +18,7 @@ import {
   Share2,
   ShieldCheck,
   Star,
+  History,
   Trophy,
   UserCircle,
 } from "lucide-react";
@@ -65,6 +66,12 @@ const pageText = {
     days: "jours",
     progress: "Progression personnelle",
     victories: "Mes victoires",
+    history: "Historique",
+    activeHistory: "Objectifs en cours",
+    completedHistory: "Objectifs terminés",
+    startedOn: "Commencé le",
+    completedOn: "Terminé le",
+    noActiveHistory: "Aucun objectif actif pour le moment.",
     noVictory: "Aucune victoire enregistrée pour le moment.",
     ecosystem: "Écosystème OnJarama",
     pathDesc: "Coach financier intelligent",
@@ -156,6 +163,12 @@ const pageText = {
     days: "days",
     progress: "Personal progress",
     victories: "My victories",
+    history: "History",
+    activeHistory: "Active goals",
+    completedHistory: "Completed goals",
+    startedOn: "Started on",
+    completedOn: "Completed on",
+    noActiveHistory: "No active goal yet.",
     noVictory: "No victory recorded yet.",
     ecosystem: "OnJarama Ecosystem",
     pathDesc: "Smart financial coach",
@@ -247,6 +260,12 @@ const pageText = {
     days: "días",
     progress: "Progreso personal",
     victories: "Mis victorias",
+    history: "Historial",
+    activeHistory: "Objetivos activos",
+    completedHistory: "Objetivos terminados",
+    startedOn: "Empezado el",
+    completedOn: "Terminado el",
+    noActiveHistory: "No hay objetivo activo por ahora.",
     noVictory: "No hay victoria registrada por ahora.",
     ecosystem: "Ecosistema OnJarama",
     pathDesc: "Coach financiero inteligente",
@@ -313,13 +332,14 @@ function Profil({
     ? selectedGoals.filter((goal) => !goal.archived)
     : [];
 
-  const activeGoalsCount = goals.length;
   const achievedGoals = goals.filter(
     (goal) =>
       Number(goal.targetAmount || 0) > 0 &&
       Number(goal.currentAmount || 0) >= Number(goal.targetAmount || 0)
   );
 
+  const activeGoals = goals.filter((goal) => !isGoalAchieved(goal));
+  const activeGoalsCount = activeGoals.length;
   const achievedGoalsCount = achievedGoals.length;
   const daysSinceStart = getDaysSinceStart(goals);
   const disciplineValue = disciplineScore?.score || 0;
@@ -474,6 +494,43 @@ function Profil({
         </div>
       </section>
 
+      <section style={historyCard}>
+        <div style={header}>
+          <History color="var(--gold)" />
+          <h2>{p.history}</h2>
+        </div>
+
+        <h3 style={historyTitle}>{p.activeHistory}</h3>
+        {activeGoals.length > 0 ? (
+          activeGoals.map((goal) => (
+            <HistoryItem
+              key={goal.id}
+              goal={goal}
+              label={p.startedOn}
+              date={goal.createdAt}
+              color="var(--gold)"
+            />
+          ))
+        ) : (
+          <p style={muted}>{p.noActiveHistory}</p>
+        )}
+
+        <h3 style={historyTitle}>{p.completedHistory}</h3>
+        {achievedGoals.length > 0 ? (
+          achievedGoals.map((goal) => (
+            <HistoryItem
+              key={goal.id}
+              goal={goal}
+              label={p.completedOn}
+              date={goal.completedAt || goal.updatedAt || goal.createdAt}
+              color="var(--green)"
+            />
+          ))
+        ) : (
+          <p style={muted}>{p.noVictory}</p>
+        )}
+      </section>
+
       <Section icon={<Trophy />} title={p.stats} color="var(--gold)">
         <InfoRow label={p.activeGoals} value={activeGoalsCount} />
         <InfoRow label={p.achievedGoals} value={achievedGoalsCount} />
@@ -530,7 +587,7 @@ function Profil({
       </Section>
 
       <Section icon={<CheckCircle />} title={p.app} color="var(--green)">
-        <InfoRow label={p.version} value="V10.7 Core Experience" />
+        <InfoRow label={p.version} value="V12.3 Polish & Consistency" />
         <InfoRow label={p.testerMode} value="ON" />
         <InfoRow label={p.pwa} value="ON" />
         <InfoRow label={p.localBackup} value="ON" />
@@ -622,6 +679,41 @@ function Profil({
       <button onClick={() => setCurrentPage("reglages")} style={settingsBtn}>
         {p.openSettings}
       </button>
+    </div>
+  );
+}
+
+function isGoalAchieved(goal) {
+  return (
+    Number(goal?.targetAmount || 0) > 0 &&
+    Number(goal?.currentAmount || 0) >= Number(goal?.targetAmount || 0)
+  );
+}
+
+function formatHistoryDate(dateValue) {
+  if (!dateValue) return "—";
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString("fr-CA", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function HistoryItem({ goal, label, date, color }) {
+  return (
+    <div style={{ ...historyItem, borderColor: color }}>
+      <CheckCircle size={18} color={color} />
+      <div>
+        <strong>{goal.title}</strong>
+        <p style={mutedSmall}>
+          {goal.categoryLabel || goal.option || goal.category || "Objectif"}
+        </p>
+        <p style={mutedSmall}>
+          {label} : {formatHistoryDate(date)}
+        </p>
+      </div>
     </div>
   );
 }
@@ -723,6 +815,31 @@ function Social({ icon, label }) {
     </div>
   );
 }
+
+const historyCard = {
+  background: "linear-gradient(135deg, rgba(212,175,55,.12), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "22px",
+  padding: "18px",
+  marginTop: "16px",
+};
+
+const historyTitle = {
+  margin: "14px 0 8px",
+  color: "var(--text-main)",
+};
+
+const historyItem = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "14px",
+  padding: "12px",
+  marginTop: "8px",
+  display: "grid",
+  gridTemplateColumns: "24px 1fr",
+  gap: "10px",
+  alignItems: "start",
+};
 
 const profileCard = {
   background: "var(--bg-card)",

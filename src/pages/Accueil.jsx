@@ -138,7 +138,7 @@ function Accueil({
       <section className="accueil-hero" />
 
       <section className="accueil-headline" style={premiumHero}>
-        <p className="accueil-eyebrow">OnJarama Path V11.1</p>
+        <p className="accueil-eyebrow">OnJarama Path V12.3</p>
 
         <h1 className="accueil-title">
           {t.heroTitle}
@@ -147,8 +147,7 @@ function Accueil({
         </h1>
 
         <p className="accueil-subtitle">
-          Situation, objectifs, simulation, plan de match : votre parcours à
-          votre rythme.
+          Situation, objectif, simulation, activation, parcours : votre chemin reste clair.
         </p>
       </section>
 
@@ -361,33 +360,13 @@ function Accueil({
             onClick={() => setCurrentPage("situation", "dettes")}
           />
           <QuickActionButton
-            label="Nouvel objectif"
-            text="Objectifs"
+            label="Simuler objectif"
+            text="Objectif → Simulation"
             color="var(--blue)"
-            onClick={() => setCurrentPage("objectifs")}
+            onClick={() => setCurrentPage("simulateur")}
           />
         </div>
       </section>
-
-      {mainGoal && (
-        <section className="accueil-headline" style={mainGoalHomeCard}>
-          <div style={sectionHead}>
-            <Target size={20} color="var(--gold)" />
-            <strong>Objectif favori</strong>
-          </div>
-          <p style={softText}>
-            <strong>{mainGoal.title}</strong>
-          </p>
-          <p style={softText}>Accessible sans exposer les montants sur l’accueil.</p>
-          <button
-            onClick={() => setCurrentPage("objectifs")}
-            className="ai-action"
-            style={{ marginTop: 12 }}
-          >
-            Ouvrir Objectifs Premium
-          </button>
-        </section>
-      )}
 
       <section className="accueil-headline" style={progressFlagCard}>
         <div style={sectionHead}>
@@ -490,10 +469,10 @@ function Accueil({
 
         <QuickTile
           icon={<Target />}
-          title="Objectif"
-          text={mainGoal ? mainGoal.title : "Créer un objectif"}
+          title="Parcours"
+          text={mainGoal ? "Continuer le suivi" : "Créer un objectif"}
           color="var(--green)"
-          onClick={() => setCurrentPage("objectifs")}
+          onClick={() => setCurrentPage(mainGoal ? "parcours" : "objectifs")}
         />
 
         <QuickTile
