@@ -1,11 +1,14 @@
 import {
   AlertTriangle,
+  Award,
   CalendarDays,
   CheckCircle,
   Clock3,
+  Compass,
   CreditCard,
   Flag,
   Gauge,
+  Lightbulb,
   PiggyBank,
   Route,
   Sparkles,
@@ -42,6 +45,7 @@ function MonPlan({
   const monthlyExpenses = Number(financeData?.overview?.monthlyExpenses || 0);
   const monthlySavings = Number(financeData?.overview?.monthlySavings || 0);
   const monthlyAvailable = monthlyIncome - monthlyExpenses - monthlySavings;
+  const monthlyCapacity = Math.max(0, monthlyAvailable + monthlySavings);
 
   const debtTotal = debts.reduce(
     (sum, debt) => sum + Number(debt.balance || 0),
@@ -50,9 +54,7 @@ function MonPlan({
 
   const priorityDebt = [...debts]
     .filter((debt) => Number(debt.balance || 0) > 0)
-    .sort(
-      (a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0)
-    )[0];
+    .sort((a, b) => Number(b.interestRate || 0) - Number(a.interestRate || 0))[0];
 
   const totalGoalTarget = goals.reduce(
     (sum, goal) => sum + Number(goal.targetAmount || 0),
@@ -98,6 +100,8 @@ function MonPlan({
     disciplineValue,
   });
 
+  const commandLevel = getCommandLevel(onjaramaScore.value, disciplineValue);
+
   const nextAction = getNextAction({
     priorityDebt,
     debtTotal,
@@ -107,12 +111,26 @@ function MonPlan({
     currency,
   });
 
+  const todayActions = buildTodayActions({
+    priorityDebt,
+    mainGoal,
+    closestGoal,
+    monthlyAvailable,
+    goals,
+  });
+
+  const autoProjection = buildAutoProjection({
+    priorityDebt,
+    goals: enrichedGoals,
+    monthlyCapacity,
+    currency,
+  });
+
   const forecast = buildForecast({
     priorityDebt,
     mainGoal,
     monthlyAvailable,
     monthlySavings,
-    currency,
   });
 
   const smartAllocation = buildSmartAllocation({
@@ -121,7 +139,6 @@ function MonPlan({
     priorityDebt,
     goals: enrichedGoals,
     mainGoal,
-    currency,
   });
 
   const allocationImpact = buildAllocationImpact({
@@ -143,15 +160,118 @@ function MonPlan({
     <div className="native-page">
       <div style={pageHead}>
         <div>
-          <p style={eyebrow}>OnJarama Path V11.1</p>
-          <h1>Plan de Match</h1>
+          <p style={eyebrow}>OnJarama Path V11.7</p>
+          <h1>Smart Command Center</h1>
           <p style={muted}>
-            La feuille de route choisie : objectif, simulation, action, destination et célébration.
+            Mon Plan devient le centre de commandement : une action aujourd’hui,
+            une projection claire, un objectif vedette et un cap intelligent.
           </p>
         </div>
 
         <Sparkles color="var(--gold)" />
       </div>
+
+      <section style={todayCommandCard}>
+        <div style={header}>
+          <Lightbulb color="var(--gold)" />
+          <div>
+            <p style={eyebrow}>Aujourd’hui</p>
+            <h2>Une action suffit</h2>
+          </div>
+        </div>
+
+        <div style={todayActionList}>
+          {todayActions.map((action) => (
+            <div key={action} style={todayActionLine}>
+              <CheckCircle size={17} color="var(--green)" />
+              <span>{action}</span>
+            </div>
+          ))}
+        </div>
+
+        <button onClick={() => setCurrentPage(nextAction.page)} style={goldButton}>
+          {nextAction.button}
+        </button>
+      </section>
+
+      <section style={featuredGoalCard}>
+        <div style={header}>
+          <Target color="var(--gold)" />
+          <div>
+            <p style={eyebrow}>Objectif vedette</p>
+            <h2>{mainGoal?.title || "À définir"}</h2>
+            <p style={muted}>
+              {mainGoal
+                ? mainGoal.option || mainGoal.categoryLabel || "Objectif actif"
+                : "Créez un objectif pour activer le GPS financier."}
+            </p>
+          </div>
+        </div>
+
+        {mainGoal ? (
+          <>
+            <div style={smartGrid}>
+              <SmallStat label="Progression" value={`${mainGoal.progress}%`} />
+              <SmallStat label="Reste" value={formatMoney(mainGoal.remaining, currency)} />
+              <SmallStat
+                label="Contribution"
+                value={
+                  Number(mainGoal.monthlyContribution || 0) > 0
+                    ? formatMoney(mainGoal.monthlyContribution, currency)
+                    : "—"
+                }
+              />
+            </div>
+            <MiniBar progress={mainGoal.progress} color="var(--gold)" />
+            <p style={mutedSmall}>
+              Prochain palier : {mainGoal.progress >= 100 ? "Victoire" : `${getNextMilestone(mainGoal.progress)} %`}
+              {mainGoal.targetDate ? ` • Date cible : ${mainGoal.targetDate}` : ""}
+            </p>
+          </>
+        ) : (
+          <button onClick={() => setCurrentPage("objectifs")} style={goldButton}>
+            Créer un objectif
+          </button>
+        )}
+      </section>
+
+      <section style={projectionCard}>
+        <div style={header}>
+          <CalendarDays color="var(--blue)" />
+          <div>
+            <p style={eyebrowBlue}>Si je continue ainsi</p>
+            <h2>Projection automatique</h2>
+          </div>
+        </div>
+
+        <div style={projectionList}>
+          {autoProjection.map((item) => (
+            <ForecastLine
+              key={item.id}
+              label={item.label}
+              value={item.value}
+              color={item.color}
+            />
+          ))}
+        </div>
+
+        <button onClick={() => setCurrentPage("simulateur")} style={blueButton}>
+          Ajuster dans le simulateur
+        </button>
+      </section>
+
+      <section style={levelCard(commandLevel.color)}>
+        <div style={header}>
+          <Award color={commandLevel.color} />
+          <div>
+            <p style={eyebrow}>Niveau OnJarama</p>
+            <h2>{commandLevel.title}</h2>
+            <p style={muted}>{commandLevel.message}</p>
+          </div>
+        </div>
+
+        <MiniBar progress={commandLevel.progress} color={commandLevel.color} />
+      </section>
 
       <section style={nextMoveCard}>
         <div style={header}>
@@ -179,7 +299,7 @@ function MonPlan({
 
       <section style={brainCard}>
         <div style={header}>
-          <Sparkles color="var(--gold)" />
+          <Compass color="var(--gold)" />
           <h2>Résumé du plan de match</h2>
         </div>
 
@@ -202,10 +322,7 @@ function MonPlan({
           />
         </div>
 
-        <button
-          onClick={() => setCurrentPage(nextAction.page)}
-          style={goldButton}
-        >
+        <button onClick={() => setCurrentPage(nextAction.page)} style={goldButton}>
           {nextAction.button}
         </button>
       </section>
@@ -232,16 +349,8 @@ function MonPlan({
         </div>
 
         <div style={impactGrid}>
-          <ImpactTile
-            label="Temps estimé gagné"
-            value={allocationImpact.timeSaved}
-            color="var(--blue)"
-          />
-          <ImpactTile
-            label="Intérêts évités"
-            value={allocationImpact.interestSaved}
-            color="var(--green)"
-          />
+          <ImpactTile label="Temps estimé gagné" value={allocationImpact.timeSaved} color="var(--blue)" />
+          <ImpactTile label="Intérêts évités" value={allocationImpact.interestSaved} color="var(--green)" />
         </div>
 
         <p style={mutedSmall}>
@@ -286,7 +395,6 @@ function MonPlan({
         </div>
 
         <MiniBar progress={onjaramaScore.value} color={onjaramaScore.color} />
-
         <p style={muted}>{onjaramaScore.message}</p>
       </section>
 
@@ -301,11 +409,7 @@ function MonPlan({
           value={forecast.debt}
           color={priorityDebt ? "var(--red)" : "var(--green)"}
         />
-        <ForecastLine
-          label="Objectif principal"
-          value={forecast.goal}
-          color="var(--gold)"
-        />
+        <ForecastLine label="Objectif vedette" value={forecast.goal} color="var(--gold)" />
         <ForecastLine
           label="Souffle mensuel"
           value={formatMoney(monthlyAvailable, currency)}
@@ -324,9 +428,7 @@ function MonPlan({
           <h2>Discipline OnJarama</h2>
           <p style={muted}>
             {firstGoal
-              ? `Vous avez commencé votre parcours ${getStartedLabel(
-                  firstGoal.createdAt
-                )}.`
+              ? `Vous avez commencé votre parcours ${getStartedLabel(firstGoal.createdAt)}.`
               : "Votre parcours commence dès votre premier objectif."}
           </p>
 
@@ -334,10 +436,7 @@ function MonPlan({
             {disciplineValue}% • {getDisciplineLabel(disciplineValue)}
           </strong>
 
-          <MiniBar
-            progress={disciplineValue}
-            color={getDisciplineColor(disciplineValue)}
-          />
+          <MiniBar progress={disciplineValue} color={getDisciplineColor(disciplineValue)} />
         </div>
       </section>
 
@@ -347,16 +446,10 @@ function MonPlan({
           <h2>Priorité automatique</h2>
         </div>
 
-        <p>
-          <strong>{nextAction.title}</strong>
-        </p>
-
+        <p><strong>{nextAction.title}</strong></p>
         <p style={muted}>{nextAction.description}</p>
 
-        <button
-          onClick={() => setCurrentPage(nextAction.page)}
-          style={goldButton}
-        >
+        <button onClick={() => setCurrentPage(nextAction.page)} style={goldButton}>
           {nextAction.button}
         </button>
       </section>
@@ -381,19 +474,11 @@ function MonPlan({
           </div>
 
           <span style={typeBadge}>{labelType(lastActivity.type)}</span>
-
-          <p>
-            <strong>{lastActivity.title}</strong>
-          </p>
-
+          <p><strong>{lastActivity.title}</strong></p>
           <p style={muted}>{lastActivity.message}</p>
-
           <small style={mutedSmall}>{formatDate(lastActivity.createdAt)}</small>
 
-          <button
-            onClick={() => setCurrentPage("historique")}
-            style={blueButton}
-          >
+          <button onClick={() => setCurrentPage("historique")} style={blueButton}>
             Voir l’historique
           </button>
         </section>
@@ -405,9 +490,7 @@ function MonPlan({
 
           <div>
             <h2>Dernière victoire</h2>
-            <p>
-              <strong>{lastVictory.title}</strong>
-            </p>
+            <p><strong>{lastVictory.title}</strong></p>
             <p style={muted}>{lastVictory.message}</p>
           </div>
         </section>
@@ -417,16 +500,12 @@ function MonPlan({
         <section style={card}>
           <div style={header}>
             <Flag color="var(--gold)" />
-            <h2>Objectif principal</h2>
+            <h2>Objectif vedette</h2>
           </div>
 
-          <p>
-            <strong>{mainGoal.title}</strong>
-          </p>
-
+          <p><strong>{mainGoal.title}</strong></p>
           <p style={muted}>
-            {mainGoal.categoryLabel || "Objectif"}{" "}
-            {mainGoal.option ? `• ${mainGoal.option}` : ""}
+            {mainGoal.categoryLabel || "Objectif"} {mainGoal.option ? `• ${mainGoal.option}` : ""}
           </p>
 
           <ProgressLine goal={mainGoal} currency={currency} />
@@ -440,10 +519,7 @@ function MonPlan({
             </div>
           )}
 
-          <button
-            onClick={() => setCurrentPage("objectifs")}
-            style={greenButton}
-          >
+          <button onClick={() => setCurrentPage("objectifs")} style={greenButton}>
             Gérer cet objectif
           </button>
         </section>
@@ -455,11 +531,7 @@ function MonPlan({
 
           <div style={{ flex: 1 }}>
             <h2>Le plus proche d’être atteint</h2>
-
-            <p>
-              <strong>{closestGoal.title}</strong>
-            </p>
-
+            <p><strong>{closestGoal.title}</strong></p>
             <p style={muted}>Progression : {closestGoal.progress}%</p>
 
             {closestGoal.progress >= 100 ? (
@@ -481,13 +553,9 @@ function MonPlan({
 
         {priorityDebt ? (
           <>
-            <p>
-              Dette prioritaire : <strong>{priorityDebt.name}</strong>
-            </p>
-
+            <p>Dette prioritaire : <strong>{priorityDebt.name}</strong></p>
             <p style={muted}>
-              Taux : {priorityDebt.interestRate}% • Solde :{" "}
-              {formatMoney(priorityDebt.balance, currency)}
+              Taux : {priorityDebt.interestRate}% • Solde : {formatMoney(priorityDebt.balance, currency)}
             </p>
           </>
         ) : (
@@ -495,7 +563,6 @@ function MonPlan({
         )}
 
         <strong>{formatMoney(debtTotal, currency)}</strong>
-
         <button onClick={() => setCurrentPage("dettes")} style={redButton}>
           Voir mes dettes
         </button>
@@ -508,8 +575,7 @@ function MonPlan({
         </div>
 
         <p style={muted}>
-          Garder une petite épargne aide à éviter de retourner au crédit en cas
-          d’imprévu.
+          Garder une petite épargne aide à éviter de retourner au crédit en cas d’imprévu.
         </p>
       </section>
 
@@ -519,20 +585,12 @@ function MonPlan({
           <h2>Étape 3 — Avancer les objectifs</h2>
         </div>
 
-        <p>
-          <strong>{goals.length}</strong> objectifs actifs
-        </p>
-
-        <p style={muted}>
-          Progression globale : <strong>{goalProgress}%</strong>
-        </p>
+        <p><strong>{goals.length}</strong> objectifs actifs</p>
+        <p style={muted}>Progression globale : <strong>{goalProgress}%</strong></p>
 
         <MiniBar progress={goalProgress} color="var(--green)" />
 
-        <button
-          onClick={() => setCurrentPage("objectifs")}
-          style={greenButton}
-        >
+        <button onClick={() => setCurrentPage("objectifs")} style={greenButton}>
           Gérer mes objectifs
         </button>
       </section>
@@ -544,8 +602,7 @@ function MonPlan({
         </div>
 
         <p style={muted}>
-          Le parcours vous aide à garder la discipline : une action claire à la
-          fois.
+          Le parcours vous aide à garder la discipline : une action claire à la fois.
         </p>
 
         <button onClick={() => setCurrentPage("parcours")} style={blueButton}>
@@ -559,8 +616,7 @@ function MonPlan({
           <div>
             <h2>Rappel discipline</h2>
             <p style={muted}>
-              Évitez d’ajouter un nouveau financement tant que la dette
-              prioritaire reste élevée.
+              Évitez d’ajouter un nouveau financement tant que la dette prioritaire reste élevée.
             </p>
           </div>
         </section>
@@ -569,14 +625,10 @@ function MonPlan({
       {achievedGoals.length > 0 && (
         <section style={successCard}>
           <Sparkles color="var(--gold)" />
-
           <div>
             <h2>Victoire enregistrée</h2>
-
             <p style={muted}>
-              {achievedGoals.length} objectif
-              {achievedGoals.length > 1 ? "s" : ""} atteint
-              {achievedGoals.length > 1 ? "s" : ""}. OnJarama garde le cap.
+              {achievedGoals.length} objectif{achievedGoals.length > 1 ? "s" : ""} atteint{achievedGoals.length > 1 ? "s" : ""}. OnJarama garde le cap.
             </p>
           </div>
         </section>
@@ -584,13 +636,10 @@ function MonPlan({
 
       <section style={successCard}>
         <CheckCircle color="var(--green)" />
-
         <div>
           <h2>Objectif final</h2>
-
           <p style={muted}>
-            Moins de pression, plus de contrôle, et des projets personnels qui
-            avancent réellement.
+            Moins de pression, plus de contrôle, et des projets personnels qui avancent réellement.
           </p>
         </div>
       </section>
@@ -606,9 +655,7 @@ function AllocationLine({ line, currency }) {
         <strong>{line.label}</strong>
         <p style={mutedSmall}>{line.reason}</p>
       </div>
-      <strong style={{ color: line.color }}>
-        {formatMoney(line.amount, currency)}
-      </strong>
+      <strong style={{ color: line.color }}>{formatMoney(line.amount, currency)}</strong>
     </div>
   );
 }
@@ -636,15 +683,154 @@ function HorizonLine({ step, index }) {
   );
 }
 
-function buildSmartAllocation({
-  monthlyAvailable,
-  monthlySavings,
-  priorityDebt,
-  goals,
-  mainGoal,
-}) {
-  const capacity = Math.max(0, Math.round(Number(monthlyAvailable || 0) + Number(monthlySavings || 0)));
-  const activeGoals = Array.isArray(goals) ? goals.filter((goal) => goal.remaining > 0) : [];
+function buildTodayActions({ priorityDebt, mainGoal, closestGoal, monthlyAvailable, goals }) {
+  if (priorityDebt) {
+    return [
+      `Payer ou planifier un montant vers ${priorityDebt.name}`,
+      "Ne pas ajouter de nouveau crédit aujourd’hui",
+      "Vérifier que la prochaine action reste réaliste",
+    ];
+  }
+
+  if (closestGoal?.progress >= 80 && closestGoal.progress < 100) {
+    return [
+      `Faire avancer ${closestGoal.title}`,
+      "Garder le cap jusqu’à la victoire",
+      "Tester un scénario si le montant semble lourd",
+    ];
+  }
+
+  if (mainGoal) {
+    return [
+      `Avancer ${mainGoal.title}`,
+      "Protéger une petite marge de sécurité",
+      "Ouvrir le parcours pour voir la prochaine étape",
+    ];
+  }
+
+  if (monthlyAvailable < 0) {
+    return [
+      "Reprendre du souffle mensuel",
+      "Identifier une dépense à réduire",
+      "Mettre la situation à jour",
+    ];
+  }
+
+  if (goals.length === 0) {
+    return [
+      "Créer un premier objectif simple",
+      "Choisir une date cible réaliste",
+      "Laisser OnJarama construire le plan",
+    ];
+  }
+
+  return [
+    "Garder une action principale",
+    "Vérifier l’objectif vedette",
+    "Continuer sans pression inutile",
+  ];
+}
+
+function buildAutoProjection({ priorityDebt, goals, monthlyCapacity, currency }) {
+  const lines = [];
+
+  if (priorityDebt) {
+    lines.push({
+      id: "debt",
+      label: priorityDebt.name || "Dette prioritaire",
+      value: estimateCompletion(priorityDebt.balance, monthlyCapacity),
+      color: "var(--red)",
+    });
+  } else {
+    lines.push({
+      id: "debt",
+      label: "Dette prioritaire",
+      value: "Aucune dette prioritaire",
+      color: "var(--green)",
+    });
+  }
+
+  const visibleGoals = [...goals]
+    .filter((goal) => Number(goal.targetAmount || 0) > 0 && goal.progress < 100)
+    .sort((a, b) => b.progress - a.progress)
+    .slice(0, 3);
+
+  visibleGoals.forEach((goal) => {
+    lines.push({
+      id: goal.id,
+      label: goal.title,
+      value: estimateCompletion(goal.remaining, monthlyCapacity || Number(goal.monthlyContribution || 0)),
+      color: goal.highlighted ? "var(--gold)" : "var(--blue)",
+    });
+  });
+
+  if (lines.length === 1) {
+    lines.push({
+      id: "capacity",
+      label: "Capacité mensuelle",
+      value: formatMoney(monthlyCapacity, currency),
+      color: monthlyCapacity > 0 ? "var(--green)" : "var(--gold)",
+    });
+  }
+
+  return lines;
+}
+
+function getCommandLevel(score, disciplineValue) {
+  const average = Math.round((Number(score || 0) + Number(disciplineValue || 0)) / 2);
+
+  if (average >= 85) {
+    return {
+      title: "Niveau 5 — Liberté",
+      message: "La base est forte. OnJarama peut maintenant aider à accélérer les projets long terme.",
+      color: "var(--green)",
+      progress: average,
+    };
+  }
+
+  if (average >= 70) {
+    return {
+      title: "Niveau 4 — Accélération",
+      message: "Le rythme est solide. La priorité est de transformer la constance en résultats visibles.",
+      color: "var(--blue)",
+      progress: average,
+    };
+  }
+
+  if (average >= 55) {
+    return {
+      title: "Niveau 3 — Stabilisation",
+      message: "Le plan se stabilise. Gardez une action principale et protégez la marge.",
+      color: "var(--gold)",
+      progress: average,
+    };
+  }
+
+  if (average >= 35) {
+    return {
+      title: "Niveau 2 — Discipline",
+      message: "La discipline se construit. Une petite action régulière vaut mieux qu’un grand effort isolé.",
+      color: "var(--purple)",
+      progress: average,
+    };
+  }
+
+  return {
+    title: "Niveau 1 — Départ",
+    message: "Le parcours commence. L’objectif est simple : clarifier, choisir, agir.",
+    color: "var(--red)",
+    progress: average,
+  };
+}
+
+function buildSmartAllocation({ monthlyAvailable, monthlySavings, priorityDebt, goals, mainGoal }) {
+  const capacity = Math.max(
+    0,
+    Math.round(Number(monthlyAvailable || 0) + Number(monthlySavings || 0))
+  );
+  const activeGoals = Array.isArray(goals)
+    ? goals.filter((goal) => goal.remaining > 0)
+    : [];
   const selectedGoal = mainGoal?.remaining > 0 ? mainGoal : activeGoals[0];
 
   if (capacity <= 0) {
@@ -664,7 +850,10 @@ function buildSmartAllocation({
   }
 
   if (priorityDebt) {
-    const debtAmount = Math.min(Number(priorityDebt.balance || 0), roundToNearest5(capacity * 0.6));
+    const debtAmount = Math.min(
+      Number(priorityDebt.balance || 0),
+      roundToNearest5(capacity * 0.6)
+    );
     const safetyAmount = roundToNearest5(capacity * 0.2);
     const goalAmount = Math.max(0, capacity - debtAmount - safetyAmount);
 
@@ -690,7 +879,7 @@ function buildSmartAllocation({
         {
           id: "goal",
           icon: "🎯",
-          label: selectedGoal?.title || "Objectif principal",
+          label: selectedGoal?.title || "Objectif vedette",
           amount: goalAmount,
           color: "var(--gold)",
           reason: selectedGoal
@@ -711,7 +900,7 @@ function buildSmartAllocation({
       {
         id: "goal",
         icon: "🎯",
-        label: selectedGoal?.title || "Objectif principal",
+        label: selectedGoal?.title || "Objectif vedette",
         amount: goalAmount,
         color: "var(--gold)",
         reason: selectedGoal
@@ -751,11 +940,17 @@ function buildAllocationImpact({ priorityDebt, allocation, currency }) {
 
   const balance = Number(priorityDebt.balance || 0);
   const rate = Number(priorityDebt.interestRate || 0);
-  const basePayment = Math.max(50, Number(priorityDebt.minimumPayment || priorityDebt.monthlyPayment || 0));
+  const basePayment = Math.max(
+    50,
+    Number(priorityDebt.minimumPayment || priorityDebt.monthlyPayment || 0)
+  );
   const monthsBase = balance > 0 ? Math.ceil(balance / basePayment) : 0;
   const monthsBoosted = balance > 0 ? Math.ceil(balance / (basePayment + debtAmount)) : 0;
   const monthsSaved = Math.max(0, monthsBase - monthsBoosted);
-  const interestSaved = Math.max(0, Math.round(debtAmount * (rate / 100) * Math.max(1, monthsSaved) / 12));
+  const interestSaved = Math.max(
+    0,
+    Math.round((debtAmount * (rate / 100) * Math.max(1, monthsSaved)) / 12)
+  );
 
   return {
     timeSaved: monthsSaved > 0 ? `${monthsSaved} mois` : "Impact progressif",
@@ -764,7 +959,9 @@ function buildAllocationImpact({ priorityDebt, allocation, currency }) {
 }
 
 function buildDynamicHorizon({ priorityDebt, goals, mainGoal }) {
-  const activeGoals = Array.isArray(goals) ? goals.filter((goal) => goal.remaining > 0) : [];
+  const activeGoals = Array.isArray(goals)
+    ? goals.filter((goal) => goal.remaining > 0)
+    : [];
   const highlighted = mainGoal?.remaining > 0 ? mainGoal : activeGoals[0];
   const nextGoal = activeGoals.find((goal) => goal.id !== highlighted?.id);
 
@@ -779,7 +976,9 @@ function buildDynamicHorizon({ priorityDebt, goals, mainGoal }) {
   }
 
   steps.push({
-    title: priorityDebt ? "Ensuite → Fonds de sécurité" : "Aujourd’hui → Fonds de sécurité",
+    title: priorityDebt
+      ? "Ensuite → Fonds de sécurité"
+      : "Aujourd’hui → Fonds de sécurité",
     text: "Protéger une petite marge pour éviter de revenir au crédit.",
     color: "var(--green)",
   });
@@ -787,7 +986,7 @@ function buildDynamicHorizon({ priorityDebt, goals, mainGoal }) {
   if (highlighted) {
     steps.push({
       title: `${priorityDebt ? "Puis" : "Ensuite"} → ${highlighted.title}`,
-      text: "Faire avancer l’objectif principal avec une action régulière.",
+      text: "Faire avancer l’objectif vedette avec une action régulière.",
       color: "var(--gold)",
     });
   }
@@ -815,19 +1014,11 @@ function roundToNearest5(value) {
   return Math.max(0, Math.round(Number(value || 0) / 5) * 5);
 }
 
-function getNextAction({
-  priorityDebt,
-  debtTotal,
-  mainGoal,
-  closestGoal,
-  achievedGoals,
-  currency,
-}) {
+function getNextAction({ priorityDebt, debtTotal, mainGoal, closestGoal, achievedGoals, currency }) {
   if (closestGoal && closestGoal.progress >= 95 && closestGoal.progress < 100) {
     return {
       title: `Finaliser ${closestGoal.title}`,
-      description:
-        "Cet objectif est presque terminé. OnJarama recommande de le finaliser avant de revenir à la prochaine priorité.",
+      description: "Cet objectif est presque terminé. OnJarama recommande de le finaliser avant de revenir à la prochaine priorité.",
       button: "Voir mes objectifs",
       page: "objectifs",
     };
@@ -836,10 +1027,7 @@ function getNextAction({
   if (priorityDebt) {
     return {
       title: `Réduire ${priorityDebt.name}`,
-      description: `Cette dette a le taux le plus élevé (${priorityDebt.interestRate}%). Solde : ${formatMoney(
-        priorityDebt.balance,
-        currency
-      )}.`,
+      description: `Cette dette a le taux le plus élevé (${priorityDebt.interestRate}%). Solde : ${formatMoney(priorityDebt.balance, currency)}.`,
       button: "Voir mes dettes",
       page: "dettes",
     };
@@ -848,8 +1036,7 @@ function getNextAction({
   if (closestGoal && closestGoal.progress >= 80 && closestGoal.progress < 100) {
     return {
       title: `Finaliser ${closestGoal.title}`,
-      description:
-        "Cet objectif est presque atteint. Un petit effort ciblé peut créer une vraie victoire.",
+      description: "Cet objectif est presque atteint. Un petit effort ciblé peut créer une vraie victoire.",
       button: "Voir mes objectifs",
       page: "objectifs",
     };
@@ -858,8 +1045,7 @@ function getNextAction({
   if (mainGoal) {
     return {
       title: `Avancer ${mainGoal.title}`,
-      description:
-        "Votre objectif principal est identifié. Gardez le rythme sans vous disperser.",
+      description: "Votre objectif vedette est identifié. Gardez le rythme sans vous disperser.",
       button: "Continuer l’objectif",
       page: "objectifs",
     };
@@ -868,31 +1054,21 @@ function getNextAction({
   if (achievedGoals.length > 0 && debtTotal <= 0) {
     return {
       title: "Consolider vos victoires",
-      description:
-        "Vous avez déjà atteint un objectif. La prochaine étape est de choisir un nouveau cap.",
-      button: "Ouvrir Mon Plan",
+      description: "Vous avez déjà atteint un objectif. La prochaine étape est de choisir un nouveau cap.",
+      button: "Choisir un nouveau cap",
       page: "objectifs",
     };
   }
 
   return {
     title: "Créer votre premier objectif",
-    description:
-      "Ajoutez un objectif pour que Mon Plan puisse construire une priorité automatique.",
-    button: "Ouvrir Mon Plan",
+    description: "Ajoutez un objectif pour que Mon Plan puisse construire une priorité automatique.",
+    button: "Créer un objectif",
     page: "objectifs",
   };
 }
 
-function calculateOnJaramaScore({
-  monthlyIncome,
-  monthlyAvailable,
-  monthlySavings,
-  debtTotal,
-  goalProgress,
-  achievedGoals,
-  disciplineValue,
-}) {
+function calculateOnJaramaScore({ monthlyIncome, monthlyAvailable, monthlySavings, debtTotal, goalProgress, achievedGoals, disciplineValue }) {
   let score = 42;
 
   if (monthlyIncome > 0) score += 10;
@@ -922,8 +1098,7 @@ function calculateOnJaramaScore({
       value,
       color: "var(--gold)",
       label: "En progression",
-      message:
-        "Votre plan avance. La priorité est de garder une action claire chaque semaine.",
+      message: "Votre plan avance. La priorité est de garder une action claire chaque semaine.",
     };
   }
 
@@ -931,8 +1106,7 @@ function calculateOnJaramaScore({
     value,
     color: "var(--red)",
     label: "À renforcer",
-    message:
-      "Votre priorité est de reprendre du souffle mensuel et de réduire la pression.",
+    message: "Votre priorité est de reprendre du souffle mensuel et de réduire la pression.",
   };
 }
 
@@ -944,8 +1118,8 @@ function buildForecast({ priorityDebt, mainGoal, monthlyAvailable, monthlySaving
       ? estimateCompletion(priorityDebt.balance, monthlyCapacity)
       : "Aucune dette prioritaire",
     goal: mainGoal
-      ? estimateCompletion(getGoalRemaining(mainGoal), monthlyCapacity)
-      : "Aucun objectif principal",
+      ? estimateCompletion(getGoalRemaining(mainGoal), monthlyCapacity || Number(mainGoal.monthlyContribution || 0))
+      : "Aucun objectif vedette",
   };
 }
 
@@ -1016,8 +1190,7 @@ function ProgressLine({ goal, currency }) {
   return (
     <>
       <p style={muted}>
-        {formatMoney(goal.currentAmount, currency)} /{" "}
-        {formatMoney(goal.targetAmount, currency)}
+        {formatMoney(goal.currentAmount, currency)} / {formatMoney(goal.targetAmount, currency)}
       </p>
       <MiniBar progress={progress} color="var(--green)" />
       <p style={muted}>Progression : {progress}%</p>
@@ -1026,9 +1199,20 @@ function ProgressLine({ goal, currency }) {
 }
 
 function MiniBar({ progress, color = "var(--green)" }) {
+  const safeProgress = Math.min(100, Math.max(0, Number(progress || 0)));
+
   return (
     <div style={barBg}>
-      <div style={{ ...barFill, width: `${progress}%`, background: color }} />
+      <div style={{ ...barFill, width: `${safeProgress}%`, background: color }} />
+    </div>
+  );
+}
+
+function SmallStat({ label, value }) {
+  return (
+    <div style={smallStat}>
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }
@@ -1090,7 +1274,6 @@ function formatDate(value) {
   if (!value) return "Date inconnue";
 
   const date = new Date(value);
-
   if (Number.isNaN(date.getTime())) return "Date inconnue";
 
   return date.toLocaleString("fr-CA", {
@@ -1115,6 +1298,135 @@ function getStartedLabel(createdAt) {
 
   return `il y a ${days} jours`;
 }
+
+function getNextMilestone(progress) {
+  if (progress < 25) return 25;
+  if (progress < 50) return 50;
+  if (progress < 75) return 75;
+  if (progress < 100) return 100;
+  return 100;
+}
+
+const pageHead = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: "14px",
+  alignItems: "flex-start",
+};
+
+const eyebrow = {
+  margin: 0,
+  color: "var(--gold)",
+  fontSize: "12px",
+  fontWeight: "900",
+  letterSpacing: ".04em",
+  textTransform: "uppercase",
+};
+
+const eyebrowBlue = {
+  ...eyebrow,
+  color: "var(--blue)",
+};
+
+const card = {
+  background: "var(--bg-card)",
+  border: "1px solid var(--border)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const todayCommandCard = {
+  background:
+    "radial-gradient(circle at top right, rgba(212,175,55,.26), transparent 34%), linear-gradient(135deg, rgba(212,175,55,.18), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "24px",
+  padding: "20px",
+  marginTop: "20px",
+  boxShadow: "0 0 24px rgba(212,175,55,.12)",
+};
+
+const todayActionList = {
+  display: "grid",
+  gap: "9px",
+  marginTop: "14px",
+};
+
+const todayActionLine = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "14px",
+  padding: "11px",
+  display: "flex",
+  alignItems: "center",
+  gap: "9px",
+};
+
+const featuredGoalCard = {
+  background:
+    "linear-gradient(135deg, rgba(212,175,55,.16), rgba(56,189,248,.08), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "24px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const projectionCard = {
+  background: "linear-gradient(135deg, rgba(56,189,248,.13), var(--bg-card))",
+  border: "1px solid var(--blue)",
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const projectionList = {
+  display: "grid",
+  gap: "8px",
+};
+
+const levelCard = (color) => ({
+  background:
+    "radial-gradient(circle at top right, rgba(212,175,55,.15), transparent 34%), var(--bg-card)",
+  border: `1px solid ${color}`,
+  borderRadius: "22px",
+  padding: "20px",
+  marginTop: "20px",
+});
+
+const smartGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+  gap: "10px",
+  marginTop: "14px",
+};
+
+const nextMoveCard = {
+  background:
+    "radial-gradient(circle at top right, rgba(212,175,55,.20), transparent 34%), linear-gradient(135deg, rgba(212,175,55,.14), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "24px",
+  padding: "20px",
+  marginTop: "20px",
+};
+
+const missionStrip = {
+  marginTop: "14px",
+  background: "var(--bg-panel)",
+  border: "1px solid rgba(212,175,55,.45)",
+  borderRadius: "16px",
+  padding: "12px",
+  display: "grid",
+  gap: "4px",
+};
+
+const brainCard = {
+  background:
+    "radial-gradient(circle at top right, rgba(212,175,55,.22), transparent 34%), linear-gradient(135deg, rgba(56,189,248,.10), var(--bg-card))",
+  border: "1px solid var(--gold)",
+  borderRadius: "24px",
+  padding: "20px",
+  marginTop: "20px",
+};
 
 const allocationCard = {
   background:
@@ -1200,58 +1512,6 @@ const horizonIndex = {
   display: "grid",
   placeItems: "center",
   fontWeight: "900",
-};
-
-const pageHead = {
-  display: "flex",
-  justifyContent: "space-between",
-  gap: "14px",
-  alignItems: "flex-start",
-};
-
-const eyebrow = {
-  margin: 0,
-  color: "var(--gold)",
-  fontSize: "12px",
-  fontWeight: "900",
-  letterSpacing: ".04em",
-  textTransform: "uppercase",
-};
-
-const card = {
-  background: "var(--bg-card)",
-  border: "1px solid var(--border)",
-  borderRadius: "22px",
-  padding: "20px",
-  marginTop: "20px",
-};
-
-const nextMoveCard = {
-  background:
-    "radial-gradient(circle at top right, rgba(212,175,55,.20), transparent 34%), linear-gradient(135deg, rgba(212,175,55,.14), var(--bg-card))",
-  border: "1px solid var(--gold)",
-  borderRadius: "24px",
-  padding: "20px",
-  marginTop: "20px",
-};
-
-const missionStrip = {
-  marginTop: "14px",
-  background: "var(--bg-panel)",
-  border: "1px solid rgba(212,175,55,.45)",
-  borderRadius: "16px",
-  padding: "12px",
-  display: "grid",
-  gap: "4px",
-};
-
-const brainCard = {
-  background:
-    "radial-gradient(circle at top right, rgba(212,175,55,.22), transparent 34%), linear-gradient(135deg, rgba(56,189,248,.10), var(--bg-card))",
-  border: "1px solid var(--gold)",
-  borderRadius: "24px",
-  padding: "20px",
-  marginTop: "20px",
 };
 
 const scoreCard = (color) => ({
@@ -1383,6 +1643,16 @@ const periodCard = {
   border: "1px solid var(--border)",
   borderRadius: "16px",
   padding: "12px",
+};
+
+const smallStat = {
+  background: "var(--bg-panel)",
+  border: "1px solid var(--border)",
+  borderRadius: "12px",
+  padding: "9px",
+  display: "grid",
+  gap: "5px",
+  fontSize: "12px",
 };
 
 const barBg = {
